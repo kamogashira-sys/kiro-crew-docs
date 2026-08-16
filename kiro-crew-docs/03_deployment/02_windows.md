@@ -1,0 +1,64 @@
+# Windows専用の注意点
+
+> **本ページは Kiro Crew（OSS）の仕様です。**
+
+**出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/windows-install.md>
+（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+
+---
+
+## 📑 このページの内容
+
+- [ソースインストールが唯一の経路](#ソースインストールが唯一の経路)
+- [OSレベルサンドボックス層の不在](#osレベルサンドボックス層の不在)
+- [機能別対応状況](#機能別対応状況)
+- [デスクトップ版の状況](#デスクトップ版の状況)
+- [未確認事項](#未確認事項)
+
+---
+
+## ソースインストールが唯一の経路
+
+Windowsは**ネイティブなソースインストール**（`pip install -e ".[voice]"`、`python -m kiro_crew gateway` で起動）を実行します。すべてのPOSIX専用のプロセス・シグナル・ファイルロック・メトリクス呼び出しは `kiro_crew.platform_compat` を経由します。
+
+## OSレベルサンドボックス層の不在
+
+**公式ドキュメントが明記**: 「Windows does not currently have this OS-level layer — all other protections still apply」。つまりWindowsには他OSにある namespace/Seatbeltレベルのサンドボックスがありませんが、**他の保護層（拒否ルール・ガバナンス・機密パスブロック・出力の秘匿化等）は機能します**。
+
+サンドボックスバックエンドが存在しないため、Script cron・Script hooks・Papyrusのコンパイル/git操作等は既定で **fail-closed**（無防備に実行せず拒否）になります。`agent.sandbox_allow_unsandboxed_exec=true` を明示的に設定するとopt-inで実行できます。
+
+## 機能別対応状況
+
+| 機能 | Windowsでの状況 |
+|------|----------------|
+| コアGateway/チャット/ダッシュボード | **works**（ディレクトリジャンクションで配信） |
+| LLM cronジョブ（`message`種） | **works** |
+| Scriptのcronジョブ | `agent.sandbox_allow_unsandboxed_exec` opt-inが必要 |
+| Commandのcronジョブ（`sh -c "…"`） | **サポート外**。POSIX shセマンティクスで検証されるが、Windowsに対応するシェルが無い（cmd.exeはPOSIXでない、Git for Windowsの`sh.exe`はbashで別の問題がある） |
+| Script hooks | `agent.sandbox_allow_unsandboxed_exec` opt-inが必要。cmd.exe言語で実行（`%ComSpec% /c`） |
+| Pull-requestソースの取得/確認/解決 | **not yet**（POSIX OSレベルサンドボックスが必要） |
+| ブラウザ自動化（`playwright-cli`） | **works**（Node.js 20以降が必要） |
+| ベクトルメモリ／埋め込み | リモート埋め込みエンドポイントまたはDocker経由。**ローカルOllamaの自動インストールはnot yet** |
+| STT（whisper／任意のクラウド文字起こし） | **works** |
+| 音声応答（Piper TTS） | **not yet**（upstream rhasspy/piperがWindowsバイナリを提供していない）。Amazon Pollyはopt-in設定併用で動作 |
+| SSHトンネル（`kirocrew cloud` リモートダッシュボード） | **not yet**（OpenSSHクライアントとシグナル処理の監査が必要） |
+| MCPサーバのツール一覧 | 組み込みサーバ（`kirocrew-core`等）はopt-in不要でworks。サードパーティサーバは opt-in が必要 |
+| MCP Gateway（opt-in・既定オフ） | **works**（named pipeトランスポート） |
+| Papyrus（LaTeXエディタ・opt-inのbuiltin） | works。コンパイル・gitは opt-in が必要 |
+
+`not yet` の項目はWindows機能パリティのフォローアップとして追跡されています。
+
+## デスクトップ版の状況
+
+- **CI成果物のみ**: nightly/releaseの実行と手動の`workflow_dispatch`プローブで生成されるが、**ダウンロードCDNには未公開**（今後 `publish-windows.yml` レーンで対応予定）
+- **署名は配線済みだが未有効化**: AWS Signerパスは準備済みだが、署名プロファイルがプロビジョニングされるまではスキップされる。**現在のインストーラは未署名**で、SmartScreenが「unrecognized app」の警告を出す（More info > Run anywayで進める）
+
+## 未確認事項
+
+- なし（本ページの記述は `docs/guides/windows-install.md` で確認済み）
+
+## 関連リンク
+
+- リポジトリ: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/windows-install.md>
+- セキュリティ（サンドボックス）: [01_features/09_security.md](../01_features/09_security.md)
+- 導入経路一覧: [01_installation.md](01_installation.md)

@@ -1,0 +1,23 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🏠 Official Kiro Crew Repository
+    url: https://github.com/kirodotdev/KiroCrew
+    about: For official Kiro Crew issues, bugs, and feature requests (Apache-2.0 OSS)
+  - name: 📖 Official Kiro Crew Documentation
+    url: https://kiro.dev/docs/crew/
+    about: Official Kiro Crew documentation (43 pages)
+  - name: 🚀 Kiro Crew Product Page
+    url: https://kiro.dev/crew/
+    about: Kiro Crew itself
+  - name: 💬 Kiro Discord
+    url: https://discord.gg/kirodotdev
+    about: Community discussion for Kiro and Kiro Crew
+  - name: 🐱 Kiro Web 版ドキュメント（姉妹サイト）
+    url: https://github.com/kamogashira-sys/kiro-web-docs
+    about: 猫でもわかるKiro Web アップデート情報
+  - name: 🐱 Kiro IDE 版ドキュメント（姉妹サイト）
+    url: https://github.com/kamogashira-sys/kiro-ide-docs
+    about: 猫でもわかるKiro IDE アップデート情報
+  - name: 🐱 Kiro CLI 版ドキュメント（姉妹サイト）
+    url: https://github.com/kamogashira-sys/q-cli-docs
+    about: 猫でもわかるKiro CLI アップデート情報

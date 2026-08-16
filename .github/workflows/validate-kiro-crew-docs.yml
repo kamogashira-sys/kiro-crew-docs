@@ -1,0 +1,81 @@
+name: Validate kiro-crew-docs
+
+# 対象ブランチは main のみ。develop 運用はしない。
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'kiro-crew-docs/**'
+      - 'README.md'
+      - 'scripts/kiro-crew-docs/**'
+      - 'Makefile'
+      - '.github/workflows/validate-kiro-crew-docs.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'kiro-crew-docs/**'
+      - 'README.md'
+      - 'scripts/kiro-crew-docs/**'
+      - 'Makefile'
+      - '.github/workflows/validate-kiro-crew-docs.yml'
+  schedule:
+    # nightly。Kiro Crew は main ブランチが日次で動き（週100コミット超）、
+    # リリースも約2週間で v0.1.0 → v0.2.0 と進んでいる。
+    # 兄弟3サイトの実測 cron 時刻と重複しないことを確認済み
+    # （q-cli-docs 17 18 / kiro-ide-docs 47 18 / kiro-web-docs 31 19、いずれも UTC）。
+    - cron: '23 20 * * *'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # 公開範囲の機械検証。ローカル管理対象（work_plans / 05_meta /
+      # 06_embedded-docs / work_records）が公開ツリーに混入していないか、
+      # 公開ファイルにローカル絶対パスが混じっていないかを見る。
+      # 公開事故は取り返しがつかないので最初に実行する。
+      - name: 公開範囲チェック（ローカル管理対象・ローカル絶対パスの混入）
+        run: make check-kiro-crew-ignore
+
+      # ネットワーク不要の全チェック
+      # （links / structure / counts / consistency / notation / coverage / changelog / scope / source-pin）。
+      - name: 全チェック（ネットワーク不要）
+        run: make check-kiro-crew-all
+
+      # ⚠️ 重要: CI には一次情報スナップショット（06_embedded-docs/）が無い。
+      # .gitignore 対象のため clone されず、次が「スキップして exit 0」になる。
+      #   - check-kiro-crew-coverage … 公式43ページ台帳の網羅性
+      #   - check-kiro-crew-counts の公式実体との照合部分
+      # つまり **CI の green は網羅性を保証しません**。
+      - name: 網羅性チェックの状態を明示
+        run: |
+          if ls kiro-crew-docs/06_embedded-docs/*/repo/docs >/dev/null 2>&1; then
+            echo "::notice::一次情報スナップショットがあるため網羅性を検証しました"
+          else
+            echo "::warning::一次情報スナップショット（06_embedded-docs/）が無いため" \
+                 "網羅性チェックと公式実体との照合はスキップされました。" \
+                 "CI の green は公式43ページ台帳の網羅性を保証しません。" \
+                 "ローカルで make check-kiro-crew-coverage と make check-kiro-crew-counts を" \
+                 "実行してください（取得手順は 05_meta/10_update-guide.md §5）"
+          fi
+
+      # 外部サイトに依存するチェックは PR では実行しない（レート制限・一時障害で
+      # PR が赤くなるのを避ける）。push / nightly / 手動で実施する。
+      - name: 重要 URL の到達性（PR ではスキップ）
+        if: github.event_name != 'pull_request'
+        run: make check-kiro-crew-urls-important
+
+      # 新安定版・CHANGELOG変化・公式crewページ数変化・docs/ファイル数変化の検知（4系統）。
+      # ⚠️ ここでの failure は「文書のバグ」ではなく「更新作業が必要」の合図。
+      - name: 更新検知（nightly と手動のみ）
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: make check-kiro-crew-freshness

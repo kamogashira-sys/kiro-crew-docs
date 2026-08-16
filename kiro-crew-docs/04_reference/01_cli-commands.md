@@ -7,6 +7,8 @@
 **出典**: <https://kiro.dev/docs/crew/interfaces/cli-reference/>（Page updated 表記あり）
 **出典**: リポジトリ README
 （参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+**出典**（`cloud`サブコマンド完全一覧・`eval`/`telemetry`掲載漏れの指摘）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/cloud.md>
+（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
 
 ---
 
@@ -45,7 +47,7 @@
 | `kirocrew restart [--port N]` | Gateway再起動 |
 | `kirocrew service install/uninstall/status` | システムレベルのサービス化（systemd/launchd） |
 | `kirocrew logs [-f]` | ログ表示（追従可） |
-| `kirocrew cloud launch/list/status/connect/stop/start/destroy/iam-policy/doctor` | 自分のAWSアカウント内のEC2インスタンスのプロビジョニング・接続・管理 |
+| `kirocrew cloud launch/list/status/connect/tunnel/login/stop/start/destroy/iam-policy/iam-boundary/doctor` | 自分のAWSアカウント内のEC2インスタンスのプロビジョニング・接続・管理（サブコマンド一覧は`modules/cloud.md`準拠。`modules/cli.md`は`tunnel`・`login`・`iam-boundary`を含まない9コマンドのみを列挙） |
 | `kirocrew security events [-n N]` | 最近のSEL監査イベント表示 |
 | `kirocrew security verify` | SEL HMACチェーンの整合性検証 |
 | `kirocrew snapshot [--keep N] [--list]` | 全状態のスナップショット作成（既定7件保持） |
@@ -62,12 +64,16 @@
 | `kirocrew computer call <tool> [k=v ...]` | Computer Useツールを1件実行（デバッグ・再現用） |
 | `kirocrew mcp-cron` / `mcp-core` / `mcp-computer` | kiro-cliが起動する内部MCPサーバ（`mcp-computer`は`argparse.SUPPRESS`で隠される） |
 | `kirocrew --version` | 版表示 |
+| `kirocrew eval [--all] [--scenario <name>]` | マルチセッション評価ハーネス実行（`kirocrew gateway --test-mode`を別シェルで起動している必要あり）。**`modules/cli.md`には記載がなく、公式`cli-reference`ページのみに記載** |
+| `kirocrew telemetry disable` / `status` | 匿名テレメトリの無効化・送信内容の確認。**`modules/cli.md`には記載がなく、リポジトリREADMEのみに記載** |
+
+> **注記**: `eval`と`telemetry`は、本ページの主出典`modules/cli.md`「## Commands」節には記載がありません。しかし`eval`は公式`interfaces/cli-reference/`ページに、`telemetry`はリポジトリREADMEに明確に存在するコマンドとして記載されているため、掲載漏れを避けるためここに追加しています。`modules/cli.md`を主出典としても、他の一次情報だけに存在するコマンドを見落とさないよう、4系統（`modules/cli.md`・公式`cli-reference`・README・各機能ページ）を横断確認する必要があります。
 
 ## クラウド・Pod（見落としやすいコマンド群）
 
-`kirocrew cloud` と `kirocrew pod` は**公式 `cli-reference` ページには独立した見出しがありません**が、リポジトリのモジュール仕様（`modules/cli.md`）には完全なサブコマンド一覧が明記されており、**実在するコマンドです**。
+`kirocrew cloud` と `kirocrew pod` は**公式 `cli-reference` ページには独立した見出しがありません**が、リポジトリのモジュール仕様には完全なサブコマンド一覧が明記されており、**実在するコマンドです**。
 
-- **`kirocrew cloud`**: 自分のAWSアカウントにKiroCrewのEC2インスタンスをプロビジョニングして管理する、人間向けのインストーラ／コントロールプレーン。`launch`は6段階のウィザード
+- **`kirocrew cloud`**: 自分のAWSアカウントにKiroCrewのEC2インスタンスをプロビジョニングして管理する、人間向けのインストーラ／コントロールプレーン。`launch`は6段階のウィザード。`tunnel`はSSMポートフォワードでダッシュボードを開く、`login`はSSM経由で`kiro-cli`のデバイスコード／ソーシャルサインインを実行、`iam-boundary`はimmutableなインスタンス権限バウンダリを事前作成するワンタイムの管理者操作（`modules/cloud.md:13-16`）
 - **`kirocrew pod`**: 孤立したワークツリーのテスト用Gateway。**Linuxの`systemd --user`のみで動作**し、macOS/Windowsではsystemdに触れるすべての動詞が1行メッセージで拒否されます
 
 ## `token`の出力ストリーム契約
@@ -77,6 +83,7 @@
 ## 未確認事項
 
 - `kirocrew --help` による実機での突合（未実施）
+- `eval`・`telemetry`が`modules/cli.md`から脱落している理由（意図的な非対象外か、ドキュメント更新漏れかは不明）
 
 ## 関連リンク
 

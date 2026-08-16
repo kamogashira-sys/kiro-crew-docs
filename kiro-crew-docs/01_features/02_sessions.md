@@ -5,6 +5,8 @@
 **出典**: <https://kiro.dev/docs/crew/chat/sessions/>（Page updated 表記あり）
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/session.md>
 （参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+**出典**（`session.pool_size`既定値の不整合・`chat_turn_timeout_secs`クランプ上限の指摘）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/overview.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/config.md>
+（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
 
 ---
 
@@ -43,10 +45,12 @@
 
 ## Warm Pool
 
-`session.pool_size`（既定 `0` = オフ）は、新しいセッションがkiro-cliのコールドスタートを払わずに開始できるよう、プロセスを事前起動します。プールされたプロセスは `session.pool_ttl_secs`（既定1800秒）を超えると、claim時に破棄されます。
+`session.pool_size`（`overview.md`は既定 `0` = オフと明記）は、新しいセッションがkiro-cliのコールドスタートを払わずに開始できるよう、プロセスを事前起動します。プールされたプロセスは `session.pool_ttl_secs`（既定1800秒）を超えると、claim時に破棄されます。
+
+> **一次情報内の不整合**: `docs/architecture/overview.md`は「Warm pool (`session.pool_size`, default `0` = off)」と明記しますが、`docs/system-specs/modules/config.md`のPython dataclass定義は `pool_size: int = 2`（ロード時クランプ0〜10）です。本サイトは`overview.md`の記述を採用していますが、実際の既定値がWarm Pool有効（2）か無効（0）かは、この2つの一次情報だけでは確定できません。
 
 - **アイドルタイムアウト**: `session.timeout_secs`（既定3600秒）経過後にセッションを回収
-- **ターン上限**: `agent.chat_turn_timeout_secs`（既定7200秒＝2時間。300〜7200秒にクランプ、無効化不可）
+- **ターン上限**: `agent.chat_turn_timeout_secs`（既定7200秒＝2時間。ロード時クランプは300〜86400秒。無効化不可）
 - **ツール承認の待機時間**: `agent.tool_approval_timeout_secs`（既定600秒＝10分）
 - **サーキットブレーカー**: 1セッションで5回連続失敗するとリセットを強制
 - **自動圧縮**: コンテキストウィンドウの `session.autocompact_pct`（既定90%）で発動
@@ -77,7 +81,7 @@
 
 ## 未確認事項
 
-- なし。`session_key` の形式は当初Zenn記事のみを出典としていたが（要検証扱い）、`modules/session.md` で `_STATELESS_PREFIXES` の実装として確認済み
+- `session.pool_size`の真の既定値（`overview.md`は0、`config.md`は2。両併記のまま。上記「Warm Pool」参照）。`session_key` の形式は当初Zenn記事のみを出典としていたが（要検証扱い）、`modules/session.md` で `_STATELESS_PREFIXES` の実装として確認済み
 
 ## 関連リンク
 

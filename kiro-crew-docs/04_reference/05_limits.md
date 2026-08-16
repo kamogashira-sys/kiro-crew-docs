@@ -46,17 +46,16 @@
 |------|-----|
 | メモリ層数 | **6層**（Preferences/Projects/Recent history/Semantic/Episodic/Lessons） |
 | コンテキストバジェット | **165,000文字**（約55,000トークン） |
-| Preferencesキャップ | 4,250文字 |
-| Projectsキャップ | 6,400文字 |
-| Recent historyキャップ | 26,600文字（公式ページ値。リポジトリ側は26,400文字と若干異なる記述あり） |
-| Semantic memoryキャップ | 12,000文字 |
-| Episodic memoryキャップ | 3,000文字・上位8件 |
-| Lessonsキャップ | 37,250文字・最大50件 |
+| Preferencesキャップ | 4,250文字（公式ページ値。リポジトリのfraction由来値は4,290文字=`int(165,000×2.6%)`） |
+| Projectsキャップ | 6,400文字（公式ページ値。リポジトリのfraction由来値は6,435文字=`int(165,000×3.9%)`） |
+| Recent historyキャップ | 26,600文字（公式ページ値。リポジトリのfraction由来値は26,400文字=`int(165,000×16%)`。リポジトリの`_MEMORY_HISTORY_CAP`は"Daily history"表記） |
+| Semantic memoryキャップ | 12,000文字（公式ページ値。リポジトリのfraction由来値は12,705文字=`int(165,000×7.7%)`） |
+| Episodic memoryキャップ | 3,000文字・上位8件（`_EPISODIC_INJECT_CAP`。基礎キャップの`_EPISODIC_MEMORY_CAP`はSemantic memoryと同じ7.7%=12,705文字だが、実際の注入時はこの3,000文字にさらにクランプされる） |
+| Lessonsキャップ | 37,250文字・最大50件（公式ページ値。リポジトリのfraction由来値は37,290文字=`int(165,000×22.6%)`） |
 | 履歴減衰の段数 | **5段**（0-13日／14-60日／61-180日／181-364日／365日以降） |
 | Consolidationトリガー（好み/プロジェクト） | **30メッセージ** |
 | Consolidationトリガー（履歴/レッスン） | **3時間アイドル** |
-| 埋め込み（Memory全体） | vendored llama-cpp-python（常時オン・in-process。`llama_cpp`固定） |
-| 埋め込み（Knowledge Libraryのみ） | Ollama経由（`qwen3-embedding:0.6b`） |
+| 埋め込み（Memory・Knowledge Library共有） | vendored llama-cpp-python（常時オン・in-process。`llama_cpp`固定。`get_shared_embedder()`でMemoryとKnowledge Libraryが共有）。※`knowledge.md`のみOllama依存の古い記述が残る。詳細: [01_features/05_knowledge-library.md](../01_features/05_knowledge-library.md) |
 
 ## 自律実行
 

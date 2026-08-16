@@ -7,6 +7,8 @@
 （参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/resource-protection.md>
 （参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+**出典**（egress既知ギャップの根拠）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/security-deep-dive.md>
+（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
 
 ---
 

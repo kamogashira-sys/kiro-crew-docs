@@ -20,5 +20,3 @@ Kiro Crew の主要機能を解説するセクションです。**本サイト�
 | [12_artifacts.md](12_artifacts.md) | 成果物（Artifacts） |
 | [13_computer-and-browser.md](13_computer-and-browser.md) | Computer Use・ブラウザ自動化 |
 | [14_migration-import.md](14_migration-import.md) | 既存設定の引き継ぎ |
-
-<!-- TODO(Phase 3): 本文執筆時に読む順序の案内を追記 -->

@@ -44,8 +44,8 @@ DUAL_NOTATION = [
     },
     {
         "id": "S15", "label": "Subagent上限（32 vs 16）",
-        "pattern_a": re.compile(r"\b32\b"),
-        "pattern_b": re.compile(r"\b16\b"),
+        "pattern_a": re.compile(r"subagent_auto_max[^\n]{0,40}?`subagent\.md`\s*[:：]\s*32\b"),
+        "pattern_b": re.compile(r"subagent_auto_max[^\n]{0,40}?`config\.md`\s*[:：]\s*16\b"),
         "target_glob": f"{DOC_ROOT}/04_reference/05_limits.md",
     },
     {
@@ -61,13 +61,18 @@ OWNER = f"{DOC_ROOT}/04_reference/05_limits.md"
 
 SSOT = [
     {"id": "S8", "label": "Gatewayポート", "value": "5476",
-     "pattern": re.compile(r"(?:ポート|port)[^\n]{0,20}?\**\s*(5476)\s*\**")},
+     "pattern": re.compile(r"(?:既定ポート|Gatewayポート|gateway\s*port|KIROCREW_PORT)[^\n]{0,20}?\**\s*(\d{2,6})\s*\**", re.IGNORECASE),
+     "extra_patterns": [re.compile(r"(?:localhost|127\.0\.0\.1)[:：](\d{2,6})")]},
     {"id": "S11", "label": "拒否コマンドルール件数", "value": "137",
-     "pattern": re.compile(r"(?:拒否(?:ルール|コマンド)?[^\n]{0,20}?|deny pattern[^\n]{0,10}?)\**\s*(137)\s*\**")},
+     "pattern": re.compile(r"(?:拒否コマンドルール件数|deny\s*pattern\s*count)[^\n]{0,10}?\**\s*(\d{1,6})\s*\**")},
     {"id": "S16", "label": "履歴減衰段数", "value": "5",
-     "pattern": re.compile(r"(?:履歴(?:の)?減衰)[^\n]{0,10}?\**\s*(5)\s*\**\s*段")},
+     "pattern": re.compile(r"履歴減衰の段数[^\n]{0,10}?\**\s*(\d{1,3})\s*\**\s*段")},
+    {"id": "S19a", "label": "Consolidationトリガー（好み/プロジェクト）", "value": "30",
+     "pattern": re.compile(r"Consolidationトリガー[^\n]{0,20}?好み/プロジェクト[^\n]{0,20}?\**\s*(\d{1,6})\s*\**\s*メッセージ")},
+    {"id": "S19b", "label": "Consolidationトリガー（履歴/レッスン）", "value": "3",
+     "pattern": re.compile(r"Consolidationトリガー[^\n]{0,20}?履歴/レッスン[^\n]{0,20}?\**\s*(\d{1,3})\s*\**\s*時間アイドル")},
     {"id": "S24", "label": "コンテキストバジェット", "value": "165000",
-     "pattern": re.compile(r"\**\s*(165,000|165000)\s*\**\s*文字")},
+     "pattern": re.compile(r"コンテキストバジェット[^\n]{0,20}?\**\s*([\d,]{3,10})\s*\**\s*文字")},
 ]
 
 
@@ -125,6 +130,41 @@ def check_value_ssot(errors, notes):
             )
         else:
             notes.append(f"{s['id']}: {s['label']} = {found}（{OWNER} で一致）")
+
+    # 水平展開検証: OWNER以外のページで同じ文脈語＋数値パターンが登場する場合、
+    # SSoT値と異なっていないかを確認する。OWNER自身は既に上のループで検証済みなので除外する。
+    # `pattern`（主パターン）と `extra_patterns`（同じ値を指す別表記。例: `localhost:PORT`）の
+    # 両方を対象にし、実際にマッチした数値をSSoT値と比較する（固定値マッチだと改変を検出できないため）。
+    other_docs = [d for d in all_docs() if os.path.abspath(d) != os.path.abspath(OWNER)]
+    mismatches_by_id = {}
+    matches_by_id = {}
+    for path in other_docs:
+        txt = open(path, encoding="utf-8").read()
+        for s in SSOT:
+            patterns = [s["pattern"]] + s.get("extra_patterns", [])
+            for pat in patterns:
+                for m in pat.finditer(txt):
+                    found = m.group(1).replace(",", "")
+                    line_no = txt.count("\n", 0, m.start()) + 1
+                    if found != s["value"].replace(",", ""):
+                        mismatches_by_id.setdefault(s["id"], []).append(
+                            f"{path}:{line_no} は {found}（SSoTは{s['value']}）"
+                        )
+                    else:
+                        matches_by_id.setdefault(s["id"], []).append(f"{path}:{line_no}")
+
+    for s in SSOT:
+        sid = s["id"]
+        if sid in mismatches_by_id:
+            for detail in mismatches_by_id[sid]:
+                errors.append(
+                    f"{sid}（{s['label']}）の値が水平展開先で食い違っています: {detail}"
+                )
+        elif sid in matches_by_id:
+            notes.append(
+                f"{sid}: {s['label']} は {len(matches_by_id[sid])} 箇所の水平展開先でも "
+                f"{OWNER} と一致（{', '.join(matches_by_id[sid])}）"
+            )
 
 
 def check_source_dates_consistency(errors, notes):

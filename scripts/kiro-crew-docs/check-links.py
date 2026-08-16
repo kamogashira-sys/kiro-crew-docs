@@ -59,8 +59,14 @@ KIRO_DEV_SLASH_REQUIRED_RE = re.compile(r'^https://kiro\.dev/(?:docs|crew|blog)(
 # GitHub の blob URL は末尾スラッシュを付けない（付けると404になる）
 GITHUB_BLOB_TRAILING_SLASH_RE = re.compile(r'^https://github\.com/[^/]+/[^/]+/blob/[^\s]+/$')
 
-# 姉妹製品（IDE/CLI/Web）ドキュメントへのリンク検出
-SIBLING_DOCS_RE = re.compile(r'^https://kiro\.dev/docs/(?:ide/|cli/|web/)')
+# 姉妹製品（IDE/CLI/Web）ドキュメントへのリンク検出。
+# kiro.dev/docs/{ide,cli,web}/ 形式に加え、実際に使われている姉妹サイトの
+# GitHubリポジトリ形式（github.com/kamogashira-sys/{kiro-web-docs,kiro-ide-docs,q-cli-docs}）
+# も検出する（V-06: 旧パターンはkiro.dev形式のみで、実際のリンクを検出できていなかった）。
+SIBLING_DOCS_RE = re.compile(
+    r'^https://kiro\.dev/docs/(?:ide/|cli/|web/)'
+    r'|^https://github\.com/kamogashira-sys/(?:kiro-web-docs|kiro-ide-docs|q-cli-docs)\b'
+)
 
 
 def repo_root():

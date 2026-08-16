@@ -80,7 +80,11 @@ fi
 
 echo "=== 公開ファイルにローカル絶対パス・ユーザー名が含まれていないことを確認 ==="
 # 対象は git が追跡する（＝公開される）ファイルのみ。バイナリは除外。
-leak=$(git ls-files -z | xargs -0 -r grep -n -I -E '/home/[a-z_][a-z0-9_-]*|/Users/[A-Za-z0-9_-]+' 2>/dev/null || true)
+# `/home/kirocrew` はDockerコンテナ内のホームディレクトリを指す一次情報由来の記述
+# （公式 running-24-7.md の Docker 実行例 `-v kirocrew-home:/home/kirocrew` と同一）であり、
+# レビュアーのローカル環境のユーザー名ではない。本スクリプト自身の説明コメントも除外する。
+leak=$(git ls-files -z | xargs -0 -r grep -n -I -E '/home/[a-z_][a-z0-9_-]*|/Users/[A-Za-z0-9_-]+' 2>/dev/null \
+  | grep -v -E '(^|[^a-z0-9_-])home/kirocrew([^a-z0-9_-]|$)' || true)
 if [ -n "$leak" ]; then
   echo "  FAIL ローカル絶対パスらしい記述があります:"
   echo "$leak" | sed 's/^/    /'

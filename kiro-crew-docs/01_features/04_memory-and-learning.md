@@ -7,6 +7,9 @@
 （参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/auto-improvement.md>
 （参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+**出典**（埋め込み共有機構の裏付け）: <https://kiro.dev/docs/crew/features/knowledge/>（Page updated 表記あり）
+**出典**（同上）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/overview.md>
+（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
 
 ---
 
@@ -38,6 +41,8 @@ Kiro Crew は新しいセッションでも、以前のセッションから好�
 | 4 | **Semantic memory**（構造化キーバリュー） | SQLite `semantic_memory` テーブル＋任意のFAISSインデックス | 12,000文字 |
 | 5 | **Episodic memory**（過去の出来事） | SQLite `episodic_memories` テーブル＋任意のFAISSインデックス | 3,000文字・クエリごと上位8件 |
 | 6 | **Lessons**（学習した修正） | `lesson.<md5hash>` セマンティックエントリ（confidence 1.0） | 37,250文字・最大50件 |
+
+> **注記**: 上記の上限値は公式ページの記述です。リポジトリの一次情報では、全キャップが `int(165,000 × fraction)` というfraction由来の値として定義されており（fractionが真実源）、公式値とは全項目でわずかに異なります（例: Preferences 4,290文字、Projects 6,435文字、Recent history 26,400文字、Semantic memory 12,705文字、Lessons 37,290文字）。詳細な対応表は [04_reference/05_limits.md](../04_reference/05_limits.md) を参照してください。
 
 コンテキストウィンドウ全体の参照バジェットは**約55,000トークン**です。
 
@@ -164,12 +169,13 @@ Crew のセッションには `memory_mode` があり、値は **`persistent`（
 
 ## 埋め込みの実行方式
 
-**Crew には2つの独立した埋め込み機構があり、対象範囲が異なります。**
+**Memory と Knowledge Library は同じ埋め込み機構を共有します。**
 
-| 対象 | 実行方式 |
-|------|---------|
-| **Memory システム全体**（本ページの6層メモリ）＋アーキテクチャ全般 | **常時オン・in-process**。vendored された `llama-cpp-python` を使用。`memory.embedding_provider` は `llama_cpp` のみを受理し、legacy値 `"ollama"`／`"none"` も**強制的に `llama_cpp` にコアース**されます。外部デーモンは不要・設定で無効化できません |
-| **Knowledge Library のみ**（[05_knowledge-library.md](05_knowledge-library.md)） | ローカルの **Ollama** 経由（別の仕組み。詳細は次ページ） |
+Memory（本ページの6層メモリ）と [Knowledge Library](05_knowledge-library.md) は、vendored された `llama-cpp-python` による**常時オン・in-processの共有シングルトン埋め込み器**（`get_shared_embedder()`）を使います。`memory.embedding_provider` は `llama_cpp` のみを受理し、legacy値 `"ollama"`／`"none"` も**強制的に `llama_cpp` にコアース**されます。外部デーモンは不要・設定で無効化できません。
+
+公式ドキュメント `features/knowledge/` も「Knowledge items are embedded for semantic search using **the same in-process embedding runtime as Memory**」と明記しており、両者が同一機構を共有することを確認できます。Ollamaは、埋め込みモデルのCDNダウンロードが失敗した場合の**任意のフォールバック手段**（`ollama pull qwen3-embedding:0.6b` を手動実行）として`troubleshooting.md`に案内されているのみで、既定の実装ではありません。
+
+> **参考: リポジトリ内の記述に不整合があります**。`docs/system-specs/modules/knowledge.md` には、Knowledge Libraryが `OllamaEmbedder`（`knowledge/embedder.py`）経由でOllamaに依存するという、上記と異なる古い記述が残っています。本サイトは、公式ドキュメントおよび `memory-skills-hooks.md`／`install.md`／`overview.md`／`config.md`の4箇所と一致する「共有in-process機構」を正としています（`knowledge.md`側は更新が反映されていないと判断）。詳細は [05_knowledge-library.md](05_knowledge-library.md) を参照してください。
 
 埋め込みモデルがまだダウンロード中／未取得の間は、メモリはキーワード・FTS検索に緩やかに縮退し、モデルが用意できた時点で自動的に埋め込みが有効になります（再起動不要）。
 
@@ -182,6 +188,7 @@ Crew のセッションには `memory_mode` があり、値は **`persistent`（
 ## 未確認事項
 
 - なし。メモリモード用語（persistent/incognito/temporary）は当初 Zenn 記事由来の記述として要検証扱いだったが、`history.py` の `INCOGNITO_MEMORY_MODES` および `session-summary.md` L188 で実在を確認済み
+- Knowledge Libraryの埋め込み機構は、公式ドキュメント `features/knowledge/` および `memory-skills-hooks.md`／`install.md`／`overview.md`／`config.md`で「Memoryと共有するin-process機構」と確認済み。リポジトリの`docs/system-specs/modules/knowledge.md`のみ、更新が反映されていないOllama依存の記述を残す（上記「埋め込みの実行方式」参照）
 
 ## 関連リンク
 

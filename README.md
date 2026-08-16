@@ -16,7 +16,7 @@ make check-kiro-crew-all
 
 内部リンク・出典・SSoT（正準値）の一致・表記規約・公式43ページの網羅性・changelog構造・スコープ境界・参照時点記録をローカルで機械検証します。利用可能な個別ターゲットは `make`（引数なし）で確認できます。
 
-> ⚠️ `check-kiro-crew-all` の exit 0 は「全部を検証した」ことを意味しません。網羅性チェックは一次情報スナップショット（`.gitignore`対象・非公開）が無い環境（クローン直後・CI）ではスキップされます。詳細は [.github/WORKFLOW.md](.github/WORKFLOW.md) を参照してください。
+> ⚠️ `check-kiro-crew-all` の exit 0 は「全部を検証した」ことを意味しません。網羅性チェックは一次情報スナップショット（`.gitignore`対象・非公開）が無い環境（クローン直後・CI）ではスキップされます。参照時点記録チェック（`check-source-pin.py`）はGitHub出典URLの近辺にSHA・日付・版があるかを確認しますが、そのURL先が実際に本文の主張を支持するか、他の一次情報と矛盾しないかは検証しません。値の水平展開チェック（`check-consistency.py`）も、パターンに文脈語を要求する設計のため、事前に想定していない箇所の食い違いまでは検出できません。詳細は [.github/WORKFLOW.md](.github/WORKFLOW.md) を参照してください。
 
 ## 公式情報源
 

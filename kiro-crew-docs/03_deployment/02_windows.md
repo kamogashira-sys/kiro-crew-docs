@@ -4,6 +4,8 @@
 
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/windows-install.md>
 （参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+**出典**（埋め込みのWindows対応に関する不整合の指摘）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/memory-skills-hooks.md>
+（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
 
 ---
 
@@ -38,7 +40,7 @@ Windowsは**ネイティブなソースインストール**（`pip install -e ".
 | Script hooks | `agent.sandbox_allow_unsandboxed_exec` opt-inが必要。cmd.exe言語で実行（`%ComSpec% /c`） |
 | Pull-requestソースの取得/確認/解決 | **not yet**（POSIX OSレベルサンドボックスが必要） |
 | ブラウザ自動化（`playwright-cli`） | **works**（Node.js 20以降が必要） |
-| ベクトルメモリ／埋め込み | リモート埋め込みエンドポイントまたはDocker経由。**ローカルOllamaの自動インストールはnot yet** |
+| ベクトルメモリ／埋め込み | `windows-install.md`本体の記載: リモート埋め込みエンドポイントまたはDocker経由。**ローカルOllamaの自動インストールはnot yet**（※下記の注記参照） |
 | STT（whisper／任意のクラウド文字起こし） | **works** |
 | 音声応答（Piper TTS） | **not yet**（upstream rhasspy/piperがWindowsバイナリを提供していない）。Amazon Pollyはopt-in設定併用で動作 |
 | SSHトンネル（`kirocrew cloud` リモートダッシュボード） | **not yet**（OpenSSHクライアントとシグナル処理の監査が必要） |
@@ -48,6 +50,8 @@ Windowsは**ネイティブなソースインストール**（`pip install -e ".
 
 `not yet` の項目はWindows機能パリティのフォローアップとして追跡されています。
 
+> **注記: ベクトルメモリ／埋め込み行に一次情報内の不整合があります**。`memory-skills-hooks.md`は「macOS (Apple Silicon and Intel), Linux (x86_64, arm64/Graviton), and **Windows supported**」「Windows x86_64 | `win_amd64/` | CPU」「the old Docker fallback is **gone**」と明記しており、vendored `llama-cpp-python`のin-process embedderがWindows向けにネイティブ提供され、リモートエンドポイントやDockerは不要と読めます。一方、本ページの主要出典である`windows-install.md`は上表のとおり「remote embedding endpointまたはDocker経由」「local Ollama auto-installはnot yet」と記載しており、この2つの一次情報は一致しません。本サイトはページの主要出典である`windows-install.md`の記述をそのまま採用していますが、実際の挙動はより新しい`memory-skills-hooks.md`の記述（Windowsネイティブサポート）に近い可能性があります。
+
 ## デスクトップ版の状況
 
 - **CI成果物のみ**: nightly/releaseの実行と手動の`workflow_dispatch`プローブで生成されるが、**ダウンロードCDNには未公開**（今後 `publish-windows.yml` レーンで対応予定）
@@ -55,7 +59,7 @@ Windowsは**ネイティブなソースインストール**（`pip install -e ".
 
 ## 未確認事項
 
-- なし（本ページの記述は `docs/guides/windows-install.md` で確認済み）
+- ベクトルメモリ／埋め込みのWindows対応状況について、本ページの主要出典`windows-install.md`と`memory-skills-hooks.md`の間に不整合がある（上記「機能別対応状況」の注記を参照）。どちらが実際の挙動を反映するかは公式情報だけでは確定できない
 
 ## 関連リンク
 

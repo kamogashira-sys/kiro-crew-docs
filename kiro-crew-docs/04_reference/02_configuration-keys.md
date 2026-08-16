@@ -4,6 +4,10 @@
 
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/config.md>
 （参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+**出典**（`session.pool_size`既定値の不整合の指摘）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/overview.md>
+（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+**出典**（`agent.max_subagents`既定値の不整合の指摘）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/subagent.md>
+（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
 
 ---
 
@@ -26,13 +30,13 @@
 |------|-------|------|
 | `agent.sandbox` | `auto` | サンドボックスモード（`auto`／`strict`／`off`。[09_security.md](../01_features/09_security.md)参照） |
 | `agent.provider` | `acp`（固定） | LLMプロバイダ。変更不可 |
-| `agent.max_subagents` | `0`（自動サイジング） | Subagentの並行数上限（**出典間で食い違うため両併記。下記参照**） |
+| `agent.max_subagents` | **食い違いあり** | Subagentの並行数上限。`subagent.md`は既定`0`（自動サイジング）、`config.md`のdataclass literalは既定`3`（両併記・裁定しない） |
 | `agent.subagent_auto_max` | **食い違いあり** | 自動サイジングの上限。`subagent.md`は32、`config.md`は16と記述（両併記・裁定しない） |
 | `agent.apps_allow_third_party` | `false` | サードパーティAppの実行許可スイッチ |
 | `agent.sandbox_allow_unsandboxed_exec` | `false` | サンドボックスバックエンド不在時の非サンドボックス実行を許可するopt-in |
-| `agent.chat_turn_timeout_secs` | `7200`（2時間） | チャットターンの上限（300〜7200秒にクランプ、無効化不可） |
+| `agent.chat_turn_timeout_secs` | `7200`（2時間） | チャットターンの上限（ロード時クランプは300〜86400秒、無効化不可） |
 | `agent.tool_approval_timeout_secs` | `600`（10分） | ツール承認の待機時間 |
-| `session.pool_size` | `0`（オフ） | Warm Poolのサイズ |
+| `session.pool_size` | **食い違いあり** | Warm Poolのサイズ。`overview.md`は既定`0`（オフ）、`config.md`のdataclass literalは既定`2`（両併記・裁定しない） |
 | `session.pool_ttl_secs` | `1800` | Warm Pool内プロセスのTTL |
 | `session.timeout_secs` | `3600` | セッションのアイドルタイムアウト |
 | `session.autocompact_pct` | `90` | 自動圧縮のコンテキスト使用率閾値 |
@@ -56,7 +60,9 @@
 
 ## 未確認事項
 
+- `agent.max_subagents` の真の既定値（`subagent.md`は0、`config.md`は3。両併記のまま）
 - `agent.subagent_auto_max` の真の既定値（32 vs 16。両併記のまま）
+- `session.pool_size` の真の既定値（`overview.md`は0、`config.md`は2。両併記のまま）
 - `spawn_min_memory_gb` の既定値（`subagent.md`・`config.md`のいずれにも数値記載なし）
 
 ## 関連リンク

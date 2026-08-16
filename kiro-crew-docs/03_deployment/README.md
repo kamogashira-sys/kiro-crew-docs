@@ -20,5 +20,3 @@ Kiro Crew の導入方法と運用に関するセクションです。
 | [04_security-hardening.md](04_security-hardening.md) | 導入時のセキュリティ設定 |
 | [05_troubleshooting.md](05_troubleshooting.md) | トラブルシューティング |
 | [06_telemetry-and-privacy.md](06_telemetry-and-privacy.md) | 匿名利用テレメトリ |
-
-<!-- TODO(Phase 4): 本文執筆時に更新 -->

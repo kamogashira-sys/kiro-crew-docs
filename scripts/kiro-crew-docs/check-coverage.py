@@ -20,8 +20,8 @@ Crew 版の設計（Rev 1 からの再設計理由）:
     1. 台帳（ledger-official-pages.md）が43行（README分含む）持っていること
     2. 各行に担当ページ（`01_features/NN_xxx.md` 等）が記載されていること
        （未割当が0件であること）
-    3. 台帳が指す担当ページが実際に `01_features/` などに存在する計画であること
-       （計画書 §5 のファイル軸と矛盾していないか）
+    3. 台帳が指す担当ページが実際に公開対象ディレクトリに存在すること
+       （ファイル名だけの記載は`01_features/`配下、`/`を含む記載はフルパスとして解決する）
     4. モジュール台帳（ledger-modules.md）が76件すべてに判定を持つこと
 
 fail-safe:
@@ -59,10 +59,21 @@ def check_official_pages_ledger(errors, notes):
         notes.append(f"公式ページ台帳: {len(rows)} 件（43件と一致）")
 
     unassigned = []
+    missing_files = []
     for num, url, assignment in rows:
         # 「担当ページ」列が空、または「未割当」等の語を含む場合は未割当とみなす
         if not assignment.strip() or re.search(r"未割当|TBD|未定", assignment):
             unassigned.append((num, url))
+            continue
+        # 担当ページが実際に公開対象に存在するかを検証する。
+        # 列の形式は次の3パターン: `01_architecture.md`（01_features/配下は省略）、
+        # `03_deployment/01_installation.md`（フルパス）、
+        # `09_security.md` ＋ `03_deployment/04_security-hardening.md`（複数ファイルを＋で連結）。
+        for raw_name in re.findall(r"`([^`]+\.md)`", assignment):
+            candidates = [raw_name] if "/" in raw_name else [f"01_features/{raw_name}", raw_name]
+            resolved = [c for c in candidates if os.path.isfile(f"kiro-crew-docs/{c}")]
+            if not resolved:
+                missing_files.append((num, url, raw_name))
     if unassigned:
         errors.append(
             f"{LEDGER_PAGES}: 未割当が {len(unassigned)} 件あります: "
@@ -70,6 +81,14 @@ def check_official_pages_ledger(errors, notes):
         )
     else:
         notes.append("公式ページ台帳: 未割当0件")
+
+    if missing_files:
+        errors.append(
+            f"{LEDGER_PAGES}: 担当ページが実在しない行が {len(missing_files)} 件あります: "
+            f"{[f'#{n} {u} -> {f}' for n, u, f in missing_files]}"
+        )
+    else:
+        notes.append(f"公式ページ台帳: 担当ページの実在確認 {len(rows)} 件すべてOK")
 
 
 def check_modules_ledger(errors, notes):

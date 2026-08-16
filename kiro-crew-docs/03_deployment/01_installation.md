@@ -65,7 +65,8 @@ curl -fsSL https://download.crew.kiro.dev/cli.sh | sh -s -- --version 0.1.0
 
 ## 未確認事項
 
-- なし（本ページの記述は公式installationページと `docs/guides/install.md`、README「App downloads」節で確認済み）
+- Node.jsの下限バージョンについて、公式`installation/`ページは「Node.js 18+」と記述するが、リポジトリの`docs/guides/install.md`は「20 || >= 22」と記述しており一致しない。本サイトはリポジトリ側（一次情報順位1）を採用している
+- managed venvのパスについて、公式`installation/`ページ相当の`docs_md/installation.md:47`は`~/.kiro/crew/venv`と記述するが、リポジトリの`docs/guides/install.md`は`~/.kiro/crew-venv`と記述しており一致しない（[03_deployment/05_troubleshooting.md](05_troubleshooting.md)も参照）。本サイトはリポジトリ側を採用している
 
 ## 関連リンク
 

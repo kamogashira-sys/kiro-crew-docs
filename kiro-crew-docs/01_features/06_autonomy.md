@@ -7,6 +7,8 @@
 **出典**: <https://kiro.dev/docs/crew/features/cron/>・<https://kiro.dev/docs/crew/features/task-runner/>・<https://kiro.dev/docs/crew/features/subagents/>（Page updated 表記あり）
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/{heartbeat,taskrunner,subagent}.md>
 （参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+**出典**（`agent.max_subagents`既定値の不整合の指摘）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/config.md>
+（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
 
 ---
 
@@ -78,7 +80,7 @@ README の起動モード5分類には無いが、`modules/heartbeat.md` に実�
 
 **並行数の上限（S15・出典間で食い違うため両併記）**:
 
-- `agent.max_subagents` の既定は **`0`**（＝起動時に自動サイジング。下限3・上限は `agent.subagent_auto_max`）。正の値を指定すると固定キャップになります
+- `agent.max_subagents` の既定値について、`modules/subagent.md`は「**`0`**」（＝起動時に自動サイジング）、`modules/config.md`のPython dataclass literalは「**`= 3`**」と記述しており**一致しません**。`0`の場合、下限3・上限は`agent.subagent_auto_max`で自動サイジングされます。正の値を指定すると固定キャップになります
 - 自動サイジングの上限 `agent.subagent_auto_max` の既定値について、`modules/subagent.md` は「**32**」、`modules/config.md` は「**`= 16`**」と記述しており**一致しません**。別途 `SUBAGENT_AUTO_MAX_CEILING = 64`（設定ロード時のクランプ上限）が存在します
 - **本サイトはこの食い違いを裁定しません**。両方の値を記録するのみです
 
@@ -93,6 +95,7 @@ README の起動モード5分類には無いが、`modules/heartbeat.md` に実�
 
 - Cron自体（`--every`）の最小間隔（確認できたのはインポート経由の60秒下限のみ）
 - `spawn_min_memory_gb` の既定値（数値記載なし）
+- `agent.max_subagents` の真の既定値（0 vs 3の食い違いは未解消）
 - `agent.subagent_auto_max` の真の既定値（32 vs 16の食い違いは未解消）
 
 ## 関連リンク

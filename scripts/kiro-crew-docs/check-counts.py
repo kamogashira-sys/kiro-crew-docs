@@ -85,6 +85,9 @@ def check_page_counts_3way(errors, notes):
     本スクリプトはサイト本体（kiro-crew-docs/）のファイル数のみ検証できるため、
     計画書側の見出し・合計表との一致は計画レビュー時に確認済みという前提で、
     ここでは「実ファイル数が計画値と一致するか」を検証する。
+
+    ⚠️ 過剰（actual > expected）・不足（actual < expected）の両方をerrorにする。
+    以前は過剰のみをerrorにしており、ページ不足（未執筆を除く）を検出できなかった。
     """
     for sec, expected in SECTIONS.items():
         actual = count_section_files(sec)
@@ -99,10 +102,17 @@ def check_page_counts_3way(errors, notes):
                 f"{sec}/: 実ファイル数 {actual} が計画値 {expected} を超えています"
                 "（計画書 §5 の構成を確認してください）"
             )
+        elif actual < expected:
+            errors.append(
+                f"{sec}/: 実ファイル数 {actual} が計画値 {expected} に不足しています"
+                "（未執筆のページがある可能性。計画書 §5 の構成を確認してください）"
+            )
 
     total_actual = sum(count_section_files(s) for s in SECTIONS) + 1  # サイト本体README
     if total_actual > TOTAL_PAGES:
         errors.append(f"サイト全体の実ファイル数 {total_actual} が計画値 {TOTAL_PAGES} を超えています")
+    elif total_actual < TOTAL_PAGES:
+        errors.append(f"サイト全体の実ファイル数 {total_actual} が計画値 {TOTAL_PAGES} に不足しています")
     else:
         notes.append(f"サイト全体: 実ファイル {total_actual} / 計画値 {TOTAL_PAGES}")
 

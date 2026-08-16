@@ -23,5 +23,3 @@
 | [03_directory-layout.md](03_directory-layout.md) | `~/.kiro/crew/` の構造 |
 | [04_mcp-tools.md](04_mcp-tools.md) | MCP ツール一覧 |
 | [05_limits.md](05_limits.md) | 上限値・既定値の一覧 |
-
-<!-- TODO(Phase 4): 本文執筆時に更新 -->

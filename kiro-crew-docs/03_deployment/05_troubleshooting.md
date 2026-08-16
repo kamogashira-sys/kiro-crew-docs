@@ -3,6 +3,8 @@
 > **本ページは Kiro Crew（OSS）の仕様です。**
 
 **出典**: <https://kiro.dev/docs/crew/troubleshooting/>（Page updated 表記あり）
+**出典**（venvパスの不整合の指摘）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md>
+（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
 
 ---
 
@@ -31,11 +33,13 @@ kirocrew doctor
 
 インストール先のディレクトリが `PATH` にありません。インストーラによって対処が異なります。
 
-- **事前ビルドwheelインストーラ**: `pipx`があればそれを使用、無ければ`~/.kiro/crew/venv`。`~/.local/bin`（pipx既定）か`~/.kiro/crew/venv/bin`が`PATH`にあることを確認
+- **事前ビルドwheelインストーラ**: `pipx`があればそれを使用、無ければ管理対象venv（`~/.kiro/crew-venv`。`KIROCREW_VENV`で変更可）を作成し、`~/.local/bin/kirocrew`にsymlinkします。`~/.local/bin`（pipx既定・symlink先とも共通）が`PATH`にあることを確認
 - **`pip install -e .`**: Pythonのスクリプトディレクトリが`PATH`にあることを確認
 - **Docker**: `docker exec kirocrew kirocrew …` で呼び出す
 
 その後 `source ~/.bashrc`（またはシェルを再起動）。
+
+> **注記: 公式ドキュメントと本サイトの記述が異なります**。公式 `troubleshooting/` ページは「`pipx`が無ければ`~/.kiro/crew/venv`。`~/.local/bin`か`~/.kiro/crew/venv/bin`をPATHに追加」と案内していますが、リポジトリの `docs/guides/install.md` は「管理対象venvは`~/.kiro/crew-venv`（データホームの外）に作成され、`~/.local/bin/kirocrew`にsymlinkされる」と記述しており、パスが異なります。本サイトはより詳細な実装記述である`install.md`を採用しています。`~/.kiro/crew/venv/bin`を`PATH`に追加しても、そのディレクトリは存在しない可能性があります。
 
 ### Windows: インストール後に `python: command not found`
 
@@ -69,6 +73,7 @@ python -m kiro_crew gateway
 ## 未確認事項
 
 - 完全なトラブルシューティング項目（本ページは主要な項目のみを記載。詳細は公式ページを参照）
+- venvパスについて、公式`troubleshooting/`（`~/.kiro/crew/venv`）と`install.md`（`~/.kiro/crew-venv`）の記述が一致しない（上記「インストール後に`kirocrew: command not found`」の注記参照）。本サイトは`install.md`の記述を採用しているが、公式ページ側が正しい可能性を排除できない
 
 ## 関連リンク
 

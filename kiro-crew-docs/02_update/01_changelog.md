@@ -47,7 +47,7 @@
 
 **出典**: <https://github.com/kirodotdev/KiroCrew/releases/tag/v0.1.3>
 
-CHANGELOG.mdの本版節には項目の記載がありません（Release本文のみが出典）。
+model entitlementのhot patch: モデルピッカーがアカウントが利用可能なモデルにスコープを限定し、アカウントが利用できないモデルは送信されなくなりました。利用不可のモデルは、容量エラーや生のJSON-RPCダンプではなく、アクセス問題として報告されます（箇条書き項目はなく、CHANGELOG.md本文の概要記述が出典）。
 
 ### v0.1.2
 

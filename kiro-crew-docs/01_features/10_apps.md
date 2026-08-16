@@ -66,7 +66,7 @@
 
 ## 未確認事項
 
-- なし（builtin App一覧は `app.json` 20件の機械抽出、権限モデルは `security.md` で確認済み）
+- builtin App 20件の機械抽出は`05_meta/ledger-builtin-apps.md`に記録された過去の実行結果に基づく。一次情報スナップショットには`docs/`配下のドキュメントのみが含まれ、`src/kiro_crew/apps/builtins/*/app.json`というソースコードは含まれないため、本ページ執筆時点でこの20件を再現・再計数することはできない
 
 ## 関連リンク
 

@@ -13,7 +13,7 @@
 - [概要](#概要)
 - [取り込みパイプライン](#取り込みパイプライン)
 - [ハイブリッド検索](#ハイブリッド検索)
-- [埋め込みはOllama経由](#埋め込みはollama経由)
+- [埋め込みは共有in-process機構](#埋め込みは共有in-process機構)
 - [重複排除](#重複排除)
 - [未確認事項](#未確認事項)
 
@@ -23,7 +23,7 @@
 
 Knowledge Library は Kiro Crew 独自のパーソナルナレッジグラフです。ローカルの SQLite バックエンドのコーパスで、ドキュメント（フォルダ・アップロード・artifact・取得したURL）を取り込み、有界のLLMワーカープールでチャンク分割・エンティティ抽出を行い、`local_knowledge_search` MCP tool 経由でハイブリッド検索（FTS5キーワード＋グラフ探索＋任意のベクトル）をLLMに提供します。
 
-**すべての取り込みと検索はホスト内で完結します。** 外部呼び出しは、抽出／URL取得ワーカーのACP LLMターンと、ローカルのOllama埋め込みエンドポイントのみです。
+**すべての取り込みと検索はホスト内で完結します。** 外部呼び出しは、抽出／URL取得ワーカーのACP LLMターンのみです（埋め込みはMemoryと共有するin-process機構で行われ、外部エンドポイントを呼び出しません。詳細は下記「埋め込みは共有in-process機構」参照）。
 
 [04_memory-and-learning.md](04_memory-and-learning.md) の6層メモリとは**別の仕組み**です。公式ページも「automatic memory layers とは区別される、外部コンテンツのための厳選ドキュメントストア」と明記しています。ダッシュボードのサイドバーにある**組み込みサーフェス**であり、App Store の app ではありません。
 
@@ -42,7 +42,7 @@ files / uploads / artifacts / URLs
 | コンポーネント | 役割 |
 |--------------|------|
 | `knowledge/chunker.py` | `HeadingAwareChunker` — テキスト/Markdown/コード/スライドのチャンク分割 |
-| `knowledge/embedder.py` | `OllamaEmbedder` — Ollama経由のローカル埋め込み |
+| `knowledge/embedder.py` | `OllamaEmbedder` — Ollama経由のローカル埋め込み（下記「埋め込みは共有in-process機構」の注記参照。他の一次情報とは記述が一致しません） |
 | `knowledge/store.py` | `KnowledgeStore` — SQLiteスキーマ、items/entities/graph、FTS5同期 |
 | `knowledge/retrieval.py` | `HybridRetriever` — FTS5＋グラフ＋ベクトル検索をRRFで融合 |
 | `knowledge/ingestion.py` | `IngestionPipeline` — 読み込み→チャンク分割→抽出→保存のオーケストレーション |
@@ -54,20 +54,29 @@ FTS5（キーワード）＋グラフ探索＋任意のベクトル検索を **R
 
 `local_knowledge_search` MCP tool 経由でLLMに提供され、既定の `limit` は3件、`min_score = 0.012` 未満の結果は除外されます。出力は `redact_exfiltration_urls()` と `redact_credentials()` を通してから返され、呼び出しごとにSELの監査イベント（`success`／`no_results`／`not_configured`）が発生します。
 
-## 埋め込みはOllama経由
+## 埋め込みは共有in-process機構
 
-> **重要: メモリシステムとは異なる埋め込み機構です。**
+> **一次情報内に不整合があります（未解消）。**
 >
-> [04_memory-and-learning.md](04_memory-and-learning.md) の6層メモリは vendored `llama-cpp-python` による常時オン・in-process の埋め込みですが、**Knowledge Library のみ、ローカルのOllamaエンドポイントを使う `OllamaEmbedder` に委譲します**（既定モデル: `qwen3-embedding:0.6b`）。
+> - `docs/system-specs/modules/knowledge.md`（本ページの主要出典）は、Knowledge Libraryが「ローカルのOllama埋め込みエンドポイント」を使う `OllamaEmbedder`（`knowledge/embedder.py`）に依存すると記述しています（既定モデル: `qwen3-embedding:0.6b`）。
+> - 一方、以下4箇所は揃って「Memory と Knowledge Library は同じ埋め込み機構を共有する」と記述しています。
+>   - `docs/system-specs/modules/memory-skills-hooks.md`: `get_shared_embedder()` は「process-wide singleton, **shared by vector memory AND the knowledge library**」と明記。
+>   - `docs/guides/install.md`: `memory.embedding_provider` は `llama_cpp` のみを受理し、旧設定値は起動時に強制変換される。
+>   - `docs/architecture/overview.md`: 「Embeddings are always-on and in-process, computed by vendored llama-cpp-python … there is no external embedding daemon to install or configure」。
+>   - `config.md` の `KnowledgeConfig`: 「Embedding/retrieval settings live under MemoryConfig (shared via `create_embedder_from_config`)」。
+>
+> 本サイトは、多数一致し新設計（Ollama依存の削除）を裏付ける後者4箇所を採用します。すなわち、**[04_memory-and-learning.md](04_memory-and-learning.md) の6層メモリと同じ、vendored `llama-cpp-python` による常時オン・in-processの共有シングルトン埋め込み器**（`get_shared_embedder()`）を使うと理解しています。`knowledge.md`のOllama記述は、リポジトリ内で更新が反映されていない可能性がありますが、確定はできません。
+
+外部Ollamaデーモンへの依存が実際にない場合、埋め込みが未取得（モデルのバックグラウンドダウンロード中など）の間はベクトル検索の脚が縮退し、キーワード＋グラフのみで動作する点は変わりません。
 
 | 項目 | 値 |
 |------|-----|
-| 埋め込みモデル | `qwen3-embedding:0.6b`（`DEFAULT_MODEL`） |
+| 埋め込みモデル（共有GGUF） | `qwen3-embedding-0.6b-q8_0.gguf`（Memoryと共有。`memory-skills-hooks.md`の`ModelDownloadManager`が管理） |
 | リクエストごとのタイムアウト | 10秒（`knowledge.embed_timeout_secs` で上書き可） |
-| チャンクトークンサイズ・オーバーラップ | チャンクオーバーラップ200 |
+| チャンクオーバーラップ | 200 |
 | ベクトルRRFの重み | 2.0 |
 
-Knowledge Library の可用性確認プローブは、初回検索時にバックグラウンドでGGUFロードをトリガーします（Ollamaの可用性確認）。プローブが即座に `None` を返す間は、検索はキーワードのみで数ミリ秒で応答します。
+Knowledge Library の初回検索時には、共有embedderのバックグラウンドGGUFロードがまだ完了していない場合があります。ロードが完了する前は、プローブが即座に `None` を返すため、検索はキーワード＋グラフのみで数ミリ秒で応答します。
 
 ## 重複排除
 
@@ -75,7 +84,7 @@ Knowledge Library の可用性確認プローブは、初回検索時にバッ�
 
 ## 未確認事項
 
-- なし（本ページの記述は公式 `features/knowledge/` と `modules/knowledge.md` で確認済み）
+- なし。Knowledge Libraryの埋め込み機構は、公式ドキュメント `features/knowledge/`（「Knowledge items are embedded … using the same in-process embedding runtime as Memory」）および `memory-skills-hooks.md`／`install.md`／`overview.md`／`config.md`で「Memoryと共有するin-process機構」と確認済み。リポジトリの`docs/system-specs/modules/knowledge.md`（本ページの主要出典）のみ、更新が反映されていないOllama依存の記述を残す（上記「埋め込みは共有in-process機構」参照）
 
 ## 関連リンク
 

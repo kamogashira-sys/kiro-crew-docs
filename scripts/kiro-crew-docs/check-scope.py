@@ -27,6 +27,9 @@ DOC_ROOT = "kiro-crew-docs"
 LOCAL_ONLY = ("05_meta", "06_embedded-docs", "work_plans", "work_records")
 
 FORBIDDEN_SOURCE_RE = re.compile(r"docs/reference/kiro-cli/[a-z0-9/_-]*\.md")
+# ⚠️ 設計意図: `.md`拡張子を要求するのは、ディレクトリ自体への言及
+# （「`docs/reference/kiro-cli/`（23ファイル）はKiro CLI単体のリファレンス」といった
+# 事実説明）を誤検知しないため。個別ファイルを出典として引用する行のみを検出する。
 CLI_SOLO_FEATURE_RE = re.compile(
     r"(?:モデル選択|model selection)(?:機能)?(?:について)?(?!.*Kiro Crew)"
 )
@@ -68,6 +71,15 @@ def main():
                 "事実として書くのは可）"
             )
         errors.extend(print_path_errors)
+
+        for i, line in enumerate(txt.splitlines(), 1):
+            m = CLI_SOLO_FEATURE_RE.search(line)
+            if m and "Crew" not in line and "Kiro Crew" not in line:
+                errors.append(
+                    f"{path}:{i}: Kiro CLI 単体機能（{m.group(0)!r}）が Crew との関係を明示せずに"
+                    "解説されています。Kiro CLI 単体の機能は q-cli-docs の担当であり、Crewが"
+                    "それにどう依存するかという接点のみを解説してください"
+                )
 
         if "Kiro CLI" in txt:
             cli_mentions += 1

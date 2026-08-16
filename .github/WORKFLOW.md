@@ -239,6 +239,20 @@ docs: 01_features/09_security.md を執筆
 
 ---
 
+## 8️⃣ kiro-crew-docs GitHub Releaseの命名
+
+この節は、Kiro Crew本体の配布チャネルではなく、**本サイト`kiro-crew-docs`のGitHub Release運用**を定めます。
+
+- 新しいGitHub Releaseは、対象にした**Kiro Crewの安定版**に対応する場合だけ作成する。
+- GitタグとRelease名の先頭には、対象Kiro Crew安定版と**完全に同じ**`vX.Y.Z`を使う。タグは`vX.Y.Z`、タイトルは`vX.Y.Z — <内容>`の形式とする。
+- 本サイト独自の連番・独自のセマンティックバージョンを新たに採番しない。
+- Kiro Crew安定版に対応しない文書修正・検証修正だけではGitHub Releaseを作成しない。通常のコミットまたはPRとして公開する。
+- `-rc.N`、`-insider.N`、nightlyなどのプレリリースを対象にGitHub Releaseを作成しない。
+- 作成前に、対象Kiro CrewのGitHub Releaseが安定版であること、タグが未使用であること、対象commitと固定した一次情報の版・SHAを記録したことを確認する。
+- 既存の`v0.1.0`初回Releaseは、この規則の適用前に作成したものであり、遡及してタグやRelease名を変更しない。
+
+---
+
 ## 🔄 問題発見時の対応
 
 | 問題 | 対応 |

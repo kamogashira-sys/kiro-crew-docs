@@ -3,9 +3,9 @@
 > **本ページは Kiro Crew（OSS）の仕様です。**
 
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/windows-install.md>
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 **出典**（埋め込みのWindows対応に関する不整合の指摘）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/memory-skills-hooks.md>
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 
 ---
 
@@ -56,6 +56,12 @@ Windowsは**ネイティブなソースインストール**（`pip install -e ".
 
 - **CI成果物のみ**: nightly/releaseの実行と手動の`workflow_dispatch`プローブで生成されるが、**ダウンロードCDNには未公開**（今後 `publish-windows.yml` レーンで対応予定）
 - **署名は配線済みだが未有効化**: AWS Signerパスは準備済みだが、署名プロファイルがプロビジョニングされるまではスキップされる。**現在のインストーラは未署名**で、SmartScreenが「unrecognized app」の警告を出す（More info > Run anywayで進める）
+
+> **v0.3.0での「Windows is a first-class build」について**: CHANGELOG v0.3.0節 116行（`21584ea`）は「**Windows is a first-class build** — The same targets as macOS and Linux, with its own install guide（macOS・Linuxと同じターゲットになり、独自のインストールガイドを持つ）」と述べています。
+>
+> **一方、上記2点（CI成果物のみ・署名未有効化）は`21584ea`の`windows-install.md` 18〜30行でも文言レベルで変わっていません**（「**CI artifact only** — ... **not yet published to the download CDN**」「**Signing wired but not yet active** — ... installers are still unsigned and SmartScreen shows an "unrecognized app"」）。
+>
+> **したがって「first-class build」はビルドターゲットとしての扱いを指し、ダウンロードCDNでの配布開始や署名の有効化を意味しません。** 本サイトは一次情報で配布開始を確認できないため、上記2点の記述を維持します。**なぜCHANGELOGが「first-class」と表現し、配布ガイドが「CI成果物のみ」と述べるのかは公式に説明がないため、本サイトは推測しません。**
 
 ## 未確認事項
 

@@ -3,7 +3,7 @@
 > **本ページは Kiro Crew（OSS）の仕様です。**
 
 **出典**: <https://kiro.dev/sitemap.xml>（実測）／<https://kiro.dev/docs/crew/>
-（参照: 2026-08-16）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 
 ---
 

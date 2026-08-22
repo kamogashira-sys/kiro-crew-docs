@@ -30,8 +30,8 @@ CHANGELOG_URL = "https://raw.githubusercontent.com/kirodotdev/KiroCrew/main/CHAN
 SITEMAP_URL = "https://kiro.dev/sitemap.xml"
 TREE_URL = "https://api.github.com/repos/kirodotdev/KiroCrew/git/trees/main?recursive=1"
 
-KNOWN_LATEST_STABLE = "v0.2.0"
-KNOWN_STABLE_COUNT = 5
+KNOWN_LATEST_STABLE = "v0.3.0"
+KNOWN_STABLE_COUNT = 6
 KNOWN_CREW_PAGES = 43
 KNOWN_DOCS_FILES = 201
 

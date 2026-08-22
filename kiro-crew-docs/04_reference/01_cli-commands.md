@@ -3,18 +3,19 @@
 > **本ページは Kiro Crew（OSS）の仕様です。**
 
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/cli.md>
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 **出典**: <https://kiro.dev/docs/crew/interfaces/cli-reference/>（Page updated 表記あり）
 **出典**: リポジトリ README
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 **出典**（`cloud`サブコマンド完全一覧・`eval`/`telemetry`掲載漏れの指摘）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/cloud.md>
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 
 ---
 
 ## 📑 このページの内容
 
 - [コマンド一覧](#コマンド一覧)
+- [v0.3.0での変更](#v030での変更)
 - [クラウド・Pod（見落としやすいコマンド群）](#クラウドpod見落としやすいコマンド群)
 - [`token`の出力ストリーム契約](#tokenの出力ストリーム契約)
 - [未確認事項](#未確認事項)
@@ -39,7 +40,7 @@
 | `kirocrew learn add/list/remove` | 学習した修正の管理 |
 | `kirocrew run TASK.md` | 仕様ファイルから自律タスクを実行 |
 | `kirocrew token` | 認証トークン付きダッシュボードURLを出力 |
-| `kirocrew logout` | 全アクティブダッシュボードセッションを無効化（リフレッシュチェーン含む） |
+| `kirocrew logout` | 全アクティブダッシュボードセッションを無効化（リフレッシュチェーン含む）。**⚠️ v0.3.0のCHANGELOGはこれを新規変更として記載しているが、この記述は`64060f3`時点で既に存在した。下記「[`kirocrew logout` の変更に関する食い違い](#kirocrew-logout-の変更に関する食い違い裁定しない)」参照** |
 | `kirocrew manifest` | ユーザーエイリアス自動入力済みのSlackマニフェスト生成 |
 | `kirocrew update` | 最新版へ更新（git pull＋再ビルド） |
 | `kirocrew status` | 実行中Gatewayの統計を表示 |
@@ -66,8 +67,25 @@
 | `kirocrew --version` | 版表示 |
 | `kirocrew eval [--all] [--scenario <name>]` | マルチセッション評価ハーネス実行（`kirocrew gateway --test-mode`を別シェルで起動している必要あり）。**`modules/cli.md`には記載がなく、公式`cli-reference`ページのみに記載** |
 | `kirocrew telemetry disable` / `status` | 匿名テレメトリの無効化・送信内容の確認。**`modules/cli.md`には記載がなく、リポジトリREADMEのみに記載** |
+| **`kirocrew tailnet up`** | ダッシュボードをTailscaleネットワークに公開する。**⚠️ `modules/cli.md`（本ページの主出典）に記載がありません**。実在は`docs/guides/remote-and-mobile.md` 286・290・294行（`tailscale serve`を実行、443でHTTPS、印字されるURLはセッションを含まない）と`docs/system-specs/modules/governance.md` 1310行（`capabilities.tailnet_origin`）で確認できます（`21584ea`）。**リポジトリ内には未確定の将来仕様を扱うディレクトリにもこのコマンドへの言及がありますが、本サイトはそれを出典として使いません** |
 
-> **注記**: `eval`と`telemetry`は、本ページの主出典`modules/cli.md`「## Commands」節には記載がありません。しかし`eval`は公式`interfaces/cli-reference/`ページに、`telemetry`はリポジトリREADMEに明確に存在するコマンドとして記載されているため、掲載漏れを避けるためここに追加しています。`modules/cli.md`を主出典としても、他の一次情報だけに存在するコマンドを見落とさないよう、4系統（`modules/cli.md`・公式`cli-reference`・README・各機能ページ）を横断確認する必要があります。
+> **注記**: `eval`と`telemetry`は、本ページの主出典`modules/cli.md`「## Commands」節には記載がありません。しかし`eval`は公式`interfaces/cli-reference/`ページに、`telemetry`はリポジトリREADMEに明確に存在するコマンドとして記載されているため、掲載漏れを避けるためここに追加しています。**`tailnet`（v0.3.0で追加）はさらに事情が異なり、CLIコマンド台帳の4系統（①公式cli-referenceページ ②リポジトリREADME ③`--help` ④`modules/cli.md`）すべてに記載がありません**。実在は上表に示した別系統（ガイド・governance仕様）で確認しています。`modules/cli.md`を主出典としても、他の一次情報だけに存在するコマンドを見落とさないよう、複数系統を横断確認する必要があります。
+
+## v0.3.0での変更
+
+### `kirocrew policy show` の詳細
+
+`show`は拒否コマンドカタログを**カテゴリ別のグループ件数として要約**し、**`--ids`** を付けると各カテゴリのrule idを列挙します。**エンタープライズポリシーが有効かどうかに関わらず、全インストールで利用可能**です。
+
+出典: `docs/system-specs/modules/cli.md` 135行（`21584ea`）／CHANGELOG.md v0.3.0節 176行「**`kirocrew policy show` lists the denied-command catalog**, so you can read what is blocked without going to the source」。拒否ルールの件数（137）は [01_features/09_security.md](../01_features/09_security.md)、ポリシーの配置は [03_deployment/04_security-hardening.md](../03_deployment/04_security-hardening.md) を参照してください。
+
+### `kirocrew logout` の変更に関する食い違い（裁定しない）
+
+CHANGELOGはv0.3.0の破壊的変更として「**`kirocrew logout` now revokes refresh tokens**, not just access tokens（access tokenだけでなくrefresh tokenも失効させる）」を挙げています（19行）。**しかし本ページの主出典`modules/cli.md` 107行は、本サイトがv0.2.0として固定している`64060f3`の時点で既に「Revoke all active dashboard sessions, refresh chains included」と記述していました**（`21584ea`でも同一文）。
+
+つまり**CHANGELOGはこれをv0.3.0の新規変更として記載しているが、モジュール仕様は`64060f3`時点で既に同じ内容を記述していた**という状態です。**どちらが実際の変更時期を示すか・なぜ食い違うのかは公式に説明がないため、本サイトは推測せず両方を記載します。**
+
+出典: CHANGELOG.md v0.3.0節 19行（`21584ea`）／`docs/system-specs/modules/cli.md` 107行（`64060f3`・`21584ea`の両方で同一文であることを実測）。
 
 ## クラウド・Pod（見落としやすいコマンド群）
 

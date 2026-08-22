@@ -4,7 +4,7 @@
 
 **出典**: <https://kiro.dev/docs/crew/features/knowledge/>（Page updated 表記あり）
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/knowledge.md>
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 
 ---
 
@@ -15,6 +15,7 @@
 - [ハイブリッド検索](#ハイブリッド検索)
 - [埋め込みは共有in-process機構](#埋め込みは共有in-process機構)
 - [重複排除](#重複排除)
+- [v0.3.0での変更](#v030での変更)
 - [未確認事項](#未確認事項)
 
 ---
@@ -81,6 +82,27 @@ Knowledge Library の初回検索時には、共有embedderのバックグラウ
 ## 重複排除
 
 「1つのドキュメント・複数の場所」の原則で管理されます。2つのソースが同じドキュメントを持つ場合、1つの保存済みコピーと `source_locations` 行で管理され、片方が消えても別のソースが保持していれば削除されません。完全一致（ハッシュ）の重複は取り込み時にゲートされ、あいまい一致（埋め込みベース）は事後の掃き掃除で処理されます。
+
+## v0.3.0での変更
+
+### 自動取り込みがopt-in（既定オフ）になった
+
+**Knowledge の自動取り込み（auto-ingest）は既定で無効になりました。** 新規インストールは、ユーザーが明示的に有効化するまで**何も取り込まず、抽出にコストを一切かけません**。設定キーは `knowledge.auto_ingest_artifacts` です（[04_reference/02_configuration-keys.md](../04_reference/02_configuration-keys.md)参照）。
+
+出典: CHANGELOG.md v0.3.0節 24行（`21584ea`）「**Knowledge auto-ingest is opt-in.** A fresh install ingests nothing, and spends nothing on extraction, until you switch it on」。`src/kiro_crew/knowledge/artifact_ingest.py` のdocstringにも「Off by default, opt in with ...」と記載されています。
+
+### 支出に上限が設けられた
+
+Knowledge Libraryの支出（LLM抽出のコスト）が境界づけられました。CHANGELOG（202行）が挙げるのは以下です。
+
+- **sweep budget**（掃き掃除の予算）
+- **per-source rate limits and caps**（ソース単位のレート制限と上限）
+- **設定可能な抽出モデル**
+- **ソース単位のコストの可視化**
+- **抽出に失敗したファイルの表示**
+- 受け付ける形式に **JSON Lines・NDJSON・Org Mode** が追加
+
+あわせて **lessons が関連度で浮上する**ようになりました（199行）。ライブラリが大きくなっても、該当する古い修正がコンテキストから減衰して消えることがなくなり、lesson は「not this」句を独立したフィールドとして保持します（lessonsの仕組みは [04_memory-and-learning.md](04_memory-and-learning.md) を参照）。
 
 ## 未確認事項
 

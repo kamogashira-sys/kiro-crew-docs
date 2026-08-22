@@ -4,7 +4,7 @@
 
 **出典**: <https://kiro.dev/docs/crew/chat/artifacts/>・<https://kiro.dev/docs/crew/features/artifact-deploy/>（Page updated 表記あり）
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/artifacts.md>
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 
 ---
 
@@ -13,6 +13,7 @@
 - [2つのArtifacts概念](#2つのartifacts概念)
 - [チャット内Artifacts](#チャット内artifacts)
 - [Artifact Deploy](#artifact-deploy)
+- [v0.3.0での変更](#v030での変更)
 - [未確認事項](#未確認事項)
 
 ---
@@ -81,6 +82,22 @@
 ### TTLとreaper
 
 既定のTTL（72時間）のクリーンアップには**reaperスタック**（`install-reaper.sh`）— アカウント内のLambdaが期限切れのデプロイを削除します。これがない場合、有限TTLのデプロイは拒否されます（409）。
+
+## v0.3.0での変更
+
+### 画像がartifactとして保持されるようになった
+
+**エージェントが生成したスクリーンショットや図が、ギャラリー・詳細ページ・メタデータとともに保持されます。**
+
+> **既存の記述との関係**: `kind` enumに `image` が含まれること自体は以前から`modules/artifacts.md`（`21584ea`では41行）に定義されており、`image` artifactは**ラスタ画像**（テキストではない）としてバイナリで保存されます（同887行以降。SVGは意図的に image artifact ではなくマークアップとして扱われます）。v0.3.0の変更は、**エージェントが生成した画像がartifactとして保持され、閲覧のためのギャラリーと詳細ページが提供されるようになった**という点です。
+
+出典: CHANGELOG.md v0.3.0節 140行（`21584ea`）「**Images are kept as artifacts** — Screenshots and diagrams the agent produces are preserved with a gallery, a detail page, and metadata」。
+
+### 公開デプロイに明示的な承諾が必要になった
+
+**artifactを公開する（public deploy）際に、明示的な承諾が求められます。** また**運用者はこの経路を完全に閉じることもできます**。
+
+出典: CHANGELOG.md v0.3.0節 109行（`21584ea`）「**A public deploy asks first** — Publishing an artifact publicly requires an explicit acknowledgement, and an operator can close the path entirely」。上記「[Artifact Deploy](#artifact-deploy)」の4ステップフローに対する追加のゲートです。
 
 ## 未確認事項
 

@@ -4,7 +4,7 @@
 
 **出典**: <https://kiro.dev/docs/crew/installation/>（Page updated 表記あり）
 **出典**: リポジトリ README「App downloads」節、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md>
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 
 ---
 
@@ -14,6 +14,7 @@
 - [デスクトップ版の配布物](#デスクトップ版の配布物)
 - [チャネル（stable/insider/nightly）](#チャネルstableinsidernightly)
 - [前提要件](#前提要件)
+- [v0.3.0での変更](#v030での変更)
 - [未確認事項](#未確認事項)
 
 ---
@@ -62,6 +63,46 @@ curl -fsSL https://download.crew.kiro.dev/cli.sh | sh -s -- --version 0.1.0
 | **Python** | バックエンド | `>= 3.10`（`make build`は既定で3.12の`.venv`を用意） |
 | **Node.js + npm** | ダッシュボードのビルド | `20 \|\| >= 22`（ビルド時のみ必要。事前ビルド済みwheel/DMG/AppImageの利用者はNode不要） |
 | **`kiro-cli`** | LLM駆動 | 必須 |
+
+## v0.3.0での変更
+
+### 破壊的変更: Node.js 22が最小要件（24 LTS推奨）
+
+**v0.3.0からNode.js 22が最小要件になりました。Node 20でのインストールは拒否されます。**
+
+**この値の出典は、上記「前提要件」表の出典とは異なります。** 上表のNode.js要件（`20 || >= 22`）は`docs/guides/install.md` 40行（`website/package.json`の`engines`）に基づきますが、**この記述は`21584ea`でも更新されていません**。v0.3.0の実際の下限は以下の一次情報で確認できます。
+
+| 出典（`21584ea`） | 記述 |
+|---|---|
+| CHANGELOG.md v0.3.0節 **14行** | 「**Node.js 22 is now the minimum** (24 LTS recommended). A Node 20 install is ...」 |
+| `src/kiro_crew/constants.py` **33行** | `MIN_NODE_MAJOR = 22`。コメントは「22 is the oldest non-EOL line the frontend bundler supports（`ensure-node.sh`はより細かい22.12の下限を強制し、`.nvmrc`は推奨の24 LTSをピン留めする）」 |
+| `install.sh` **48行** | `NODE_MIN_MAJOR=22`。コメントは「Minimum Node major the frontend build actually supports」。**インストーラは検出段階でこの値を参照し、下限未満のnodeが既にある場合はそれを使わずインストールのはしごに進みます**（263行「Node.js ... is below the supported floor (>= $NODE_MIN_MAJOR) — installing a supported Node…」） |
+
+**⚠️ 本サイトは上表（`install.md`由来の`20 || >= 22`）を削除していません。** 公式`installation/`ページの「Node.js 18+」と`install.md`の「`20 || >= 22`」の食い違いは`21584ea`でも解消されておらず、そこに**インストーラ実体の22という第3の値**が加わった状態です。**どの記述が最終的に正か・なぜ更新が追随していないかは公式に説明がないため、本サイトは裁定しません。**
+
+### デスクトップ版のプラットフォームに関するCHANGELOGの記載
+
+CHANGELOGは以下2件を新機能として挙げています。**ただし上記「[デスクトップ版の配布物](#デスクトップ版の配布物)」表の内容と照らすと、いずれも本サイトが`64060f3`時点で既に記録していた内容と重なります。**
+
+| CHANGELOGの記載 | 本サイトの既存記述との関係 | CHANGELOG行 |
+|---|---|:---:|
+| **Linux ARM64** — ネイティブaarch64デスクトップビルド。**アーキテクチャチェック付きで公開**され、誤ったものをダウンロードすることがない | 既存表に「**Linux aarch64**（Graviton・Raspberry Pi・ARMラップトップ向け）`.AppImage`（x86_64とは独立したレーン）」として記載済み。**新規の情報は「アーキテクチャチェック付きで公開される」という点** | 114行 |
+| **Windowsがfirst-class build** — macOS・Linuxと**同じターゲット**になり、独自のインストールガイドを持つ | 既存表は「**Windows: デスクトップ版は未配布**。ソースインストールを実行しブラウザでダッシュボードを開く」と記載。**`21584ea`の`windows-install.md` 18〜30行は引き続き「CI artifact only ... not yet published to the download CDN」「Signing wired but not yet active ... installers are still unsigned」と述べており、配布状況は変わっていません** | 116行 |
+
+**⚠️ 「first-class build」はビルドターゲットとしての扱いを指し、ダウンロードCDNでの配布や署名の有効化を意味しません。** 本サイトは既存表の「デスクトップ版は未配布」という記述を**変更しません**（一次情報で配布開始を確認できないため）。Windowsの詳細は [02_windows.md](02_windows.md) を参照してください。
+
+### リリースチャネルの切替が再インストール不要になった
+
+**AboutからStable・Insider・Nightlyの間を移動でき、更新後にGatewayがその場で再起動します。**
+
+出典: CHANGELOG.md v0.3.0節 120行（`21584ea`）「**Change release channel without reinstalling** — Move between Stable, Insider, and Nightly from About, and the gateway restarts in place after an update」。**3チャネルの構成自体は変わっていません**（[02_update/02_release-policy.md](../02_update/02_release-policy.md)参照）。
+
+### その他
+
+- **システム全体のホットキー** — macOSは`Cmd+Shift+K`、それ以外は`Alt+Shift+K`でダッシュボードを呼び出せます。再設定・無効化も可能（118行）
+- **tailnetへの公開** — `kirocrew tailnet up`でダッシュボードをTailscaleネットワークに載せ、他のデバイスから到達できます（122行。[04_reference/01_cli-commands.md](../04_reference/01_cli-commands.md)参照）
+- **ダッシュボードからのcloud crew起動** — リモートEC2のプロビジョニング（デバイスサインインを含む）が、閉じてはいけないCLIセッションではなく**再起動可能なジョブ**として実行されます。`--subnet`でプライベートサブネットに固定できます（124行）
+- **GNOMEでのタイトルバー重複の解消** — 独自装飾を描くデスクトップで、重複していたネイティブタイトルバーがなくなりました（126行）
 
 ## 未確認事項
 

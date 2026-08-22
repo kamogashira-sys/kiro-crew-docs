@@ -36,6 +36,14 @@ Kiro Crew は **OSS であり、一次情報がリポジトリ（GitHub `kirodot
 - `docs/request-for-change/`（RFC）・`[Unreleased]`・プレリリースを実装済みとして書かない
 - **削除済み・移行専用の仕様書を出典にしない**（`features/claude-code-provider.md`・`post-launch-removals.md` 等。冒頭に `removed`／`no longer exists`／`legacy` の断りがあるもの）
 
+### 厳密な仕様調査での `src/` 解析確認（必須）
+
+厳密な仕様・実装挙動・既定値の調査を依頼された場合、**着手前に依頼者へKiro Crewの`src/`配下を直接解析するか必ず確認する**。依頼文に実施・非実施が明記されている場合は、その指定を確認済みとして扱う。
+
+- **実施する場合**: 固定するcommit SHA・対象パス・解析方法を定め、対応するソースを取得する。参照したファイルパス、実行コマンドまたは解析方法、確認結果を調査結果と作業記録へ残す。
+- **実施しない場合**: `src/`直接解析を実施しないことと、仕様書・公式ドキュメント等を根拠にした調査であることを調査結果と作業記録へ残す。実装の動作を直接確認したとは記述しない。
+- `docs/system-specs/`・`docs/architecture/`はリポジトリ内の仕様書であり、`src/`直接解析とは区別する。固定スナップショットに`src/`が含まれない場合、必要な固定commitを再取得してから解析する。
+
 ### 出典にしないもの
 
 | 対象 | 理由 |
@@ -90,7 +98,7 @@ curl -s "https://api.github.com/repos/kirodotdev/KiroCrew/git/trees/main?recursi
 
 ```
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/overview.md>
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 ```
 
 ### 方法2: 公式 docs 出典（インライン）
@@ -232,9 +240,9 @@ docs: 01_features/09_security.md を執筆
 - サンドボックス3モード（auto/strict/off）を記述
 - Owner lock を追加
 
-出典: https://kiro.dev/docs/crew/security/（参照: 2026-08-16）
+出典: https://kiro.dev/docs/crew/security/（参照: 2026-08-22）
 出典: https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/security.md
-（参照: 2026-08-16 / commit 64060f3 / 版 v0.2.0）
+（参照: 2026-08-22 / commit 21584ea / 版 v0.3.0）
 ```
 
 ---
@@ -294,4 +302,4 @@ make check-kiro-crew-all
 
 ---
 
-**最終更新**: 2026-08-16
+**最終更新**: 2026-08-22（v0.3.0対応で出典記法の例を更新）

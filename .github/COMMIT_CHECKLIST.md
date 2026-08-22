@@ -17,7 +17,7 @@
 - [ ] 機能仕様・設定値は公式ドキュメント（<https://kiro.dev/docs/crew/>）またはリポジトリの `docs/system-specs/` に基づく
 - [ ] 各ページに**出典日**を記載している
 - [ ] 公式に確認できない事項は「未確認」と明示している（推測で断定していない）
-- [ ] **0.1.2 時点の Zenn 記事の値を最新版（v0.2.0）の値として書いていないか**（本サイトで実際に発生した誤りの主因）
+- [ ] **0.1.2 時点の Zenn 記事の値を最新版（現在 v0.3.0）の値として書いていないか**（本サイトで実際に発生した誤りの主因）
 
 ### 2. 表現の確認
 
@@ -56,7 +56,7 @@
 
 ```
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/overview.md>
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 ```
 
 ### 公式 docs 出典の確認
@@ -148,9 +148,9 @@ docs: 01_features/09_security.md を執筆
 - サンドボックス3モード（auto/strict/off）を記述
 - Owner lock を追加
 
-出典: https://kiro.dev/docs/crew/security/（参照: 2026-08-16）
+出典: https://kiro.dev/docs/crew/security/（参照: 2026-08-22）
 出典: https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/security.md
-（参照: 2026-08-16 / commit 64060f3 / 版 v0.2.0）
+（参照: 2026-08-22 / commit 21584ea / 版 v0.3.0）
 ```
 
 ---
@@ -162,4 +162,4 @@ docs: 01_features/09_security.md を執筆
 
 ---
 
-**最終更新**: 2026-08-16
+**最終更新**: 2026-08-22（v0.3.0対応で出典記法の例を更新）

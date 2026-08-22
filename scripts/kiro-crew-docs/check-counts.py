@@ -39,8 +39,8 @@ LOCAL_ONLY = ("05_meta", "06_embedded-docs", "work_plans", "work_records")
 SSOT = {
     "S1": {"value": 43, "label": "公式crewページ数"},
     "S2": {"value": 201, "label": "docs/配下ファイル数"},
-    "S4": {"value": 5, "label": "安定版リリース数"},
-    "S5": {"value": 23, "label": "総リリース数"},
+    "S4": {"value": 6, "label": "安定版リリース数"},
+    "S5": {"value": 28, "label": "総リリース数"},
     "S11": {"value": 137, "label": "拒否コマンドルール件数"},
     "S12": {"value": 20, "label": "builtin App数"},
     "S13": {"value": 7, "label": "メッセージングチャネル数"},

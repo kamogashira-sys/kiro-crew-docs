@@ -4,9 +4,9 @@
 
 **出典**: <https://kiro.dev/docs/crew/chat/sessions/>（Page updated 表記あり）
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/session.md>
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 **出典**（`session.pool_size`既定値の不整合・`chat_turn_timeout_secs`クランプ上限の指摘）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/overview.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/config.md>
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 
 ---
 
@@ -17,6 +17,7 @@
 - [Warm Pool](#warm-pool)
 - [Session Resume](#session-resume)
 - [Circuit Breaker](#circuit-breaker)
+- [Session summaries（v0.3.0で追加）](#session-summariesv030で追加)
 - [未確認事項](#未確認事項)
 
 ---
@@ -78,6 +79,14 @@
 ## Circuit Breaker
 
 1セッションで5回連続失敗すると、リセットが強制されます。
+
+## Session summaries（v0.3.0で追加）
+
+サイドパネルのタブが、セッション内の各スレッドが**何をしようとしていたか**と**どこに着地したか**を示します。未解決のまま残っている項目は先頭に引き上げられます。過去のセッションもオンデマンドで要約できます。
+
+**opt-in**（既定では無効）で、**トークンコストが明示されます**。
+
+出典: CHANGELOG.md v0.3.0節 32行（`21584ea`）。
 
 ## 未確認事項
 

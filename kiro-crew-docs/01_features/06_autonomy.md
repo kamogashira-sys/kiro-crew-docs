@@ -3,12 +3,12 @@
 > **本ページは Kiro Crew（OSS）の仕様です。**
 
 **出典**: リポジトリ README「Autonomy modes」節
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 **出典**: <https://kiro.dev/docs/crew/features/cron/>・<https://kiro.dev/docs/crew/features/task-runner/>・<https://kiro.dev/docs/crew/features/subagents/>（Page updated 表記あり）
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/{heartbeat,taskrunner,subagent}.md>
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 **出典**（`agent.max_subagents`既定値の不整合の指摘）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/config.md>
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 
 ---
 
@@ -52,7 +52,15 @@ README が整理する、Crew がユーザーの入力なしで動く5つの起�
 
 推論を伴わないCronのScript／Commandは**ACPを経由しません**。
 
-> **Cron自体の最小間隔について**: 公式 `cli-reference` にはCronコマンド自体の最小間隔の明記がありません。確認できたのは「他エージェントからインポートしたスケジュールの検証ルール」（`learn-cron-dashboard.md`: 「Interval values must map exactly to an integer number of native seconds and remain at least 60 seconds」＝60秒以上・整数秒）のみです。Cron新規作成時にも同じ制約が適用されるかは**未確認**です。
+### v0.3.0での変更（Cron・スケジュールジョブ）
+
+- **各jobが自身の時間予算を設定できる（最大24時間）**。従来の固定30分上限を置き換えます。jobのinstructionsは50,000文字まで記述できます（CHANGELOG 184行）。**⚠️ これは job（スケジュールジョブ）の時間予算であり、[Subagent](#subagents) の1件あたりハードタイムアウト1800秒（30分）とは別項目です**（後者は`21584ea`でも変更されていません。[04_reference/05_limits.md](../04_reference/05_limits.md)参照）
+- **スケジュールジョブが毎実行ごとに再審査される**。作成時のみでなく発火ごとに現行ポリシーへ照合されるようになり、復元したバックアップが承認システムを迂回してshellコマンドを持ち込むことができなくなりました（CHANGELOG 215行）
+- **ジョブのPythonソースをターミナルなしで読める**。ジョブ詳細ビューにハイライト付き・読み取り専用で表示されます（CHANGELOG 186行）
+
+出典: CHANGELOG.md v0.3.0節（`21584ea`）。
+
+> **Cron自体の最小間隔（v0.3.0で確認）**: `docs/system-specs/modules/learn-cron-dashboard.md` 59行（`21584ea`）の「## Cron Service (`cron.py`)」節が、3種のスケジュール方式を「`every` (interval, **min 60s**), `at` (one-shot timestamp), `cron` (5-field expression)」と定義しています。これはCron Service全体の仕様記述であるため、`--every` による新規作成にも**60秒の下限が適用されます**。あわせて、他エージェントからインポートしたスケジュールにも「整数秒かつ60秒以上」の検証ルールがあります（同ファイル299行「Interval values must map exactly to an integer number of native seconds and remain at least 60 seconds」）。
 
 ## Heartbeat（分類外・実在する第6の仕組み）
 
@@ -91,12 +99,21 @@ README の起動モード5分類には無いが、`modules/heartbeat.md` に実�
 - 下限3・入れ子不可（サブエージェントからさらにサブエージェントは起動できない）
 - 空きメモリの admission gate（`spawn_min_memory_gb`）は**Linuxのみ有効**（`/proc/meminfo` を読む）。**非Linuxでは fails open**（チェックをスキップして起動を許可）。既定値は `subagent.md`・`config.md` のいずれにも数値の記載が見つかっていません（未確認）
 
+### v0.3.0での変更（Subagent・メモリガバナー）
+
+- **Subagentが主エージェントと同様に承認を求める**。subagentの承認要求が trust／auto-approve／プロンプトのいずれかを通るようになり、従来のように要求がドロップされて子プロセスが固まることがなくなりました（CHANGELOG 193行）
+- **メモリが致命的に少ないときの挙動が定義された**（メモリガバナー）。スケジュールジョブは延期され、新規subagentは拒否されます。ヘッダに現在の姿勢（posture）が表示されるため、重い作業が失敗する前に把握できます（CHANGELOG 181行）
+- **メモリ上限が全同時エージェントの合計に適用される**。上限が同時実行中の全エージェントにまとめて適用されるようになり、小さなspawnを多数行ってホストのメモリを食い潰すことができなくなりました（CHANGELOG 218行）
+
+出典: CHANGELOG.md v0.3.0節（`21584ea`）。
+
 ## 未確認事項
 
-- Cron自体（`--every`）の最小間隔（確認できたのはインポート経由の60秒下限のみ）
 - `spawn_min_memory_gb` の既定値（数値記載なし）
 - `agent.max_subagents` の真の既定値（0 vs 3の食い違いは未解消）
 - `agent.subagent_auto_max` の真の既定値（32 vs 16の食い違いは未解消）
+
+> **解消済み**: 「Cron自体（`--every`）の最小間隔」は、`21584ea`の`learn-cron-dashboard.md` 59行で**60秒**と確認できたため未確認事項から除きました（上記「Scheduled: Cron」節参照）。
 
 ## 関連リンク
 

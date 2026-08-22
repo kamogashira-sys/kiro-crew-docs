@@ -44,7 +44,7 @@ body:
       description: |
         If this concerns a specific release, give the version. If based on the
         repository directly, give the commit SHA you referenced.
-      placeholder: e.g., v0.2.0 or commit 64060f3
+      placeholder: e.g., v0.3.0 or commit 21584ea
 
   - type: textarea
     id: additional-context

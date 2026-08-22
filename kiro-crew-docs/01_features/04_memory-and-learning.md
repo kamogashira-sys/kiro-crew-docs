@@ -4,12 +4,12 @@
 
 **出典**: <https://kiro.dev/docs/crew/features/memory/>（Page updated 表記あり）
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/memory-skills-hooks.md>
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/auto-improvement.md>
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 **出典**（埋め込み共有機構の裏付け）: <https://kiro.dev/docs/crew/features/knowledge/>（Page updated 表記あり）
 **出典**（同上）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/overview.md>
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 
 ---
 
@@ -20,6 +20,7 @@
 - [減衰の3機構](#減衰の3機構)
 - [競合解決の優先順位](#競合解決の優先順位)
 - [メモリモード](#メモリモード)
+- [メモリ編集の保護（v0.3.0で追加）](#メモリ編集の保護v030で追加)
 - [チャネルごとの記録](#チャネルごとの記録)
 - [埋め込みの実行方式](#埋め込みの実行方式)
 - [Self-evolving（Auto-Improvement）](#self-evolvingauto-improvement)
@@ -152,6 +153,12 @@ Lessons が最優先されるのは、「常にこれに従う。デフォルト
 ## メモリモード
 
 Crew のセッションには `memory_mode` があり、値は **`persistent`（永続）・`incognito`（匿名）・`temporary`（一時）** の3種です（`history.py` の `INCOGNITO_MEMORY_MODES` として実装。`session-summary.md` にも同様の記述あり）。`incognito`・`temporary` のセッションは「restricted（制限）」として扱われ、統合（consolidation）・レッスン抽出・メモリコンテキストの注入がブロックされます。ただしセッションのJSONL自体（タブ復旧・Gateway再起動時の復元のため）は書き込まれます。
+
+## メモリ編集の保護（v0.3.0で追加）
+
+**メモリの編集には「認識済みのセッション」が必要になりました。** 偽造されたキーで保存済みメモリを削除できる経路が閉じられています。
+
+出典: CHANGELOG.md v0.3.0節 226行（`21584ea`）「**Memory edits require a recognised session**, closing a path where a forged key could delete stored memory」。セキュリティ全体の文脈は [09_security.md](09_security.md) を参照してください。
 
 ## チャネルごとの記録
 

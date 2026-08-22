@@ -4,7 +4,7 @@
 
 **出典**: <https://kiro.dev/docs/crew/chat/>（配下の各ページ、Page updated 表記あり）
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/{autopilot,side,file-search,themes}.md>
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 
 ---
 

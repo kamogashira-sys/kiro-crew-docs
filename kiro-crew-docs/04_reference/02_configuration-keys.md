@@ -3,11 +3,11 @@
 > **本ページは Kiro Crew（OSS）の仕様です。**
 
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/config.md>
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 **出典**（`session.pool_size`既定値の不整合の指摘）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/overview.md>
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 **出典**（`agent.max_subagents`既定値の不整合の指摘）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/subagent.md>
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 
 ---
 
@@ -47,6 +47,9 @@
 | `hooks.denied_commands.user_added` | – | インポート等で追加されたユーザー定義の拒否ルール |
 | `mcp_gateway.enabled` | – | MCP Gatewayの有効化 |
 | `dashboard.url` | 省略時 `localhost:5476` | ダッシュボードの到達先URL |
+| **`telegram.bot_token`**（v0.3.0） | `""`（空） | **Telegramのbot token（@BotFather発行）。v0.3.0でmulti-accountが撤回され、単一トークンのみが受理されるようになった**。従来のaccount mapは**parseされ保持されるが読まれない**。**`config.md` 753行は「prefer the `TELEGRAM_BOT_TOKEN` credential」と記述しており、設定ファイルに直接書くよりも認証情報（環境変数・`.env`）経由が推奨されます**（[01_features/11_interfaces.md](../01_features/11_interfaces.md)参照） |
+| **`knowledge.auto_ingest_artifacts`**（v0.3.0） | **`false`** | **Knowledge Libraryへのローカルartifact自動取り込み。v0.3.0でopt-in（既定オフ）化された**。有効にすると既存のartifactもバックフィルされる（[01_features/05_knowledge-library.md](../01_features/05_knowledge-library.md)参照） |
+| **`knowledge.embed_timeout_secs`** | `10.0` | Knowledge Libraryの1リクエストあたり埋め込みタイムアウト（秒）。0・未設定は組み込みの既定値10秒になる |
 
 ## 環境変数
 

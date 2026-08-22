@@ -22,7 +22,7 @@ import re
 import sys
 
 DOC_FILE = "kiro-crew-docs/02_update/01_changelog.md"
-VALID_STABLE_VERSIONS = ["0.1.0", "0.1.1", "0.1.2", "0.1.3", "0.2.0"]
+VALID_STABLE_VERSIONS = ["0.1.0", "0.1.1", "0.1.2", "0.1.3", "0.2.0", "0.3.0"]
 
 VERSION_HEAD_RE = re.compile(r'(?m)^### v(\d+\.\d+\.\d+)\s*$')
 DATE_ROW_RE = re.compile(r'\|\s*(CHANGELOG\.md|GitHub Release\s*公開日)\s*\|\s*(\d{4}-\d{2}-\d{2})\s*\|')

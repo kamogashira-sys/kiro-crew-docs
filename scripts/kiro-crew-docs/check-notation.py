@@ -73,7 +73,7 @@ DATE_OK_RE = re.compile(r"Page updated|出典|公式|引用|略記|月名フル|
 # (d) 存在しない版番号の創作
 # ------------------------------------------------------------
 VERSION_RE = re.compile(r"\bv(\d+)\.(\d+)\.(\d+)\b")
-VALID_STABLE_VERSIONS = {"0.1.0", "0.1.1", "0.1.2", "0.1.3", "0.2.0"}
+VALID_STABLE_VERSIONS = {"0.1.0", "0.1.1", "0.1.2", "0.1.3", "0.2.0", "0.3.0"}
 VERSION_ALLOW = [
     (re.compile(r"-rc\.\d+"), "プレリリース版への言及（実装済みとして書かない文脈）"),
 ]
@@ -107,6 +107,12 @@ ALLOWED_CLI_COMMANDS = {
     "telemetry", "security", "policy",  # README限定（公式ページには無いが実在確認済み）
     "cloud", "pod", "memory", "knowledge", "workspace", "mcp-cron", "mcp-core", "mcp-computer",
     # ↑ modules/cli.md でのみ確認できたコマンド群（Phase 4で追加。公式cli-reference/READMEには無い）
+    "tailnet",
+    # ↑ v0.3.0で追加。⚠️ CLIコマンド台帳の4系統すべて（公式cli-referenceページ・README・
+    #   --help・modules/cli.md）に記載がない。実在はCHANGELOG v0.3.0節122行、
+    #   docs/guides/remote-and-mobile.md 286/290/294行、
+    #   docs/system-specs/modules/governance.md 1310行（capabilities.tailnet_origin）で確認
+    #   （commit 21584ea）。docs/request-for-change/のRFCは出典として使わない。
 }
 # 明示的に「記載しない」と判定した語。現時点では該当なし（cloud/podはmodules/cli.mdで実在確認済み）
 DENIED_CLI_COMMANDS = set()

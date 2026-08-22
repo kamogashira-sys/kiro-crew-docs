@@ -4,7 +4,7 @@
 
 **出典**: <https://kiro.dev/docs/crew/troubleshooting/>（Page updated 表記あり）
 **出典**（venvパスの不整合の指摘）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md>
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 
 ---
 

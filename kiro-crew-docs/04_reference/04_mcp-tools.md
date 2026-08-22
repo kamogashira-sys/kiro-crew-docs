@@ -3,7 +3,7 @@
 > **本ページは Kiro Crew（OSS）の仕様です。**
 
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/mcp.md>
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 
 ---
 
@@ -12,6 +12,7 @@
 - [3つの管理対象サーバ](#3つの管理対象サーバ)
 - [ツール一覧](#ツール一覧)
 - [ブラウザはMCPではない](#ブラウザはmcpではない)
+- [v0.3.0でのMCP関連の変更](#v030でのmcp関連の変更)
 - [未確認事項](#未確認事項)
 
 ---
@@ -41,6 +42,19 @@
 ## ブラウザはMCPではない
 
 **ブラウザ自動化はMCPツールとして提供されません。** `playwright-cli` をシェル機能として実行するため、登録すべきMCPサーバは存在しません。詳細は [01_features/13_computer-and-browser.md](../01_features/13_computer-and-browser.md) を参照してください。
+
+> **v0.3.0でも変わりません**: v0.3.0でBrowser panel（ダッシュボードのサイドパネルをエージェントが直接操作する経路）が追加されましたが、`docs/system-specs/modules/browser.md` 10行（`21584ea`）は引き続き「The browser is a **shell capability, not a tool namespace.**」と記述しており、**MCPサーバ化されたわけではありません**。同ファイル362行も「why browsing is deliberately not an MCP」として`architecture/mcp.md`を参照しています。
+
+## v0.3.0でのMCP関連の変更
+
+サーバ管理・ツール提示に関する変更が入っています（概念面の詳細は [01_features/08_mcp-integration.md](../01_features/08_mcp-integration.md) を参照）。
+
+- **プロセス共有の可否をプローブ**（サーバ単位の選択がグローバルスイッチを置き換え）
+- **per-agent tool sets**（サーバを特定エージェントに割り当て）
+- **Tool Searchの遅延提示の度合いを設定可能**
+- **認証付きカスタムサーバ**（リモートMCPサーバ追加時にリクエストヘッダを指定可）
+
+出典: CHANGELOG.md v0.3.0節 166・169・172・174行（`21584ea`）。
 
 ## 未確認事項
 

@@ -4,11 +4,11 @@
 
 **出典**: <https://kiro.dev/docs/crew/security/>（Page updated 表記あり）
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/security.md>
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/resource-protection.md>
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 **出典**（egress既知ギャップの根拠）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/security-deep-dive.md>
-（参照: 2026-08-16 / commit `64060f3` / 版 v0.2.0）
+（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 
 ---
 
@@ -18,6 +18,7 @@
 - [バックエンド不在時の挙動](#バックエンド不在時の挙動)
 - [macOSでの相互排他](#macosでの相互排他)
 - [ガバナンスファイルの配置](#ガバナンスファイルの配置)
+- [terminal出力とcredentialについて（v0.3.0・裁定しない）](#terminal出力とcredentialについてv030裁定しない)
 - [シークレットと環境変数](#シークレットと環境変数)
 - [ネットワークegressについて](#ネットワークegressについて)
 - [未確認事項](#未確認事項)
@@ -44,6 +45,10 @@ kirocrew config set agent.sandbox <mode>
 kirocrew config set agent.sandbox_allow_unsandboxed_exec true
 ```
 
+> **⚠️ v0.3.0での重要な変更**: **governed host（ポリシーがピン留めされたホスト）では、ポリシーがローカル設定に勝ちます。これは`agent.sandbox_allow_unsandboxed_exec`のopt-inに対しても適用されます**。つまりポリシーが非サンドボックス実行を禁じている環境では、上記コマンドで`true`にしても実行は通りません。
+>
+> 出典: CHANGELOG.md v0.3.0節 223行（`21584ea`）「**A pinned policy floor cannot be lowered locally** — On a governed host the policy wins over local configuration, **including over the unsandboxed-exec opt-in**」。ポリシーの配置は下記「[ガバナンスファイルの配置](#ガバナンスファイルの配置)」を参照してください。
+
 ## macOSでの相互排他
 
 macOSでは kiro-cli ≥ 2.13 の内蔵サンドボックスとの**相互排他**が働きます。カーネルが入れ子のサンドボックスプロファイルに対して`EPERM`を返すため、1つのプロセス起動につき有効な層は厳密に1つです。kiro-cli自身の内蔵サンドボックスが有効な場合、Kiro Crewはそちらに処理を委譲します。これは「既定が`off`だから委譲される」のではなく、**設定駆動の決定論的な委譲**です。
@@ -62,6 +67,14 @@ kirocrew policy show        # 実効ポリシーを表示
 kirocrew policy validate    # ポリシーファイルのエラーを検査
 kirocrew policy explain     # ツール呼び出しがどう評価されるかを説明
 ```
+
+> **v0.3.0での`policy show`の詳細**: `show`は拒否コマンドカタログを**カテゴリ別のグループ件数として要約**し、`--ids`を付けると各カテゴリのrule idを列挙します。**エンタープライズポリシーが有効かどうかに関わらず、全インストールで利用可能**です（`docs/system-specs/modules/cli.md` 135行・`21584ea`）。CHANGELOG（176行）は「拒否されている内容をソースを見ずに読めるようになった」と述べています。拒否ルールの件数（137）は [01_features/09_security.md](../01_features/09_security.md) を参照してください。
+
+## terminal出力とcredentialについて（v0.3.0・裁定しない）
+
+**v0.3.0のCHANGELOGには、terminal出力のcredential秘匿化について相反する記述が同一版節内に存在します。** 本サイトは裁定せず4件を併記しています。**運用上は、terminalに秘密を表示させないことを前提に設計するのが安全側の判断です。**
+
+詳細な4件の併記は [01_features/09_security.md](../01_features/09_security.md) の「v0.3.0での変更」を参照してください。
 
 ## シークレットと環境変数
 

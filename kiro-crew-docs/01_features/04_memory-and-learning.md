@@ -4,9 +4,9 @@
 
 **出典**: <https://kiro.dev/docs/crew/features/memory/>（Page updated 表記あり）
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/memory-skills-hooks.md>
-（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
+（参照: 2026-08-29 / commit `bba3f195212992eaa07d83c082e1ec55e395c32b` / 版 v0.4.1）
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/auto-improvement.md>
-（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
+（参照: 2026-08-29 / commit `bba3f195212992eaa07d83c082e1ec55e395c32b` / 版 v0.4.1）
 **出典**（埋め込み共有機構の裏付け）: <https://kiro.dev/docs/crew/features/knowledge/>（Page updated 表記あり）
 **出典**（同上）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/overview.md>
 （参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
@@ -73,7 +73,7 @@ SQLite に保存される構造化された事実。キーの接頭辞は `pref.
 
 ### Lessons（学習した修正）
 
-デフォルトの振る舞いを上書きする、ユーザーが教えたルールです。「常にXをして」と言ったとき、または会話中に修正パターンが検出されたときに作成されます。重複排除は部分文字列一致＋トピック重複（50%超のキーワード重複→新しい方に置換）。**global（グローバル）とworkspace（ワークスペース）のスコープ**があります（一次情報: `memory-skills-hooks.md`「`[Learned corrections]`（global + workspace）」）。`[Learned corrections]` という独立したブロックとして注入されます。
+デフォルトの振る舞いを上書きする、ユーザーが教えたルールです。「常にXをして」と言ったとき、または会話中に修正パターンが検出されたときに作成されます。重複排除は部分文字列一致＋トピック重複（50%超のキーワード重複→新しい方に置換）。**global（グローバル）とworkspace（ワークスペース）のスコープ**があります。v0.4.0 CHANGELOGは、scope optionが以前は機能していなかったが、この版で動作するようになったと記載します（一次情報: `memory-skills-hooks.md`「`[Learned corrections]`（global + workspace）」）。`[Learned corrections]` という独立したブロックとして注入されます。
 
 ## 記憶がどう作られるか
 

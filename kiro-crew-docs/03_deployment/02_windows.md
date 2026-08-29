@@ -3,15 +3,15 @@
 > **本ページは Kiro Crew（OSS）の仕様です。**
 
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/windows-install.md>
-（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
+（参照: 2026-08-29 / commit `bba3f195212992eaa07d83c082e1ec55e395c32b` / 版 v0.4.1）
 **出典**（埋め込みのWindows対応に関する不整合の指摘）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/memory-skills-hooks.md>
-（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
+（参照: 2026-08-29 / commit `bba3f195212992eaa07d83c082e1ec55e395c32b` / 版 v0.4.1）
 
 ---
 
 ## 📑 このページの内容
 
-- [ソースインストールが唯一の経路](#ソースインストールが唯一の経路)
+- [デスクトップ版の導入](#デスクトップ版の導入)
 - [OSレベルサンドボックス層の不在](#osレベルサンドボックス層の不在)
 - [機能別対応状況](#機能別対応状況)
 - [デスクトップ版の状況](#デスクトップ版の状況)
@@ -19,9 +19,9 @@
 
 ---
 
-## ソースインストールが唯一の経路
+## デスクトップ版の導入
 
-Windowsは**ネイティブなソースインストール**（`pip install -e ".[voice]"`、`python -m kiro_crew gateway` で起動）を実行します。すべてのPOSIX専用のプロセス・シグナル・ファイルロック・メトリクス呼び出しは `kiro_crew.platform_compat` を経由します。
+**v0.4.0でWindowsは署名済みinstallerをstableチャネルで配布し、in-app auto-updateに対応します。** ソースインストールは開発・検証などで引き続き利用できますが、唯一の導入経路ではありません。すべてのPOSIX専用のプロセス・シグナル・ファイルロック・メトリクス呼び出しは `kiro_crew.platform_compat` を経由します。
 
 ## OSレベルサンドボックス層の不在
 
@@ -54,14 +54,8 @@ Windowsは**ネイティブなソースインストール**（`pip install -e ".
 
 ## デスクトップ版の状況
 
-- **CI成果物のみ**: nightly/releaseの実行と手動の`workflow_dispatch`プローブで生成されるが、**ダウンロードCDNには未公開**（今後 `publish-windows.yml` レーンで対応予定）
-- **署名は配線済みだが未有効化**: AWS Signerパスは準備済みだが、署名プロファイルがプロビジョニングされるまではスキップされる。**現在のインストーラは未署名**で、SmartScreenが「unrecognized app」の警告を出す（More info > Run anywayで進める）
+現在の配布状況はv0.4.0 CHANGELOGの「Signed Windows installer」に基づきます。Windows installerは署名済みでstableチャネルから提供され、in-app auto-updateに対応します。旧v0.3.0資料にあるCI artifactのみ・CDN未公開・未署名という説明は、その時点の履歴であり、現在の配布状況を示しません。
 
-> **v0.3.0での「Windows is a first-class build」について**: CHANGELOG v0.3.0節 116行（`21584ea`）は「**Windows is a first-class build** — The same targets as macOS and Linux, with its own install guide（macOS・Linuxと同じターゲットになり、独自のインストールガイドを持つ）」と述べています。
->
-> **一方、上記2点（CI成果物のみ・署名未有効化）は`21584ea`の`windows-install.md` 18〜30行でも文言レベルで変わっていません**（「**CI artifact only** — ... **not yet published to the download CDN**」「**Signing wired but not yet active** — ... installers are still unsigned and SmartScreen shows an "unrecognized app"」）。
->
-> **したがって「first-class build」はビルドターゲットとしての扱いを指し、ダウンロードCDNでの配布開始や署名の有効化を意味しません。** 本サイトは一次情報で配布開始を確認できないため、上記2点の記述を維持します。**なぜCHANGELOGが「first-class」と表現し、配布ガイドが「CI成果物のみ」と述べるのかは公式に説明がないため、本サイトは推測しません。**
 
 ## 未確認事項
 

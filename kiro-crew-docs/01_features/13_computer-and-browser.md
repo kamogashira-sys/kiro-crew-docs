@@ -3,9 +3,9 @@
 > **本ページは Kiro Crew（OSS）の仕様です。**
 
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/computer-use.md>
-（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
+（参照: 2026-08-29 / commit `bba3f195212992eaa07d83c082e1ec55e395c32b` / 版 v0.4.1）
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/browser.md>
-（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
+（参照: 2026-08-29 / commit `bba3f195212992eaa07d83c082e1ec55e395c32b` / 版 v0.4.1）
 
 ---
 
@@ -13,6 +13,7 @@
 
 - [Computer Use（デスクトップGUI自動化）](#computer-useデスクトップgui自動化)
 - [ブラウザ自動化](#ブラウザ自動化)
+- [v0.4.0での変更](#v040での変更)
 - [v0.3.0での変更](#v030での変更)
 - [未確認事項](#未確認事項)
 
@@ -27,7 +28,7 @@
 - **要素指定・非ポインタ入力が既定であり、そのままで使える唯一の方法です。** `element_index` を指定した `computer_click` は `AXPress` を実行し、ポインタを一切介さずにコントロールを起動します。これがインデックスがある場合に `auto` が常に選ぶ方法です。座標クリックと `computer_drag` はキャンバス・地図・独自描画UI向けに用意されており、これらも物理カーソルには触れません
 - **操作者がオフバンドで有効化するまで無効**です。有効化ファイルはエージェントが読み書きできません（キーストーン方式）
 
-**macOS限定**（このリリースでは）。**Windows・Linuxは型付きの拒否を返します。**
+**v0.4.0時点でmacOSとWindowsに対応します**。WindowsではUI Automationによりネイティブアプリを読み取り・操作します。Linux対応はv0.4.0 CHANGELOGでは確認できないため、対応プラットフォームに含めません。
 
 ### 実際のカーソルを動かす経路
 
@@ -59,6 +60,12 @@ agent turn ──shell──▶ playwright-cli <verb> …
 
 > **版差の注記**: AWS Japan社員のZenn記事（0.1.2時点）はブラウザ自動化を「Playwright MCP」と記述していますが、これは執筆時点の設計から変わった可能性があります。v0.2.0以降の一次情報は明確に「MCPサーバではなくシェル機能」と述べているため、本サイトはこれを正として採用します。
 
+## v0.4.0での変更
+
+**Windows Computer Use** — v0.4.0 CHANGELOGは、Windows UI AutomationでネイティブWindowsアプリを読み取り・操作できるようになったと記載します。これにより、旧版資料の「macOS限定」「Windowsは型付き拒否」は現在の説明としては用いません。
+
+出典: CHANGELOG.md v0.4.0節（`bba3f195212992eaa07d83c082e1ec55e395c32b`）。
+
 ## v0.3.0での変更
 
 ### Browser panelについて（CHANGELOGとモジュール仕様が食い違う・裁定しない）
@@ -80,9 +87,9 @@ v0.3.0のCHANGELOGは「**The Browser panel is the browser**（Browser panelが�
 
 ### Computer Useの提示方法の変更
 
-**Computer Useは「動作する環境にのみ提示される」ようになりました。** ネイティブなデスクトップ自動化は**macOSに出現します**。従来の「どこでも提示して失敗する」方式が改められたものです。
+**Computer Useは「動作する環境にのみ提示される」ようになりました。** ネイティブなデスクトップ自動化は**当時はmacOSに出現しました**。従来の「どこでも提示して失敗する」方式が改められたものです。
 
-**⚠️ v0.3.0でプラットフォームが拡大したわけではありません。** 上記「[Computer Use（デスクトップGUI自動化）](#computer-useデスクトップgui自動化)」の**macOS限定という記述は引き続き正しい**です。変わったのは「動作しない環境にも機能を提示していた」という**UIの提示方法**です。
+**⚠️ この記述はv0.3.0時点のものです。** v0.4.0でWindows対応が追加されました。変わったのは「動作しない環境にも機能を提示していた」という**UIの提示方法**です。
 
 出典: CHANGELOG.md v0.3.0節 57行（`21584ea`）「**Computer Use is offered only where it works** — Native desktop automation appears on macOS」。
 

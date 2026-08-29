@@ -4,14 +4,14 @@
 
 **出典**: <https://kiro.dev/docs/crew/interfaces/>（配下の各ページ、Page updated 表記あり）
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/{messaging,persistent-agent-channels}.md>
-（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
+（参照: 2026-08-29 / commit `bba3f195212992eaa07d83c082e1ec55e395c32b` / 版 v0.4.1）
 
 ---
 
 ## 📑 このページの内容
 
 - [1つのGateway・複数のサーフェス](#1つのgateway複数のサーフェス)
-- [メッセージングチャネル7種](#メッセージングチャネル7種)
+- [メッセージングチャネル](#メッセージングチャネル)
 - [チャネルの振る舞い](#チャネルの振る舞い)
 - [v0.3.0での変更](#v030での変更)
 - [未確認事項](#未確認事項)
@@ -29,7 +29,7 @@ Kiro Crewは1つのGateway（単一のasyncioプロセス）が複数のサー�
 | **CLI** | `kirocrew chat` |
 | **メッセージングチャネル** | Slack・Telegram・Discord・Teams・Webex・WeCom・WeChat |
 
-## メッセージングチャネル7種
+## メッセージングチャネル
 
 | チャネル | 用途 |
 |---------|------|
@@ -40,6 +40,9 @@ Kiro Crewは1つのGateway（単一のasyncioプロセス）が複数のサー�
 | Webex | （公式一覧に記載。詳細ページ参照） |
 | WeCom | （公式一覧に記載。詳細ページ参照） |
 | WeChat | （公式一覧に記載。詳細ページ参照） |
+| WhatsApp | v0.4.0で追加。QRコードで個人アカウントをリンク |
+| iMessage | v0.4.0で追加。macOSのMessages.appをローカルbridgeで利用 |
+| Feishu | v0.4.0で追加。Feishu（Lark / 飞书）のネイティブチャネル |
 
 ## チャネルの振る舞い
 
@@ -48,6 +51,12 @@ Kiro Crewは1つのGateway（単一のasyncioプロセス）が複数のサー�
 - **スレッド単位のセッション**: チャネルのスレッドが論理セッションにマッピングされる（[02_sessions.md](02_sessions.md)参照）
 - **ダッシュボードセッションのSlack引き渡し**: `set_slack_link(session_key, reply_ts, channel)` で会話へのリンクを保持
 - **永続エージェントチャネル**: `persistent-agent-channels.md` に定義される、チャネルとエージェントの長期的な紐付け
+
+## v0.4.0での変更
+
+v0.4.0 CHANGELOGはWhatsApp・iMessage・Feishuの3チャネル追加を記載します。チャネル数は、公式docs 7、README 8、messaging仕様 10と一次情報間で一致しないため、本ページは総数を断定しません。Teams、Telegram、WebexのSlackとの機能パリティ、およびDiscordのコマンドメニュー等も同CHANGELOGで記載されています。
+
+出典: CHANGELOG.md v0.4.0節（`bba3f195212992eaa07d83c082e1ec55e395c32b`）。
 
 ## v0.3.0での変更
 

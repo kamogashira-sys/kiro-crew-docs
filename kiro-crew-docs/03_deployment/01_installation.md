@@ -4,7 +4,7 @@
 
 **出典**: <https://kiro.dev/docs/crew/installation/>（Page updated 表記あり）
 **出典**: リポジトリ README「App downloads」節、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md>
-（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
+（参照: 2026-08-29 / commit `bba3f195212992eaa07d83c082e1ec55e395c32b` / 版 v0.4.1）
 
 ---
 
@@ -35,7 +35,8 @@
 | **macOS** | **ユニバーサル `.dmg` 1種**（Apple Silicon＋Intel）。Electronシェルはlipo結合、バックエンドはlipo不可のため`process.arch`で選択される2つの完全なPBSツリーとして同梱 |
 | **Linux x86_64** | `.AppImage`（独自のビルド・auto-update feed・SLSA provenance attestationを持つ） |
 | **Linux aarch64**（Graviton・Raspberry Pi・ARMラップトップ向け） | `.AppImage`（同上。x86_64とは**独立したレーン**） |
-| **Windows** | **デスクトップ版は未配布**。ソースインストールを実行しブラウザでダッシュボードを開く |
+| **Linux desktop packages** | `.deb` / `.rpm`。glibc 2.34以上が必要。古いhostはone-line CLI installを利用 |
+| **Windows** | **署名済みinstaller**をstable配布。in-app auto-updateに対応 |
 
 `uname -m` で `x86_64` か `aarch64` かを確認できます。
 
@@ -63,6 +64,10 @@ curl -fsSL https://download.crew.kiro.dev/cli.sh | sh -s -- --version 0.1.0
 | **Python** | バックエンド | `>= 3.10`（`make build`は既定で3.12の`.venv`を用意） |
 | **Node.js + npm** | ダッシュボードのビルド | `20 \|\| >= 22`（ビルド時のみ必要。事前ビルド済みwheel/DMG/AppImageの利用者はNode不要） |
 | **`kiro-cli`** | LLM駆動 | 必須 |
+
+## v0.4.0での変更
+
+Windowsは署名済みinstallerとin-app auto-updateをstableチャネルで提供し、Linux desktopは`.deb`/`.rpm`を提供します。これはv0.4.0 CHANGELOGの記述であり、旧版の「Windows desktop未配布」は現行状況としては用いません。
 
 ## v0.3.0での変更
 

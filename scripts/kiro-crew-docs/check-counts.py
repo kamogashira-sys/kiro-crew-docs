@@ -13,9 +13,9 @@
 
 検証する正準値（件数系。05_meta/10_update-guide.md §7 参照）:
     S1  公式crewページ数        = 43
-    S2  docs/配下ファイル数      = 201
-    S4  安定版リリース数         = 5
-    S5  総リリース数            = 23
+    S2  docs/配下ファイル数      = 225
+    S4  安定版リリース数         = 8
+    S5  総リリース数            = 43
     S6  CHANGELOG版節数         = 3（+Unreleased）
     S12 builtin App数           = 20（defaultEnabled:true は projects のみ）
     S13 メッセージングチャネル数  = 7
@@ -38,9 +38,9 @@ LOCAL_ONLY = ("05_meta", "06_embedded-docs", "work_plans", "work_records")
 
 SSOT = {
     "S1": {"value": 43, "label": "公式crewページ数"},
-    "S2": {"value": 201, "label": "docs/配下ファイル数"},
-    "S4": {"value": 6, "label": "安定版リリース数"},
-    "S5": {"value": 28, "label": "総リリース数"},
+    "S2": {"value": 225, "label": "docs/配下ファイル数"},
+    "S4": {"value": 8, "label": "安定版リリース数"},
+    "S5": {"value": 43, "label": "総リリース数"},
     "S11": {"value": 137, "label": "拒否コマンドルール件数"},
     "S12": {"value": 20, "label": "builtin App数"},
     "S13": {"value": 7, "label": "メッセージングチャネル数"},

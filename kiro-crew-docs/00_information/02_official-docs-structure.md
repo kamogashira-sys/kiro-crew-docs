@@ -37,7 +37,7 @@
 
 ## `changelog/crew/`は存在しない
 
-`https://kiro.dev/changelog/crew/` は**存在しません**（changelogのカテゴリはcli/ide/models/web/generalのみ）。更新履歴の一次情報はGitHub（CHANGELOG.md・Releases）のみです。
+Kiro公式サイトにはCrew用changelogパスがありません（changelogのカテゴリはcli/ide/models/web/generalのみ）。更新履歴の一次情報はGitHub（CHANGELOG.md・Releases）のみです。
 
 ## `.md` companionの実在
 

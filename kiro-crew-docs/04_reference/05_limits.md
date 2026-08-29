@@ -3,7 +3,7 @@
 > **本ページは Kiro Crew（OSS）の仕様です。**
 
 **出典**: 各ページに記載の一次情報を集約（詳細出典は各節を参照。主要な一次情報は <https://kiro.dev/docs/crew/> と <https://github.com/kirodotdev/KiroCrew>）
-（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
+（参照: 2026-08-29 / commit `bba3f195212992eaa07d83c082e1ec55e395c32b` / 版 v0.4.1）
 
 ---
 
@@ -25,11 +25,11 @@
 | 項目 | 値 |
 |------|-----|
 | 公式docsのcrewページ数 | **43** |
-| リポジトリ`docs/`配下ファイル数 | **201**（.md 169／.png 20／その他12） |
-| 最新安定版 | **v0.3.0** |
-| 安定版リリース数 | **6** |
-| 総リリース数（プレリリース含む） | **28**（プレリリース22件） |
-| CHANGELOG.mdの版節数 | **3**（＋`[Unreleased]`） |
+| リポジトリ`docs/`配下ファイル数 | **225** |
+| 最新安定版 | **v0.4.1** |
+| 安定版リリース数 | **8** |
+| 総リリース数（プレリリース含む） | **43**（プレリリース35件） |
+| CHANGELOG.mdの版節数 | **6**（＋`[Unreleased]`） |
 | ライセンス | **Apache-2.0**（本サイトはMIT） |
 
 ## セキュリティ
@@ -44,7 +44,7 @@
 
 | 項目 | 値 |
 |------|-----|
-| メモリ層数 | **6層**（Preferences/Projects/Recent history/Semantic/Episodic/Lessons） |
+| メモリ層数 | リポジトリ資料: **6層**（Preferences/Projects/Recent history/Semantic/Episodic/Lessons）＋横断帯（request auth / Slack owner lock / governance ceiling / SEL audit）。公式docs: **8機構**。単一の層数には裁定しない |
 | コンテキストバジェット | **165,000文字**（約55,000トークン） |
 | Preferencesキャップ | 4,250文字（公式ページ値。リポジトリのfraction由来値は4,290文字=`int(165,000×2.6%)`） |
 | Projectsキャップ | 6,400文字（公式ページ値。リポジトリのfraction由来値は6,435文字=`int(165,000×3.9%)`） |
@@ -62,7 +62,7 @@
 | 項目 | 値 |
 |------|-----|
 | Cron: `--timeout-secs` 既定 | 1800秒 |
-| **Cron `every` の最小間隔** | **60秒**（`learn-cron-dashboard.md` 59行の「Cron Service」節。`every`／`at`／`cron`の3方式のうち`every`に適用。**v0.3.0対応時に確認し未確認事項から解消**） |
+| Cron `--every` の一般下限 | **未確認**（60秒はimport取込下限およびHeartbeat間隔として確認済みだが、一般的な`--every`下限としては裁定しない） |
 | Cronインポート時の最小間隔 | 60秒以上（整数秒。同ファイル299行。他エージェントからのインポート時の検証ルール） |
 | **job（スケジュールジョブ）の時間予算** | **最大24時間**（v0.3.0で追加。従来の固定30分上限を置き換え。**下記「Subagent 1件あたりのハードタイムアウト」とは別項目**） |
 | **job のinstructions文字数** | **50,000文字**（v0.3.0で追加） |
@@ -80,8 +80,8 @@
 
 | 項目 | 値 |
 |------|-----|
-| builtin App数 | **20**（既定有効はTask Runnerのみ） |
-| メッセージングチャネル数 | **7**（Slack/Telegram/Discord/Teams/Webex/WeCom/WeChat） |
+| builtin App数 | **[要検証]**。v0.4.1の`src/`解析は未承認のため、旧値を実測値として追認しない |
+| メッセージングチャネル数 | 公式docs **7**、README **8**、messaging仕様 **10**。v0.4.0でWhatsApp/iMessage/Feishu追加。出典間の総数は裁定しない |
 | インポート対応ソース数 | **5**（Claude Code/Codex/OpenClaw/Hermes/MeshClaw） |
 | インポートカテゴリ数 | **8** |
 | Gatewayの既定ポート | **5476**（`KIROCREW_PORT`で変更可） |
@@ -100,16 +100,19 @@
 
 | 項目 | 出典A | 出典B |
 |------|-------|-------|
+| v0.4.1の日付 | CHANGELOG.mdの版日付 | Release公開日: 2026-08-29 |
+| v0.4.0の日付 | CHANGELOG.mdの版日付 | Release公開日: 2026-08-27 |
 | v0.3.0の日付 | CHANGELOG.md: 2026-08-17 | Release公開日: 2026-08-21 |
 | v0.2.0の日付 | CHANGELOG.md: 2026-08-09 | Release公開日: 2026-08-10 |
 | Subagent自動サイジング上限（`agent.subagent_auto_max`） | `subagent.md`: 32 | `config.md`: 16 |
 | サンドボックスの呼称 | 公式docs: `auto` | README・内部ティア: `standard` |
+| 埋め込み実装 | Memory/Knowledge Library: shared in-process / vendored llama-cpp-python | `knowledge.md`: Ollama依存の旧記述。裁定しない |
 
 ## 未確認事項
 
+- builtin App数（S12）: v0.4.1の`src/`解析は、対象SHA・対象パス・解析方法を示す明示承認がないため未実施
 - `spawn_min_memory_gb` の既定値（Linuxのみ有効・非Linuxはfails openという性質のみ確認）
-
-> **解消済み**: 「Cron自体（`--every`）の最小間隔」は、`21584ea`の`learn-cron-dashboard.md` 59行で**60秒**と確認できたため未確認事項から除きました（上記「自律実行」表参照）。
+- Cron `--every` の一般下限（60秒はimport取込下限とHeartbeat間隔として確認済み）
 
 ## 関連リンク
 

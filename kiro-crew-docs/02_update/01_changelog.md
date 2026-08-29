@@ -3,14 +3,16 @@
 > **本ページは Kiro Crew（OSS）の仕様です。**
 
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/CHANGELOG.md>
-（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
+（参照: 2026-08-29 / commit `bba3f195212992eaa07d83c082e1ec55e395c32b` / 版 v0.4.1）
 **出典**: <https://github.com/kirodotdev/KiroCrew/releases>
-（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
+（参照: 2026-08-29 / commit `bba3f195212992eaa07d83c082e1ec55e395c32b` / 版 v0.4.1）
 
 ---
 
 ## 📑 このページの内容
 
+- [v0.4.1](#v041)
+- [v0.4.0](#v040)
 - [v0.3.0](#v030)
 - [v0.2.0](#v020)
 - [v0.1.3](#v013)
@@ -20,7 +22,40 @@
 
 ---
 
-> このページは **v0.1.2〜v0.3.0** をCHANGELOG.mdに版節があるものから要約しています。CHANGELOG.mdは開発者向けの詳細記述（PR番号付き・1項目10行超）のため、そのまま転記せず、利用者に影響する変更に絞っています。
+> このページは **v0.1.2〜v0.4.1** をCHANGELOG.mdに版節があるものから要約しています。CHANGELOG.mdは開発者向けの詳細記述（PR番号付き・1項目10行超）のため、そのまま転記せず、利用者に影響する変更に絞っています。
+
+### v0.4.1
+
+| 日付系統 | 値 |
+|---------|-----|
+| CHANGELOG.md | 2026-08-28 |
+| GitHub Release 公開日 | 2026-08-29 |
+
+**出典**: <https://github.com/kirodotdev/KiroCrew/releases/tag/v0.4.1>
+（参照: 2026-08-29 / commit `bba3f195212992eaa07d83c082e1ec55e395c32b` / 版 v0.4.1）
+
+安定チャネルの表示修正です。About、Settings footer、更新ポップアップは、内部のrelease-candidate stampではなく、インストール済み・利用可能な**正式リリース番号**を表示します。更新の仕組み、skip、snoozeの動作は変わりません。
+
+### v0.4.0
+
+| 日付系統 | 値 |
+|---------|-----|
+| CHANGELOG.md | 2026-08-25 |
+| GitHub Release 公開日 | 2026-08-27 |
+
+**出典**: <https://github.com/kirodotdev/KiroCrew/releases/tag/v0.4.0>
+（参照: 2026-08-29 / commit `bba3f195212992eaa07d83c082e1ec55e395c32b` / 版 v0.4.1）
+
+主な変更（利用者に影響するもの・抜粋）:
+
+- **WindowsとLinuxの導入** — Windowsは署名済みinstallerとin-app auto-updateをstable配布。Linux desktopは`.deb`/`.rpm`（glibc 2.34以上）を提供し、旧ディストリビューション向けに`--managed-python`がある
+- **Windows Computer Use** — UI AutomationでWindowsネイティブアプリを読み取り・操作でき、Windows agent treeにはJob objectのprocess/memory ceilingが追加
+- **チャネル** — WhatsApp、iMessage、Feishuが追加。Teams/Telegram/WebexがSlackとの機能パリティへ近づき、Discordにはコマンドメニュー等が追加
+- **Secrets** — config fileではなく暗号化vaultに保存し、MCP環境で`secret://NAME`参照を使える。値はSettings → Secretsでマスクされ、ブラウザへ送られない
+- **ダッシュボード/セッション** — inline編集・diff・file tree、複数Gateway横断のセッション検索、Session hand-off、Reloadなどを追加
+- **Memory / Skills** — repository scopeのLessonが有効化、tag別episodic decay、project-local skills、hooksのmatcher/injectionを追加
+
+暗号方式、設定キー、保存先、およびbuiltin App数は、このCHANGELOG記述だけでは確定しないため補完しません。詳細は各機能ページを参照してください。
 
 ### v0.3.0
 

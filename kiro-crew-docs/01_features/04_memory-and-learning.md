@@ -182,7 +182,10 @@ Memory（本ページの6層メモリ）と [Knowledge Library](05_knowledge-lib
 
 公式ドキュメント `features/knowledge/` も「Knowledge items are embedded for semantic search using **the same in-process embedding runtime as Memory**」と明記しており、両者が同一機構を共有することを確認できます。Ollamaは、埋め込みモデルのCDNダウンロードが失敗した場合の**任意のフォールバック手段**（`ollama pull qwen3-embedding:0.6b` を手動実行）として`troubleshooting.md`に案内されているのみで、既定の実装ではありません。
 
-> **参考: リポジトリ内の記述に不整合があります**。`docs/system-specs/modules/knowledge.md` には、Knowledge Libraryが `OllamaEmbedder`（`knowledge/embedder.py`）経由でOllamaに依存するという、上記と異なる古い記述が残っています。本サイトは、公式ドキュメントおよび `memory-skills-hooks.md`／`install.md`／`overview.md`／`config.md`の4箇所と一致する「共有in-process機構」を正としています（`knowledge.md`側は更新が反映されていないと判断）。詳細は [05_knowledge-library.md](05_knowledge-library.md) を参照してください。
+> **リポジトリ内の記述の不整合は v0.6.0 で解消しました**。v0.4.1 時点では `docs/system-specs/modules/knowledge.md` に「Knowledge Library が `OllamaEmbedder`（`knowledge/embedder.py`）経由で Ollama に依存する」という上記と異なる記述が残っていましたが、**v0.6.0 では同ファイルが `InProcessEmbedder` —「in-process via the vendored llama-cpp runtime, no server and no HTTP hop」に更新され、`Ollama` の語が0件になりました**（`knowledge.md` 106行）。これで公式ドキュメントおよび `memory-skills-hooks.md`／`install.md`／`overview.md`／`config.md` と一致します。詳細は [05_knowledge-library.md](05_knowledge-library.md) を参照してください。
+>
+> **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/knowledge.md>
+> （参照: 2026-09-13 / commit `8575209` / 版 v0.6.0）
 
 埋め込みモデルがまだダウンロード中／未取得の間は、メモリはキーワード・FTS検索に緩やかに縮退し、モデルが用意できた時点で自動的に埋め込みが有効になります（再起動不要）。
 
@@ -195,7 +198,7 @@ Memory（本ページの6層メモリ）と [Knowledge Library](05_knowledge-lib
 ## 未確認事項
 
 - なし。メモリモード用語（persistent/incognito/temporary）は当初 Zenn 記事由来の記述として要検証扱いだったが、`history.py` の `INCOGNITO_MEMORY_MODES` および `session-summary.md` L188 で実在を確認済み
-- Knowledge Libraryの埋め込み機構は、公式ドキュメント `features/knowledge/` および `memory-skills-hooks.md`／`install.md`／`overview.md`／`config.md`で「Memoryと共有するin-process機構」と確認済み。リポジトリの`docs/system-specs/modules/knowledge.md`のみ、更新が反映されていないOllama依存の記述を残す（上記「埋め込みの実行方式」参照）
+- Knowledge Libraryの埋め込み機構は、公式ドキュメント `features/knowledge/` および `memory-skills-hooks.md`／`install.md`／`overview.md`／`config.md`で「Memoryと共有するin-process機構」と確認済み。**v0.4.1 まで食い違っていた `docs/system-specs/modules/knowledge.md` も v0.6.0 で `InProcessEmbedder` に更新され、不整合は解消した**（上記「埋め込みの実行方式」参照）
 
 ## 関連リンク
 

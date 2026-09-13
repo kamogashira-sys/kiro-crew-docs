@@ -7,6 +7,8 @@
 （参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 **出典**（`session.pool_size`既定値の不整合・`chat_turn_timeout_secs`クランプ上限の指摘）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/overview.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/config.md>
 （参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
+**出典**（タイムアウト・自動圧縮・Warm Pool の既定値の再測定）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/config.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/resource-protection.md>
+（参照: 2026-09-13 / commit `8575209` / 版 v0.6.0）
 
 ---
 
@@ -48,13 +50,15 @@
 
 `session.pool_size`（`overview.md`は既定 `0` = オフと明記）は、新しいセッションがkiro-cliのコールドスタートを払わずに開始できるよう、プロセスを事前起動します。プールされたプロセスは `session.pool_ttl_secs`（既定1800秒）を超えると、claim時に破棄されます。
 
-> **一次情報内の不整合**: `docs/architecture/overview.md`は「Warm pool (`session.pool_size`, default `0` = off)」と明記しますが、`docs/system-specs/modules/config.md`のPython dataclass定義は `pool_size: int = 2`（ロード時クランプ0〜10）です。本サイトは`overview.md`の記述を採用していますが、実際の既定値がWarm Pool有効（2）か無効（0）かは、この2つの一次情報だけでは確定できません。
+> **一次情報内の不整合は解消しました**（v0.6.0 実測）。以前は `docs/architecture/overview.md` が「Warm pool (`session.pool_size`, default `0` = off)」、`docs/system-specs/modules/config.md` の Python dataclass が `pool_size: int = 2` と食い違っていました。**v0.6.0 では両方が `0`（既定は無効）で一致**します（`overview.md` 279行／`config.md` 957行「`0` (the default) disables. Single source of truth: `DEFAULT_POOL_SIZE`」）。ロード時のクランプ上限は `POOL_SIZE_MAX = 10`（`config.md` 1226行）。
 
-- **アイドルタイムアウト**: `session.timeout_secs`（既定3600秒）経過後にセッションを回収
-- **ターン上限**: `agent.chat_turn_timeout_secs`（既定7200秒＝2時間。ロード時クランプは300〜86400秒。無効化不可）
-- **ツール承認の待機時間**: `agent.tool_approval_timeout_secs`（既定600秒＝10分）
+- **アイドルタイムアウト**: `session.timeout_secs`（既定3600秒＝60分）経過後にセッションを回収
+- **ターン上限**: `agent.chat_turn_timeout_secs`（**既定14400秒＝4時間**。ロード時クランプは300〜86400秒。無効化不可）
+  - **v0.5.0以前は7200秒＝2時間**でした。`resource-protection.md` 49行は「14400 is the default, not the ceiling」と明記しています
+- **ツール承認の待機時間**: `agent.tool_approval_timeout_secs`（既定600秒＝10分。ロード時クランプは30〜7200秒、かつ `chat_turn_timeout_secs` より60秒以上小さい値へ丸められる）
 - **サーキットブレーカー**: 1セッションで5回連続失敗するとリセットを強制
-- **自動圧縮**: コンテキストウィンドウの `session.autocompact_pct`（既定90%）で発動
+- **自動圧縮**: コンテキストウィンドウの `session.autocompact_pct`（**既定70%**）で発動。ロード時クランプは5.0〜90.0
+  - ⚠️ **本サイトは以前「既定90%」と記載していました**。`config.md` 221行は既定値の変更履歴として `session.autocompact_pct` (90.0 -> 70.0, #4388) を挙げており、v0.6.0 実測値は **70.0** です（`config.md` 956行・`modules/cli.md` 742行「default 70%」）
 
 ## Session Resume
 
@@ -90,7 +94,9 @@
 
 ## 未確認事項
 
-- `session.pool_size`の真の既定値（`overview.md`は0、`config.md`は2。両併記のまま。上記「Warm Pool」参照）。`session_key` の形式は当初Zenn記事のみを出典としていたが（要検証扱い）、`modules/session.md` で `_STATELESS_PREFIXES` の実装として確認済み
+- `session_key` の形式は当初Zenn記事のみを出典としていたが（要検証扱い）、`modules/session.md` で `_STATELESS_PREFIXES` の実装として確認済み
+
+> **解消済み**: `session.pool_size` の既定値の食い違い（`overview.md` は0、`config.md` は2）は **v0.6.0 実測で解消**しました（両出典が `0`）。上記「Warm Pool」節を参照してください。
 
 ## 関連リンク
 

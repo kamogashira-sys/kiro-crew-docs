@@ -43,7 +43,7 @@ files / uploads / artifacts / URLs
 | コンポーネント | 役割 |
 |--------------|------|
 | `knowledge/chunker.py` | `HeadingAwareChunker` — テキスト/Markdown/コード/スライドのチャンク分割 |
-| `knowledge/embedder.py` | `OllamaEmbedder` — Ollama経由のローカル埋め込み（下記「埋め込みは共有in-process機構」の注記参照。他の一次情報とは記述が一致しません） |
+| `knowledge/embedder.py` | `InProcessEmbedder` — vendored された llama-cpp ランタイムによるin-process埋め込み。**サーバもHTTPホップも介しません**（`knowledge.md` 106行） |
 | `knowledge/store.py` | `KnowledgeStore` — SQLiteスキーマ、items/entities/graph、FTS5同期 |
 | `knowledge/retrieval.py` | `HybridRetriever` — FTS5＋グラフ＋ベクトル検索をRRFで融合 |
 | `knowledge/ingestion.py` | `IngestionPipeline` — 読み込み→チャンク分割→抽出→保存のオーケストレーション |
@@ -57,16 +57,21 @@ FTS5（キーワード）＋グラフ探索＋任意のベクトル検索を **R
 
 ## 埋め込みは共有in-process機構
 
-> **一次情報内に不整合があります（未解消）。**
+> **一次情報内の不整合は v0.6.0 で解消しました。**
 >
-> - `docs/system-specs/modules/knowledge.md`（本ページの主要出典）は、Knowledge Libraryが「ローカルのOllama埋め込みエンドポイント」を使う `OllamaEmbedder`（`knowledge/embedder.py`）に依存すると記述しています（既定モデル: `qwen3-embedding:0.6b`）。
-> - 一方、以下4箇所は揃って「Memory と Knowledge Library は同じ埋め込み機構を共有する」と記述しています。
->   - `docs/system-specs/modules/memory-skills-hooks.md`: `get_shared_embedder()` は「process-wide singleton, **shared by vector memory AND the knowledge library**」と明記。
->   - `docs/guides/install.md`: `memory.embedding_provider` は `llama_cpp` のみを受理し、旧設定値は起動時に強制変換される。
->   - `docs/architecture/overview.md`: 「Embeddings are always-on and in-process, computed by vendored llama-cpp-python … there is no external embedding daemon to install or configure」。
->   - `config.md` の `KnowledgeConfig`: 「Embedding/retrieval settings live under MemoryConfig (shared via `create_embedder_from_config`)」。
+> v0.6.0 の `docs/system-specs/modules/knowledge.md` は 106行で `InProcessEmbedder` を「embedding **in-process** via the vendored llama-cpp runtime, **no server and no HTTP hop**」と記述し、**同ファイル内に `Ollama` の語は1件も存在しません**（実測0件）。以下4箇所の記述と一致しました。
 >
-> 本サイトは、多数一致し新設計（Ollama依存の削除）を裏付ける後者4箇所を採用します。すなわち、**[04_memory-and-learning.md](04_memory-and-learning.md) の6層メモリと同じ、vendored `llama-cpp-python` による常時オン・in-processの共有シングルトン埋め込み器**（`get_shared_embedder()`）を使うと理解しています。`knowledge.md`のOllama記述は、リポジトリ内で更新が反映されていない可能性がありますが、確定はできません。
+> - `docs/system-specs/modules/memory-skills-hooks.md`: `get_shared_embedder()` は「process-wide singleton, **shared by vector memory AND the knowledge library**」と明記。
+> - `docs/guides/install.md`: `memory.embedding_provider` は `llama_cpp` のみを受理し、旧設定値は起動時に強制変換される。
+> - `docs/architecture/overview.md`: 「Embeddings are always-on and in-process, computed by vendored llama-cpp-python … there is no external embedding daemon to install or configure」。
+> - `config.md` の `KnowledgeConfig`: 「Embedding/retrieval settings live under MemoryConfig (shared via `create_embedder_from_config`)」。
+>
+> したがって **[04_memory-and-learning.md](04_memory-and-learning.md) の6層メモリと同じ、vendored `llama-cpp-python` による常時オン・in-processの共有シングルトン埋め込み器**（`get_shared_embedder()`）を使います。既定モデルは `qwen3-embedding:0.6b`（`knowledge.md` 132行）で、**モデル名は `名前:タグ` 形式ですが、Ollamaサーバを介するわけではありません**。
+>
+> **経緯**: v0.4.1 時点では `knowledge.md` 104行が `OllamaEmbedder` —「local embedding via Ollama」と記述し（同ファイル内に `Ollama` が4件）、他の一次情報と食い違っていたため、本サイトは両方を記載していました。v0.6.0 で `knowledge.md` 側が更新され解消しています。
+>
+> **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/knowledge.md>
+> （参照: 2026-09-13 / commit `8575209` / 版 v0.6.0）
 
 外部Ollamaデーモンへの依存が実際にない場合、埋め込みが未取得（モデルのバックグラウンドダウンロード中など）の間はベクトル検索の脚が縮退し、キーワード＋グラフのみで動作する点は変わりません。
 

@@ -37,10 +37,10 @@ DOC_ROOT = "kiro-crew-docs"
 LOCAL_ONLY = ("05_meta", "06_embedded-docs", "work_plans", "work_records")
 
 SSOT = {
-    "S1": {"value": 43, "label": "公式crewページ数"},
-    "S2": {"value": 225, "label": "docs/配下ファイル数"},
-    "S4": {"value": 8, "label": "安定版リリース数"},
-    "S5": {"value": 43, "label": "総リリース数"},
+    "S1": {"value": 49, "label": "公式crewページ数"},
+    "S2": {"value": 230, "label": "docs/配下ファイル数"},  # v0.6.0タグ実測
+    "S4": {"value": 10, "label": "安定版リリース数"},
+    "S5": {"value": 59, "label": "総リリース数"},
     "S11": {"value": 137, "label": "拒否コマンドルール件数"},
     "S12": {"value": 20, "label": "builtin App数"},
     "S13": {"value": 7, "label": "メッセージングチャネル数"},
@@ -51,12 +51,12 @@ SSOT = {
 # §5 のページ数3者一致の対象セクション（見出し・合計表・実ファイルの数を突合する）
 SECTIONS = {
     "00_information": 4,
-    "01_features": 15,
+    "01_features": 18,
     "02_update": 3,
     "03_deployment": 7,
     "04_reference": 6,
 }
-TOTAL_PAGES = 36  # サイト本体README含む合計
+TOTAL_PAGES = 39  # サイト本体README含む合計
 
 DECLARED_RE = re.compile(r"README\s*含む\s*\*{0,2}(\d+)\s*ページ\*{0,2}")
 

@@ -63,9 +63,14 @@ Kiro Crew は次の3層の上に成り立っています。
 
 **Kiro Crew は KiroACP 専用です**: `agent.provider` は `acp` に固定され、kiro-cli が必須要件です。`LLMProvider` という抽象インターフェースは薄い接点として残されていますが、**実在する具体プロバイダは1つだけ**（`AcpProvider`）です。
 
-> **削除された機能**（重要な事実として明記）: **Bedrock プロバイダ**と**スタンドアロンプロバイダ**は「de-Amazoning」の過程で、設定フィールドとマルチプロバイダ振り分けファクトリごと**削除されました**。`acp/client.py` には休眠状態の `ACP_BACKEND_CLAUDE` という接点（`AcpProvider` が理論上 `claude-agent-acp` を駆動できる）が残っていますが、公開されているプロバイダファクトリはこれを選択せず、`kiro-cli` が唯一のバックエンドです。
+> **削除された機能**（重要な事実として明記）: **Bedrock プロバイダ**は「de-Amazoning」の過程で、設定フィールドとマルチプロバイダ振り分けファクトリごと**削除されました**。
 
-この事実は `docs/system-specs/features/claude-code-provider.md`（タイトル `# Standalone provider — removed`）にも記録されています。この仕様書自体は**削除済み機能の記録**であり出典にしませんが、「削除された」という事実は本ページで書きます。
+> **⚠️ v0.6.0 で状況が変わりました**。かつて「スタンドアロンプロバイダは削除された」と記録していた仕様書 `docs/system-specs/features/claude-code-provider.md`（タイトル `# Standalone provider — removed`）は、**v0.6.0 では `docs/system-specs/modules/claude-code-provider.md` に移動し、タイトルが `# Claude Code provider — a selectable ACP harness` に変わりました**。すなわち**削除済み機能の記録ではなく、現行機能（選択可能なACPハーネス）の仕様書**です。
+>
+> v0.6.0 では `agent.acp_backend` によってハーネスを選択でき、`acp_backends.BASELINE_SELECTABLE_BACKENDS` は `ACP_BACKEND_KIRO`（空文字列）・`ACP_BACKEND_CLAUDE`・`ACP_BACKEND_KAS` を含みます。ただし**これは Preview 機能で、Developer Mode を有効にしないと選択できません**。したがって「`kiro-cli` が唯一のバックエンド」という記述は v0.5.0 以前の状態です。詳細と出典間の食い違いは [15_agent-backends.md](15_agent-backends.md) を参照してください。
+>
+> **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/claude-code-provider.md>
+> （参照: 2026-09-13 / commit `8575209` / 版 v0.6.0）
 
 ## メッセージフロー
 

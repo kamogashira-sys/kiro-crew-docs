@@ -23,7 +23,8 @@ import re
 import sys
 
 DOC_FILE = "kiro-crew-docs/02_update/01_changelog.md"
-VALID_STABLE_VERSIONS = ["0.1.0", "0.1.1", "0.1.2", "0.1.3", "0.2.0", "0.3.0", "0.4.0", "0.4.1"]
+VALID_STABLE_VERSIONS = ["0.1.0", "0.1.1", "0.1.2", "0.1.3", "0.2.0", "0.3.0", "0.4.0", "0.4.1",
+                         "0.5.0", "0.6.0"]
 
 VERSION_HEAD_RE = re.compile(r"(?m)^### v(\d+\.\d+\.\d+)\s*$")
 DATE_ROW_RE = re.compile(

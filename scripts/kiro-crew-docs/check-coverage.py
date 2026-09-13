@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""check-coverage.py - 公式43ページ台帳の網羅性を検証する
+"""check-coverage.py - 公式ページ台帳の網羅性を検証する
 
 使用方法:
     ./scripts/kiro-crew-docs/check-coverage.py
@@ -8,7 +8,7 @@
 
 Crew 版の設計（Rev 1 からの再設計理由）:
     兄弟サイトは「changelog エントリの網羅性」を検証するが、Crew は changelog が
-    GitHub のため、それに相当する検証対象が無い。代わりに **「公式43ページのどれを
+    GitHub のため、それに相当する検証対象が無い。代わりに **「公式ページのどれを
     扱い、どれを意図的に扱わないか」の台帳（05_meta/ledger-official-pages.md）**を
     検証対象にする。
 
@@ -17,12 +17,12 @@ Crew 版の設計（Rev 1 からの再設計理由）:
     台帳の各行に「担当ページ」または「不扱い理由」が明記されているかを検証する。
 
 検証内容:
-    1. 台帳（ledger-official-pages.md）が43行（README分含む）持っていること
+    1. 台帳（ledger-official-pages.md）が EXPECTED_OFFICIAL_PAGES 行（README分含む）持っていること
     2. 各行に担当ページ（`01_features/NN_xxx.md` 等）が記載されていること
        （未割当が0件であること）
     3. 台帳が指す担当ページが実際に公開対象ディレクトリに存在すること
        （ファイル名だけの記載は`01_features/`配下、`/`を含む記載はフルパスとして解決する）
-    4. モジュール台帳（ledger-modules.md）が76件すべてに判定を持つこと
+    4. モジュール台帳（ledger-modules.md）が EXPECTED_MODULES 件すべてに判定を持つこと
 
 fail-safe:
     台帳ファイルが無い場合は exit 0＋警告（Phase 0 未実施の場合はスキップ）。
@@ -35,8 +35,8 @@ import sys
 
 LEDGER_PAGES = "kiro-crew-docs/05_meta/ledger-official-pages.md"
 LEDGER_MODULES = "kiro-crew-docs/05_meta/ledger-modules.md"
-EXPECTED_OFFICIAL_PAGES = 43
-EXPECTED_MODULES = 76
+EXPECTED_OFFICIAL_PAGES = 49
+EXPECTED_MODULES = 88  # v0.6.0タグ実測（直下3/common7/modules78）。v0.3.0時点の76から更新
 
 ROW_RE = re.compile(r'^\|\s*(\d+)\s*\|\s*`([^`]+)`\s*\|\s*(.+?)\s*\|', re.M)
 
@@ -53,10 +53,10 @@ def check_official_pages_ledger(errors, notes):
     rows = ROW_RE.findall(txt)
     if len(rows) != EXPECTED_OFFICIAL_PAGES:
         errors.append(
-            f"{LEDGER_PAGES}: 台帳の行数が {len(rows)} 件ですが公式43ページと一致しません"
+            f"{LEDGER_PAGES}: 台帳の行数が {len(rows)} 件ですが公式{EXPECTED_OFFICIAL_PAGES}ページと一致しません"
         )
     else:
-        notes.append(f"公式ページ台帳: {len(rows)} 件（43件と一致）")
+        notes.append(f"公式ページ台帳: {len(rows)} 件（{EXPECTED_OFFICIAL_PAGES}件と一致）")
 
     unassigned = []
     missing_files = []
@@ -101,10 +101,10 @@ def check_modules_ledger(errors, notes):
         total = int(m.group(1))
         if total != EXPECTED_MODULES:
             errors.append(
-                f"{LEDGER_MODULES}: 集計の合計が {total} 件ですが実測76件と一致しません"
+                f"{LEDGER_MODULES}: 集計の合計が {total} 件ですが実測{EXPECTED_MODULES}件と一致しません"
             )
         else:
-            notes.append(f"モジュール台帳: 合計 {total} 件（76件と一致）")
+            notes.append(f"モジュール台帳: 合計 {total} 件（{EXPECTED_MODULES}件と一致）")
     else:
         notes.append(f"{LEDGER_MODULES}: 合計欄が見つかりません（形式が変わった可能性）")
 
@@ -118,7 +118,7 @@ def check_against_sitemap(repo_dir, errors, notes):
     urls = re.findall(r"<loc>(https://kiro\.dev/docs/crew/[^<]*)</loc>", s)
     if len(urls) != EXPECTED_OFFICIAL_PAGES:
         errors.append(
-            f"sitemap実測の公式crewページが {len(urls)} 件ですが台帳の前提43件と一致しません"
+            f"sitemap実測の公式crewページが {len(urls)} 件ですが台帳の前提{EXPECTED_OFFICIAL_PAGES}件と一致しません"
             "（公式サイトが更新された可能性。台帳の再作成が必要）"
         )
     else:
@@ -136,10 +136,10 @@ def main():
 
     errors, notes = [], []
 
-    print("🔍 公式43ページ台帳の未割当を検証中...")
+    print(f"🔍 公式{EXPECTED_OFFICIAL_PAGES}ページ台帳の未割当を検証中...")
     check_official_pages_ledger(errors, notes)
 
-    print("🔍 モジュール76ファイル台帳の判定漏れを検証中...")
+    print(f"🔍 モジュール{EXPECTED_MODULES}ファイル台帳の判定漏れを検証中...")
     check_modules_ledger(errors, notes)
 
     if args.repo_dir and os.path.isdir(args.repo_dir):

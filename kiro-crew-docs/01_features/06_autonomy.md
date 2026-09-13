@@ -9,6 +9,10 @@
 （参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
 **出典**（`agent.max_subagents`既定値の不整合の指摘）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/config.md>
 （参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
+**出典**（Subagent・Cron・Heartbeat のタイムアウト値の再測定）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/resource-protection.md>
+（参照: 2026-09-13 / commit `8575209` / 版 v0.6.0）
+**出典**（`orchestrator.max_plan_duration_seconds`）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/autopilot.md>
+（参照: 2026-09-13 / commit `8575209` / 版 v0.6.0）
 
 ---
 
@@ -54,7 +58,7 @@ README が整理する、Crew がユーザーの入力なしで動く5つの起�
 
 ### v0.3.0での変更（Cron・スケジュールジョブ）
 
-- **各jobが自身の時間予算を設定できる（最大24時間）**。従来の固定30分上限を置き換えます。jobのinstructionsは50,000文字まで記述できます（CHANGELOG 184行）。**⚠️ これは job（スケジュールジョブ）の時間予算であり、[Subagent](#subagents) の1件あたりハードタイムアウト1800秒（30分）とは別項目です**（後者は`21584ea`でも変更されていません。[04_reference/05_limits.md](../04_reference/05_limits.md)参照）
+- **各jobが自身の時間予算を設定できる（最大24時間）**。従来の固定30分上限を置き換えます。jobのinstructionsは50,000文字まで記述できます（CHANGELOG 184行）。**⚠️ これは job（スケジュールジョブ）の時間予算であり、[Subagent](#subagents) の1件あたりハードタイムアウトとは別項目です**（Subagent 側は v0.3.0（`21584ea`）時点では1800秒＝30分でしたが、**v0.6.0 で10800秒＝3時間に変更**されました。[04_reference/05_limits.md](../04_reference/05_limits.md)参照）
 - **スケジュールジョブが毎実行ごとに再審査される**。作成時のみでなく発火ごとに現行ポリシーへ照合されるようになり、復元したバックアップが承認システムを迂回してshellコマンドを持ち込むことができなくなりました（CHANGELOG 215行）
 - **ジョブのPythonソースをターミナルなしで読める**。ジョブ詳細ビューにハイライト付き・読み取り専用で表示されます（CHANGELOG 186行）
 
@@ -82,6 +86,21 @@ README の起動モード5分類には無いが、`modules/heartbeat.md` に実�
 
 内部は `taskrunner.py`（オーケストレータ）＋4つのヘルパーモジュール（`task_models.py`／`task_planner.py`／`task_executor.py`／`task_reporter.py`）に分割されています。
 
+### v0.6.0での変更（無人 auto-run plan の時間上限）
+
+**無人の auto-run plan は2時間で停止します。** これは v0.6.0 の破壊的変更です。
+
+| 項目 | 内容 |
+|---|---|
+| 設定キー | `orchestrator.max_plan_duration_seconds`（既定 `7200` 秒＝2時間） |
+| 無効化 | `0` を設定すると上限がなくなります |
+| 判定タイミング | **plan 全体の実時間予算**で、**各ステージ境界でチェック**されます（ステージの途中で打ち切られません） |
+| 警告 | 予算の75%に達した時点で1回だけ警告します |
+| 適用外 | **stage-gated な plan は打ち切られません** |
+| 関連キー | `orchestrator.stage_timeout_seconds`（ステージ単位のタイムアウト） |
+
+出典: `docs/system-specs/modules/autopilot.md` 194・227・388行。
+
 ## Subagents
 
 `kirocrew spawn run "task"` で並行作業を委任します。
@@ -94,8 +113,12 @@ README の起動モード5分類には無いが、`modules/heartbeat.md` に実�
 
 その他の確定事項:
 
-- 1サブエージェントあたりのハードタイムアウト: 1800秒（30分）
-- 外側のキャップ: セマフォ待機＋注入の最大合計秒数 1200秒（20分）
+- **1サブエージェントあたりのハードタイムアウト: 10800秒（3時間）**。設定キーは `agent.subagent_timeout_secs`（`subagent.py` の `_TIMEOUT_SECS` がフォールバック）。**v0.5.0以前は1800秒（30分）の固定値**でした
+  - ⚠️ **このキーはダッシュボードから設定できません**。`resource-protection.md` 374-377行は「config PUT の allowlist はターン予算と並行数の上限しか含まないため、subagent の期限を上げるには CLI か `config.json` の編集が必要」と述べています
+  - タイムアウト時のエラー文は `Timed out after 180 minutes`（`subagent.md` 189行）。`start_reaper()` が60秒間隔で期限超過のサブエージェントを強制終了します（同228行）
+- 外側のキャップ: セマフォ待機＋注入の最大合計秒数 1200秒（20分。`_ON_DONE_TIMEOUT`）
+- 内側のキャップ: `stream_and_collect` 1回あたり900秒（15分。`INJECTION_TIMEOUT`）
+- 1サブエージェントあたりのツール呼び出し予算: 既定100（`_TURN_LIMIT`。`agent.subagent_max_turns` で変更可能、ロード時のクランプ上限は1000）
 - 下限3・入れ子不可（サブエージェントからさらにサブエージェントは起動できない）
 - 空きメモリの admission gate（`spawn_min_memory_gb`）は**Linuxのみ有効**（`/proc/meminfo` を読む）。**非Linuxでは fails open**（チェックをスキップして起動を許可）。既定値は `subagent.md`・`config.md` のいずれにも数値の記載が見つかっていません（未確認）
 

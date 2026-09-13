@@ -4,7 +4,7 @@
 
 Kiro Crewは、Kiro CLIをランタイムに使い、チャット・Slackなどのメッセージングチャネル・スケジュールジョブ・サブエージェントといった複数の窓口から、1つのエージェントを操作するためのGatewayです。本サイトでは更新履歴に加え、主要機能の解説を中心に扱います。
 
-> ⚠️ 一次情報の固定参照時点は**2026-08-29**です。Kiro Crewの固定コミットは`bba3f195212992eaa07d83c082e1ec55e395c32b`（v0.4.1タグ）、この時点の最新安定版は`v0.4.1`です。以後のKiro Crewの更新は、反映されるまで本サイトには含まれません。
+> ⚠️ 一次情報の固定参照時点は**2026-09-13**です。Kiro Crewの固定コミットは`85752095f1649215fadd4f9b7ca3a208f9ae4aca`（v0.6.0タグ）、この時点の最新安定版は`v0.6.0`です。以後のKiro Crewの更新は、反映されるまで本サイトには含まれません。
 
 ---
 
@@ -29,7 +29,7 @@ Kiro Crewは、Kiro CLIをランタイムに使い、チャット・Slackなど�
 | セクション | 内容 |
 |-----------|------|
 | [00_information](kiro-crew-docs/00_information/) | KiroCrewリポジトリ・公式サイトの構造、情報源の使い分け |
-| [01_features](kiro-crew-docs/01_features/) | 機能解説（アーキテクチャ、セッション、メモリ、Knowledge、サブエージェント、Apps、セキュリティ、MCP、Artifactなど） |
+| [01_features](kiro-crew-docs/01_features/) | 機能解説（アーキテクチャ、セッション、メモリ、Knowledge、サブエージェント、Apps、セキュリティ、MCP、Artifact、Agent Backends、AWS Control、Workflowsなど） |
 | [02_update](kiro-crew-docs/02_update/) | Kiro Crewの更新履歴とリリース方針 |
 | [03_deployment](kiro-crew-docs/03_deployment/) | インストール、Windows、常時運用、セキュリティ、トラブルシューティング、テレメトリ |
 | [04_reference](kiro-crew-docs/04_reference/) | CLIコマンド、設定キー、ディレクトリ構成、MCPツール、上限値・既定値 |
@@ -46,10 +46,10 @@ Kiro Crewは、Kiro CLIをランタイムとして利用するGatewayです。�
 
 | 項目 | 内容 |
 |------|------|
-| 固定参照日 | 2026-08-29 |
-| Kiro Crew固定コミット | `bba3f195212992eaa07d83c082e1ec55e395c32b`（`v0.4.1`タグ） |
-| 固定時点の最新安定版 | `v0.4.1` |
-| 更新履歴の対象 | 安定版 `v0.1.0`〜`v0.4.1` |
+| 固定参照日 | 2026-09-13 |
+| Kiro Crew固定コミット | `85752095f1649215fadd4f9b7ca3a208f9ae4aca`（`v0.6.0`タグ） |
+| 固定時点の最新安定版 | `v0.6.0` |
+| 更新履歴の対象 | 安定版 `v0.1.0`〜`v0.6.0`（10件） |
 | 一次情報 | KiroCrew GitHubリポジトリ、公式ドキュメント、GitHub Releases、CHANGELOG.md |
 
 一次情報間で記述や値が食い違う場合は、根拠なく裁定せず、両方の記述または未確認事項として示します。詳細は[リリース方針](kiro-crew-docs/02_update/02_release-policy.md)と[情報源](kiro-crew-docs/00_information/03_information-sources.md)を参照してください。
@@ -91,7 +91,7 @@ make check-kiro-crew-quick    # 執筆中の常用チェック
 make check-kiro-crew-ignore   # 公開範囲の確認
 ```
 
-> ⚠️ `check-kiro-crew-all` の exit 0 は「すべてを検証した」ことを意味しません。網羅性チェックは一次情報スナップショット（`.gitignore`対象・非公開）がない環境ではスキップされます。`check-source-pin.py`はGitHub出典URLの近辺にSHA・日付・版があるかを確認しますが、URL先が本文の主張を支持するか、他の一次情報と矛盾しないかまでは検証しません。`check-consistency.py`も、事前に定義した文脈パターン外の不整合を検出しません。詳細は[ドキュメント作成ワークフロー](.github/WORKFLOW.md)を参照してください。
+> ⚠️ `check-kiro-crew-all` の exit 0 は「すべてを検証した」ことを意味しません。網羅性チェックは一次情報スナップショット（`.gitignore`対象・非公開）がない環境ではスキップされます。`check-source-pin.py`はGitHub出典URLの近辺にSHA・日付・版があるかを確認しますが、URL先が本文の主張を支持するか、他の一次情報と矛盾しないかまでは検証しません。`check-consistency.py`も、事前に定義した文脈パターン外の不整合を検出しません。**また一部の項目は警告どまりで終了コードを変えません**（CLIサブコマンド名が許可リストに未登録の場合、および計画済みページが未執筆の場合）。これらは人が確認する必要があります。詳細は[ドキュメント作成ワークフロー](.github/WORKFLOW.md)を参照してください。
 
 ---
 

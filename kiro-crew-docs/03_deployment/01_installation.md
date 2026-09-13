@@ -14,6 +14,8 @@
 - [デスクトップ版の配布物](#デスクトップ版の配布物)
 - [チャネル（stable/insider/nightly）](#チャネルstableinsidernightly)
 - [前提要件](#前提要件)
+- [v0.6.0での変更](#v060での変更)
+- [v0.4.0での変更](#v040での変更)
 - [v0.3.0での変更](#v030での変更)
 - [未確認事項](#未確認事項)
 
@@ -61,9 +63,34 @@ curl -fsSL https://download.crew.kiro.dev/cli.sh | sh -s -- --version 0.1.0
 
 | 要件 | 用途 | 下限 |
 |------|------|------|
-| **Python** | バックエンド | `>= 3.10`（`make build`は既定で3.12の`.venv`を用意） |
+| **Python** | バックエンド | **`>= 3.12`**（v0.6.0で3.10から引き上げ。`pyproject.toml` の `requires-python`） |
 | **Node.js + npm** | ダッシュボードのビルド | `20 \|\| >= 22`（ビルド時のみ必要。事前ビルド済みwheel/DMG/AppImageの利用者はNode不要） |
 | **`kiro-cli`** | LLM駆動 | 必須 |
+
+## v0.6.0での変更
+
+### 破壊的変更: Python 3.12 が下限
+
+**3.10・3.11 のホストは、インストールまたは更新の前に上げる必要があります。** システムのパッケージマネージャに 3.12 がない場合は、各インストーラが自分で 3.12 を用意します。
+
+出典: `docs/guides/install.md` 39行（`requires-python`）。
+
+### 破壊的変更: インストーラが自前の Python を持ち込む
+
+次のインストーラは、システムの Python ではなく**ピン留めされた CPython** を用意します。
+
+```bash
+curl -fsSL https://download.crew.kiro.dev/cli.sh | sh
+```
+
+意図してシステム側の Python に対してビルドする場合は **`--system-python`** を渡します。環境変数 `KIROCREW_MANAGED_PYTHON=0` でもシステムの Python 3.12+ を使う経路があります（`docs/guides/install.md` 156・160・171行）。
+
+### Kiro CLI が古いときのゲート
+
+セットアップは、エージェントセッションに対して古すぎる Kiro CLI を検出します（起動時のゲート）。
+
+**出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md>
+（参照: 2026-09-13 / commit `8575209` / 版 v0.6.0）
 
 ## v0.4.0での変更
 

@@ -59,7 +59,20 @@ Crew はAIエージェントに実際のツールアクセス（ファイル読�
 
 設定は Settings → Security、または `kirocrew config set agent.sandbox <mode>`。**Windowsには OS レベルのサンドボックス層がありません**（公式明記: 「Windows does not currently have this OS-level layer — all other protections still apply」）。Linuxではuser/mount namespaces、macOSではSeatbeltプロファイルを使用します。
 
-> ⚠️ **呼称の食い違い**: README は「Standard, strict, and off modes」と書き、公式docsは「`auto` (default)」と書きます。設定値は `auto`、内部ティア名は `standard` という対応で、本サイトは両方の表記を併記します。
+> ⚠️ **呼称と値域の食い違い（出典3系統・裁定しない）**
+>
+> | 出典 | 記述 |
+> |---|---|
+> | リポジトリ `README.md` **385行** | 「Seatbelt isolation. **Standard, strict, and off modes** make the tradeoff…」＝**3モード**として提示 |
+> | `docs/system-specs/modules/config.md` **940行** | `agent.sandbox` の既定は **`"auto"`**（Linuxはnamespace、macOSはseatbelt。macOSで有効時はkiro-cli内部のサンドボックスに委譲）、**`"off"`** はKiro Crewのサンドボックスをスキップ。**`strict` の記載はありません** |
+> | `docs/architecture/security-deep-dive.md` **107-112行** | `wrap_argv` の内部ティア語彙は設定enumより広く **`standard`（`auto` の解決先）／`cc`／`strict`／`off` の4種**。これらは内部呼び出しとガバナンスの `sandbox.min_level` 順序尺度（`_ORDINAL_SCALES["sandbox"] = ("off", "standard", "cc", "strict")`）から到達し、要求されたモードを**上へ**クランプする。**「They are not values an operator writes into `agent.sandbox`」と明記** |
+>
+> 設定値は `auto`、内部ティア名は `standard` という対応です。**上の表の `strict` は README を根拠にしていますが、`security-deep-dive.md` は運用者が `agent.sandbox` に書ける値ではないと述べています。** また同ファイルにのみ登場する **`cc`** ティアは上の表に含まれていません。どちらが正しいかは公式に説明がないため、本サイトは裁定せず両方を記載します。
+>
+> **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/security-deep-dive.md>
+> （参照: 2026-09-13 / commit `8575209` / 版 v0.6.0）
+>
+> 値の一覧は [04_reference/05_limits.md](../04_reference/05_limits.md) の「セキュリティ」節も参照してください。
 
 導入時の設定手順は [03_deployment/04_security-hardening.md](../03_deployment/04_security-hardening.md) を参照してください。
 

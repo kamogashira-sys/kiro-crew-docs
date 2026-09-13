@@ -15,6 +15,7 @@
 - [旧仕様との差分](#旧仕様との差分)
 - [無効化の3経路（ローカル設定）](#無効化の3経路ローカル設定)
 - [ローカル設定を上書きする2つの経路](#ローカル設定を上書きする2つの経路)
+- [メトリクス／OTLPエクスポート（別系統・既定オフ）](#メトリクスotlpエクスポート別系統既定オフ)
 - [送られないもの](#送られないもの)
 - [未確認事項](#未確認事項)
 
@@ -75,6 +76,36 @@ kirocrew telemetry status         # 送信内容を正確に表示
 {"version": 1, "boot": {"fail_closed": true},
  "capabilities": {"telemetry": {"enabled": false}}}
 ```
+
+## メトリクス／OTLPエクスポート（別系統・既定オフ）
+
+> **⚠️ 本ページのここまでの内容とは別の仕組みです。混同しないでください。**
+>
+> - **①匿名利用テレメトリ**（本ページの上記すべて）: **既定オン**。`kirocrew telemetry enable/disable/status` で操作します
+> - **②メトリクス／OTLPエクスポート**（この節）: **既定オフ**。`telemetry.enabled` で操作します
+>
+> 名前が似ていますが、設定キー・既定値・送信先・目的がいずれも異なります。
+
+**v0.6.0 でメトリクスの計測範囲が広がりました。** CHANGELOG は「Every turn reports its tokens, spend and latency across cron, heartbeat, …」と記述しています。
+
+`docs/system-specs/modules/metrics.md` は、これを OpenTelemetry SDK（Apache-2.0 / CNCF）上に構築された **local-first** のメトリクステレメトリと説明し、**Default OFF**（`telemetry.enabled: false`）と明記しています。無効時は「all metric call sites are cheap no-ops and nothing is written or exported, **byte-identical to no telemetry**」であり、`mcp_gateway.enabled`／`skills.lazy_load` と同じ opt-in 規約に従います。
+
+### 収集と送出は別のスイッチ
+
+`docs/guides/telemetry-otlp-export.md` は「Collection and egress are deliberately separate switches」と明記しています。**収集を有効にしてもデータはどこにも送られません。**
+
+| 設定 | 既定 | 意味 |
+|---|---|---|
+| `telemetry.enabled` | **`false`** | 何も記録されません。メトリクスの呼び出し箇所は安価な no-op になります |
+| `telemetry.otlp_endpoint` | **`""`（空）** | **マシンから何も出ません。** ローカルの JSONL シンクのみ |
+| `kirocrew[otlp]` extra | **未インストール** | OTLP エクスポータはインポートすらできません |
+
+送出（egress）にはエンドポイントの設定**と** extra のインストールの**両方**が必要です。ローカルシンクは OTLP に置き換わるのではなく**追加**されるため、エンドポイントを設定してもダッシュボードは動き続けます。
+
+環境変数 `KIROCREW_TELEMETRY=1` でも収集を有効にできます（`telemetry.enabled` が `false` で `KIROCREW_TELEMETRY` も未設定のときは何も記録されません）。
+
+**出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/metrics.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/telemetry-otlp-export.md>
+（参照: 2026-09-13 / commit `8575209` / 版 v0.6.0）
 
 ## 送られないもの
 

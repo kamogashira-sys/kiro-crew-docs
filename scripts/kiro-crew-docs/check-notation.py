@@ -73,7 +73,8 @@ DATE_OK_RE = re.compile(r"Page updated|出典|公式|引用|略記|月名フル|
 # (d) 存在しない版番号の創作
 # ------------------------------------------------------------
 VERSION_RE = re.compile(r"\bv(\d+)\.(\d+)\.(\d+)\b")
-VALID_STABLE_VERSIONS = {"0.1.0", "0.1.1", "0.1.2", "0.1.3", "0.2.0", "0.3.0", "0.4.0", "0.4.1"}
+VALID_STABLE_VERSIONS = {"0.1.0", "0.1.1", "0.1.2", "0.1.3", "0.2.0", "0.3.0", "0.4.0", "0.4.1",
+                         "0.5.0", "0.6.0"}
 VERSION_ALLOW = [
     (re.compile(r"-rc\.\d+"), "プレリリース版への言及（実装済みとして書かない文脈）"),
 ]
@@ -108,6 +109,11 @@ ALLOWED_CLI_COMMANDS = {
     "cloud", "pod", "memory", "knowledge", "workspace", "mcp-cron", "mcp-core", "mcp-computer",
     # ↑ modules/cli.md でのみ確認できたコマンド群（Phase 4で追加。公式cli-reference/READMEには無い）
     "tailnet",
+    "secrets", "artifact",
+    # ↑ v0.5.0/v0.6.0で追加。`kirocrew secrets import`（CHANGELOG v0.5.0節 Before you upgrade近傍・
+    #   "Secrets leave more files"節）、`kirocrew artifact save --slug`（CHANGELOG v0.6.0節
+    #   "The terminal, themes and artifacts"節）で実在確認（commit 8575209）。
+    #   ⚠️ 公式cli-referenceページ・README・modules/cli.md での記載はPhase 4のCLI台帳突合で確認する。
     # ↑ v0.3.0で追加。⚠️ CLIコマンド台帳の4系統すべて（公式cli-referenceページ・README・
     #   --help・modules/cli.md）に記載がない。実在はCHANGELOG v0.3.0節122行、
     #   docs/guides/remote-and-mobile.md 286/290/294行、

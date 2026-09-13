@@ -3,14 +3,16 @@
 > **本ページは Kiro Crew（OSS）の仕様です。**
 
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/CHANGELOG.md>
-（参照: 2026-08-29 / commit `bba3f195212992eaa07d83c082e1ec55e395c32b` / 版 v0.4.1）
+（参照: 2026-09-13 / commit `8575209` / 版 v0.6.0）
 **出典**: <https://github.com/kirodotdev/KiroCrew/releases>
-（参照: 2026-08-29 / commit `bba3f195212992eaa07d83c082e1ec55e395c32b` / 版 v0.4.1）
+（参照: 2026-09-13 / commit `8575209` / 版 v0.6.0）
 
 ---
 
 ## 📑 このページの内容
 
+- [v0.6.0](#v060)
+- [v0.5.0](#v050)
 - [v0.4.1](#v041)
 - [v0.4.0](#v040)
 - [v0.3.0](#v030)
@@ -22,7 +24,110 @@
 
 ---
 
-> このページは **v0.1.2〜v0.4.1** をCHANGELOG.mdに版節があるものから要約しています。CHANGELOG.mdは開発者向けの詳細記述（PR番号付き・1項目10行超）のため、そのまま転記せず、利用者に影響する変更に絞っています。
+> このページは **v0.1.2〜v0.6.0** をCHANGELOG.mdに版節があるものから要約しています。CHANGELOG.mdは開発者向けの詳細記述（PR番号付き・1項目10行超）のため、そのまま転記せず、利用者に影響する変更に絞っています。
+
+### v0.6.0
+
+| 日付系統 | 値 |
+|---------|-----|
+| CHANGELOG.md | 2026-09-05 |
+| GitHub Release 公開日 | 2026-09-11 |
+
+**出典**: <https://github.com/kirodotdev/KiroCrew/releases/tag/v0.6.0>
+（参照: 2026-09-13 / commit `8575209` / 版 v0.6.0）
+
+#### Before you upgrade（破壊的変更・4件）
+
+- **Python 3.12 が下限**になりました。3.10・3.11 のホストはインストール・更新の前に上げる必要があります。システムのパッケージマネージャに 3.12 がない場合は、各インストーラが自分で 3.12 を用意します
+  → 詳細は [03_deployment/01_installation.md](../03_deployment/01_installation.md)
+- **インストーラが自前の Python を持ち込む**ようになりました。`curl -fsSL https://download.crew.kiro.dev/cli.sh | sh` はシステムの Python ではなく**ピン留めされた CPython** を用意します。意図してシステム側に対してビルドする場合は `--system-python` を渡します
+  → 詳細は [03_deployment/01_installation.md](../03_deployment/01_installation.md)
+- **コマンドゲートがコマンド文字列を読んで credential パスを塞ぐ方式をやめました**。今後は**サンドボックスの bind mask が境界**です。この文字列ゲートに依存していた場合は、`config.json` の `agent.sandbox` が `off` になっていないか確認が必要です
+  → 詳細は [01_features/09_security.md](../01_features/09_security.md)
+- **無人の auto-run plan が2時間で停止**します。`config.json` の `orchestrator.max_plan_duration_seconds` で引き上げるか、`0` で上限を外します。**stage-gated な plan は打ち切られません**
+  → 詳細は [01_features/06_autonomy.md](../01_features/06_autonomy.md) / [04_reference/05_limits.md](../04_reference/05_limits.md)
+
+#### 新機能（利用者に影響するもの・抜粋）
+
+- **ハーネスの選択（Preview）** — Claude Code・Codex・KAS を選べます。Settings → Developer で Developer Mode をオン（既定オフ）にしてから Developer → Agent Backend で選択します。**Claude 自身の設定で事前承認されたツール呼び出しは Crew の承認パスに到達せず、拒否ルールと監査ログがその呼び出しを見ません**
+  → 詳細は [01_features/15_agent-backends.md](../01_features/15_agent-backends.md)
+- **Remote crews（Preview）** — `instances.enabled` で、接続済みの別 crew 上でチャットを実行できます。別所で動くセッションには server badge と crew 名が付きます
+  → 詳細は [03_deployment/03_running-24-7.md](../03_deployment/03_running-24-7.md)
+- **長時間の作業** — チャットの1ターンが最大4時間（`agent.chat_turn_timeout_secs`）、サブエージェントは3時間・最大1000ツール呼び出しになりました
+  → 詳細は [04_reference/05_limits.md](../04_reference/05_limits.md) / [04_reference/02_configuration-keys.md](../04_reference/02_configuration-keys.md)
+- **エージェントが自分の監視ループを制御** — 開始・変更・停止をエージェント自身が行えます。goal chip にサイクル上限が表示されます。`agent.session_control` は既定 true で、`false` で無効化します
+  → 詳細は [01_features/17_workflows.md](../01_features/17_workflows.md)
+- **AWS Control が Overview で開く** — アカウント・キーの健全性・ドライブ使用量・共有リンク・バックアップスケジュールを1画面に表示します。Files ペインはその場でプレビュー・リネームします
+  → 詳細は [01_features/16_aws-control.md](../01_features/16_aws-control.md)
+- **Apps に Launchpad** — Apps → Library がグリッド表示になり、アプリはバックグラウンド処理・Command Bar の行・埋め込みチャットを持てます
+  → 詳細は [01_features/10_apps.md](../01_features/10_apps.md)
+- **Crew members に顔（Preview）** — ghost avatar を組み立てられます。**Developer Mode 前提の Preview opt-in** です
+- **ゲートが理由を説明する** — ブロックされたツール呼び出しが次の手を示します。拒否ルールは綴り替えに耐えるようになり、通常の作業が誤って拒否されることが減りました。**サンドボックスできないホスト（armv7l・riscv64 など）はエージェントの実行を拒否します**
+  → 詳細は [01_features/09_security.md](../01_features/09_security.md)
+- **承認の形を変えられる** — サンドボックス内のコマンドが自分の上限を書き換えられなくなりました。再起動時に auto-approve grant を落としたことを通知します
+  → 詳細は [01_features/09_security.md](../01_features/09_security.md)
+- **計測** — cron・heartbeat を含むすべてのターンがトークン・支出・レイテンシを報告します
+  → 詳細は [03_deployment/06_telemetry-and-privacy.md](../03_deployment/06_telemetry-and-privacy.md)
+- **Artifact の公開** — 自分の AWS アカウント上の公開 HTTPS URL へ artifact を公開できます（`publish.allowed_destinations`）
+  → 詳細は [01_features/12_artifacts.md](../01_features/12_artifacts.md)
+- **自動 Knowledge フォルダの廃止** — フォルダは明示的に追加したときだけ Library に入ります
+  → 詳細は [01_features/05_knowledge-library.md](../01_features/05_knowledge-library.md)
+
+### v0.5.0
+
+| 日付系統 | 値 |
+|---------|-----|
+| CHANGELOG.md | 2026-08-29 |
+| GitHub Release 公開日 | 2026-09-05 |
+
+**出典**: <https://github.com/kirodotdev/KiroCrew/releases/tag/v0.5.0>
+（参照: 2026-09-13 / commit `e683282` / 版 v0.5.0）
+
+#### Before you upgrade（破壊的変更・12件）
+
+> **⚠️ 出典間で件数が食い違っています。本サイトは裁定せず両方を示します。**
+> CHANGELOG.md の `[0.5.0]` 節の "Before you upgrade" は **12項目**ですが、GitHub Release 本文は **5項目**のみを挙げ、本文中で "Five changes" と明記しています。本サイトは**CHANGELOG.md の12件を根拠**とし、Release 本文には5件しか記載がないことを注記します。どちらが正しいかは判断しません。
+
+- **Dictation provider が単一の `local` provider に統合**されました
+- **Snapshot-to-S3 が廃止**されました。`kirocrew snapshot --to s3://…`・`--aws-profile`・`s3://` からの fetch が削除され、クラウドバックアップは AWS Control app に移りました。引き換えにスナップショットは live state への restore を獲得しています
+  → 詳細は [01_features/16_aws-control.md](../01_features/16_aws-control.md)
+- **App の実行信頼が、同意したコードに束縛**されました。grant は同意した時点のコードに紐づきます
+  → 詳細は [01_features/10_apps.md](../01_features/10_apps.md)
+- **黙って実行されていた一部のコマンドが確認を求める**ようになりました
+  → 詳細は [01_features/09_security.md](../01_features/09_security.md)
+- **Kiro CLI へは published relay 経由で到達**するようになりました（bundle-path 系の環境変数2件が削除）
+- **security-policy の `sandbox` キーの綴り誤りが検証エラーになりました**（従来は黙って無視）。`publish` が malformed な場合は publish を拒否します
+- **リリースが最小サポート版を宣言できる**ようになりました。下回るインストールには snooze・skip・dismiss ができない更新プロンプトが出ます
+  → 詳細は [02_release-policy.md](02_release-policy.md)
+- **Knowledge が Agent Capabilities 配下へ移動**しました（単独の Knowledge ページは廃止）
+  → 詳細は [01_features/05_knowledge-library.md](../01_features/05_knowledge-library.md)
+- **単独の Auto-Triage Pipeline app が廃止**され、そのボードは他所へ移りました
+  → 詳細は [01_features/10_apps.md](../01_features/10_apps.md)
+- **Disconnect が本当に切断する**ようになりました。接続の削除は OAuth grant の revoke も行います
+- **Malformed な agent spec が明示的に失敗**するようになりました（従来は黙って読み飛ばし）
+- **`kirocrew gateway --no-tunnel`** — 新フラグで起動した gateway はトンネルを張りません
+  → 詳細は [04_reference/01_cli-commands.md](../04_reference/01_cli-commands.md)
+
+> **注**: 上記のうち、Release 本文に記載があるのは「Dictation provider の統合」「Snapshot-to-S3 の廃止」「App 実行信頼の束縛」「確認を求めるコマンド」と、Knowledge 移動と Auto-Triage 廃止を1項目に統合したものです。残りは CHANGELOG.md にのみ記載されています。
+
+#### 新機能（利用者に影響するもの・抜粋）
+
+- **AWS Control（builtin App・既定オフ）** — 接続済み AWS アカウントの健全性・プライベート S3 ドライブ・クラウドバックアップ・費用を1画面で扱います。**Apps > Library で有効化**します
+  → 詳細は [01_features/16_aws-control.md](../01_features/16_aws-control.md)
+- **セキュリティポリシーの中央配布** — `security_policy.json` を URL で配布し、各ホストが fetch します
+  → 詳細は [01_features/09_security.md](../01_features/09_security.md)
+- **セッションがタブになる** — ダッシュボードのセッション表示がタブ形式になりました
+  → 詳細は [01_features/02_sessions.md](../01_features/02_sessions.md)
+- **エージェントが他のエージェントを動かす** — `session_send` が他セッションへ次のターンとしてメッセージを配送します。conductor エージェントがこの上に構築されています
+  → 詳細は [01_features/17_workflows.md](../01_features/17_workflows.md)
+- **承認を誘導できる** — 承認の挙動を設定で方向づけられます
+  → 詳細は [01_features/09_security.md](../01_features/09_security.md)
+- **Secrets の適用範囲拡大**・**MCP サーバの無言劣化の解消**・**スマートフォンとタッチ対応**・**Meetings の自動翻訳**（対象言語を選ぶと逐行で翻訳）
+  → 詳細は [01_features/11_interfaces.md](../01_features/11_interfaces.md) / [04_reference/04_mcp-tools.md](../04_reference/04_mcp-tools.md)
+- **どこからでも自己更新**・**Issue Radar と Dev Fleet の強化**・**高速化と軽量化**
+- **多言語化の拡充** — CHANGELOG は「Counted labels, confirmation dialogs and sign-in guidance are fully translated in all 12 languages」と記述しています（**v0.1.2 節の「10言語対応」から増加**）。破壊的プロンプトはその言語の引用符で資源名を囲み、5つのメニューがキーボード操作・フォーカス復帰・スクリーンリーダー通知に対応しました
+- **`tunnel.enabled`・`dashboard.browser_view_port`・`slack.trusted_bot_ids`** の設定キーが追加されました
+  → 詳細は [04_reference/02_configuration-keys.md](../04_reference/02_configuration-keys.md)
 
 ### v0.4.1
 

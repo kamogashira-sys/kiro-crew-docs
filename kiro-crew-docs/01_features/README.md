@@ -15,8 +15,11 @@ Kiro Crew の主要機能を解説するセクションです。**本サイト�
 | [07_agents-skills-steering.md](07_agents-skills-steering.md) | エージェント設定・スキル・Steering |
 | [08_mcp-integration.md](08_mcp-integration.md) | MCP統合 |
 | [09_security.md](09_security.md) | 多層防御 |
-| [10_apps.md](10_apps.md) | App の仕組み（builtin App 20件） |
+| [10_apps.md](10_apps.md) | App の仕組み（builtin App） |
 | [11_interfaces.md](11_interfaces.md) | 複数サーフェス・メッセージングチャネル |
 | [12_artifacts.md](12_artifacts.md) | 成果物（Artifacts） |
 | [13_computer-and-browser.md](13_computer-and-browser.md) | Computer Use・ブラウザ自動化 |
 | [14_migration-import.md](14_migration-import.md) | 既存設定の引き継ぎ |
+| [15_agent-backends.md](15_agent-backends.md) | ハーネス選択（Agent Backends・**Preview・既定オフ**） |
+| [16_aws-control.md](16_aws-control.md) | AWS Control（builtin App・**既定オフ**） |
+| [17_workflows.md](17_workflows.md) | Workflows（conductor・ワークフローライブラリ） |

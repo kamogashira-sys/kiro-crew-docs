@@ -24,7 +24,7 @@
 |-----|-------|-----------|
 | 1 | リポジトリのソース／モジュール仕様（`docs/system-specs/`・`docs/architecture/`） | 仕様の最終根拠 |
 | 2 | リポジトリのREADME／ガイド | 導入手順・運用手順 |
-| 3 | 公式ドキュメント（`kiro.dev/docs/crew/`配下43ページ） | 機能の公式な言い方 |
+| 3 | 公式ドキュメント（`kiro.dev/docs/crew/`配下49ページ） | 機能の公式な言い方 |
 | 4 | CHANGELOG.md + GitHub Releases | 版ごとの変更点 |
 | 5 | 公式ブログ | 設計意図・背景 |
 | 6 | AWS公式ブログ（日本語） | 日本語の公式用語 |
@@ -35,11 +35,11 @@
 
 | 対象 | 理由 |
 |------|------|
-| `docs/request-for-change/`（20件） | 未確定の将来仕様 |
-| `docs/ci/`・`docs/build/` | Crew開発者向け |
-| 削除済み・移行専用の仕様書 | v0.2.0で既に存在しない機能の記録（例: `claude-code-provider.md`） |
-| `## [Unreleased]`（CHANGELOG冒頭） | 未リリース |
-| プレリリース（`-rc.N`） | 安定版のみを版番号として扱う |
+| `docs/request-for-change/`（**Markdown 46件**） | 未確定の将来仕様。**本サイトは以前「20件」と記載していました**（v0.4.1時点の実測でも28件で、既にドリフトしていました）。<br>**数え方を明記します**（版によって構造が変わるため）: v0.6.0 は再帰で `.md` **46件**（トップレベル43件＋`plans/` サブディレクトリ3件）、うち `rfc-*.md` は**41件**。v0.4.1 は再帰・トップレベルとも**28件**（サブディレクトリなし）、うち `rfc-*.md` は26件 |
+| `docs/ci/`・`docs/build/` | Crew開発者向け。**ただしリリース手順・changelog運用の一次情報としては参照します**（`docs/build/release.md`・`docs/build/changelog.md`。[02_update/02_release-policy.md](../02_update/02_release-policy.md)参照） |
+| 削除済み・移行専用の仕様書 | 既に存在しない機能の記録（例: `docs/system-specs/post-launch-removals.md`）。**⚠️ `claude-code-provider.md` は対象外です**: v0.6.0 では `modules/claude-code-provider.md`（「Claude Code provider — a selectable ACP harness」）＝**現行機能の仕様書**に変わりました（[01_features/15_agent-backends.md](../01_features/15_agent-backends.md)参照） |
+| `## [Unreleased]`（CHANGELOG冒頭） | 未リリース。**⚠️ 固定参照時点（版 v0.6.0）では、この節は存在しません**（実測0件）。`docs/build/changelog.md` 23行は「There is no `## [Unreleased]` section, and the gate refuses one.」と明記し、gateの実体は `scripts/check_changelog_history.py` です。**節が復活した場合に備えて除外方針は維持します**（[02_update/02_release-policy.md](../02_update/02_release-policy.md)参照） |
+| プレリリース（`-insider.N`・`-rc.N`） | 安定版のみを版番号として扱う。**`-insider.N` が41件で主系統、`-rc.N` は v0.2.0系8件のみ**（本サイトは以前 `-rc.N` のみを挙げていました。[02_update/02_release-policy.md](../02_update/02_release-policy.md)参照） |
 | `kiro.dev/llms.txt` | crewの言及が0件（URL網羅には使えない） |
 
 ## Zenn記事の位置づけ

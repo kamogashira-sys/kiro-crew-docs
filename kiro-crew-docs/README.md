@@ -12,6 +12,9 @@ Kiro Crewは、Kiro CLIをランタイムに使い、チャット・Slack等の�
 | メモリの仕組みを知りたい | [01_features/04_memory-and-learning.md](01_features/04_memory-and-learning.md) |
 | セキュリティモデルを知りたい | [01_features/09_security.md](01_features/09_security.md) |
 | どんなApp（機能）があるか知りたい | [01_features/10_apps.md](01_features/10_apps.md) |
+| ハーネス（Claude Code・Codex・KAS）を選びたい | [01_features/15_agent-backends.md](01_features/15_agent-backends.md) |
+| AWSアカウントをCrewから扱いたい | [01_features/16_aws-control.md](01_features/16_aws-control.md) |
+| 複数エージェントを構造化して動かしたい | [01_features/17_workflows.md](01_features/17_workflows.md) |
 | 導入したい | [03_deployment/01_installation.md](03_deployment/01_installation.md) |
 | Windowsで使いたい | [03_deployment/02_windows.md](03_deployment/02_windows.md) |
 | CLIコマンドを調べたい | [04_reference/01_cli-commands.md](04_reference/01_cli-commands.md) |
@@ -22,7 +25,7 @@ Kiro Crewは、Kiro CLIをランタイムに使い、チャット・Slack等の�
 | セクション | 内容 | ページ数 |
 |-----------|------|:---:|
 | [00_information](00_information/) | リポジトリ・公式サイトの構造、情報源の使い分け | 4 |
-| [01_features](01_features/) | **機能解説（本サイトの主眼）** | 15 |
+| [01_features](01_features/) | **機能解説（本サイトの主眼）** | 18 |
 | [02_update](02_update/) | 更新履歴・リリース方針 | 3 |
 | [03_deployment](03_deployment/) | 導入・運用・セキュリティ設定・テレメトリ | 7 |
 | [04_reference](04_reference/) | CLI・設定キー・ディレクトリ構造・上限値 | 6 |
@@ -31,7 +34,7 @@ Kiro Crewは、Kiro CLIをランタイムに使い、チャット・Slack等の�
 
 - **OSSであり、一次情報がリポジトリ（GitHub）と公式サイト（kiro.dev）の二重構造**です。両者が食い違う場合、本サイトは裁定せず両方を記載します
 - Kiro Crewのmainブランチは**日次で動く**ため、リポジトリを出典にした記述には参照日・commit SHA・版を必ず記録しています
-- 最新安定版は **v0.4.1**（2026-08-29時点）
+- 最新安定版は **v0.6.0**（2026-09-13時点）
 - Kiro Crew本体のライセンスは **Apache-2.0**、本サイト（解説文書）は **MIT** です
 
 ## 機械検証
@@ -42,7 +45,7 @@ Kiro Crewは、Kiro CLIをランタイムに使い、チャット・Slack等の�
 make check-kiro-crew-all
 ```
 
-内部リンク・出典・SSoT（正準値）の一致・表記規約・公式43ページの網羅性・changelog構造・スコープ境界・参照時点記録を検証します。
+内部リンク・出典・SSoT（正準値）の一致・表記規約・公式49ページの網羅性・changelog構造・スコープ境界・参照時点記録を検証します。
 
 ## 編集方針
 

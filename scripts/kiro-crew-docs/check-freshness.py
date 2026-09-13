@@ -30,10 +30,14 @@ CHANGELOG_URL = "https://raw.githubusercontent.com/kirodotdev/KiroCrew/main/CHAN
 SITEMAP_URL = "https://kiro.dev/sitemap.xml"
 TREE_URL = "https://api.github.com/repos/kirodotdev/KiroCrew/git/trees/main?recursive=1"
 
-KNOWN_LATEST_STABLE = "v0.4.1"
-KNOWN_STABLE_COUNT = 8
-KNOWN_CREW_PAGES = 43
-KNOWN_DOCS_FILES = 225
+KNOWN_LATEST_STABLE = "v0.6.0"
+KNOWN_STABLE_COUNT = 10
+KNOWN_CREW_PAGES = 49
+KNOWN_DOCS_FILES = 244
+# ⚠️ ④系統は `trees/main`（＝main HEAD）を測る更新検知であり、SSoT S2（v0.6.0タグの230件）とは
+#    別の値である。244 は 2026-09-13 の main 実測値。main は日次で動くため、この値の変化は
+#    「文書のバグ」ではなく「上流が動いた」の合図。offline モードではタグ版tree.json（230）を
+#    読むため差分が報告されるが、これは想定どおり。
 
 UA = "Mozilla/5.0"
 

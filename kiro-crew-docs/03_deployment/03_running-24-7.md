@@ -3,7 +3,9 @@
 > **本ページは Kiro Crew（OSS）の仕様です。**
 
 **出典**: <https://kiro.dev/docs/crew/running-24-7/>（Page updated 表記あり）
-**出典**: <https://kiro.dev/docs/crew/features/multi-instance/>・<https://kiro.dev/docs/crew/features/snapshot/>
+**出典**: <https://kiro.dev/docs/crew/features/multi-instance/>・<https://kiro.dev/docs/crew/features/snapshot/>・<https://kiro.dev/docs/crew/system/>
+**出典**（Remote Instances の呼称と有効化の2スイッチ）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/instances.md>
+（参照: 2026-09-13 / commit `8575209` / 版 v0.6.0）
 
 ---
 
@@ -14,6 +16,7 @@
 - [リモートホスト](#リモートホスト)
 - [モバイルアクセス](#モバイルアクセス)
 - [マルチインスタンス](#マルチインスタンス)
+- [System & storage（リソース監視とディスク回収）](#system--storageリソース監視とディスク回収)
 - [スナップショットと復元](#スナップショットと復元)
 - [未確認事項](#未確認事項)
 
@@ -89,6 +92,52 @@ ssh -L 5476:localhost:5476 user@your-host.example.com
 ## マルチインスタンス
 
 複数のCrewインスタンスを運用するための機能です（詳細は公式 `features/multi-instance/` を参照）。**注記**: 公式ページの「4つの一般的な運用パターン」（ローカルサービス化・Docker常駐・リモートホスト・モバイルアクセス）には含まれず、公式ページの別項目です。
+
+### Remote Instances（v0.6.0・Preview・既定オフ）
+
+**v0.6.0 で、接続済みの別インスタンス上でチャットを実行できるようになりました。** 1つの Kiro Crew Gateway（**hub**）が、SSH **または AWS SSM Session Manager** のトンネル経由で複数のリモート Kiro Crew インスタンス（開発ホスト・EC2・自宅サーバ）を管理・切り替えます。各リモートのダッシュボードは、切り替えストリップの下に iframe ペインとして埋め込まれます。トランスポートはインスタンス単位（`connection_method`）です。
+
+> **⚠️ 有効化には2つのスイッチが必要です（どちらも既定オフ）。**
+>
+> 1. `config.json` の **`instances.enabled`** を設定する
+> 2. **Settings → Developer → Feature Previews → Chat on a crew** をオンにする
+>
+> そのうえでサイドバーの新規チャットメニューの **New chat on crew** から相手を選びます。**トランスクリプトはローカルに残り、各ターンは相手のインスタンス上で実行されます。**
+
+別所で実行されるセッションには **server badge** と相手の名前が表示されます。インスタンスはアプリのロード時とタブのフォーカス時に自分で接続します（既定で有効）。
+
+> **呼称について（一次情報が理由を説明しています）**: CHANGELOG v0.6.0 の見出しは「Remote crews」ですが、`instances.md` 9-21行は**UI上の表示は「Remote Instances」**（*Settings → Remote Instances*、ヘッダの切り替えグループ、キーボードショートカット）だと明記しています。同仕様書は、以前のUI文言が「Remote Crew」であり、コードと設定（`/api/instances`・`instances.json`・`InstancesPanel`・EC2の`instance_id`／`ssm_target`）に合わせて「instance」へ改めたと説明します。**変更されたのは表示文字列のみで、i18nキー名と内部識別子（`remoteCrewPanel` を含む）は変わっていない**ため、コードと仕様書の文中には「crew」が略称として残ります。製品名の **Kiro Crew** や、エージェントの **crew**（独自のワークスペース／メモリを持つアシスタント。「Crew Mode」）とは**意図的に別物**です。
+
+**出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/instances.md>
+（参照: 2026-09-13 / commit `8575209` / 版 v0.6.0）
+
+## System & storage（リソース監視とディスク回収）
+
+**v0.6.0 で公式ドキュメントに新設されたページの内容です。** ダッシュボードの **System** 領域は、Crew が自分のマシンに何をしているかを見て後片付けをする場所で、**2つの部分**からなります。
+
+### System: ライブのタスクマネージャ
+
+ダッシュボードから **System** を開くと、セッション単位のリソース使用状況をリアルタイムで確認できます。実行中のセッション・サブエージェント・バックグラウンド処理と、それぞれの消費量が表示されます。公式ページはこれを「Crew 用のタスクマネージャのように読める」と説明しています。
+
+メモリを保持しているセッションやサブエージェントを見つけたり、重い作業を始める前にマシンがアイドルであることを確認するのに使います。
+
+### マシンが埋まったとき
+
+Crew は全体のメモリ圧を監視し、重い作業がホストをスラッシングさせるのではなく穏当に失敗するようにします。**メモリが致命的に少なくなると、スケジュールジョブは延期され、新規サブエージェントは拒否されます。** ダッシュボードのヘッダに現在の姿勢（posture）が表示されるため、要求の重い処理を始める前に把握できます。
+
+**上限は同時実行中の全エージェントの合計に適用**され、spawn単位ではありません。多数の小さなサブエージェントが集まってマシンを食い潰すことはできません。合計値は `config.json` の `resource_limits.max_total_memory_mb` と `resource_limits.max_total_processes` で上書きします。
+
+### Storage: コストを見て容量を回収する
+
+**Storage** 画面は、セッションがディスク上で消費している量（トランスクリプト・添付ファイル・セッション単位の状態）を報告します。長く運用したインストールが静かに満杯になることを防ぐためのものです。
+
+- セッション別のディスク使用量の内訳を見る
+- セッションを**削除するのではなくtrashへ移して**容量を回収する
+- まだ必要だったものはtrashから復元し、完全に容量を空けるにはtrashを空にする
+
+公式ページは「セッションのインベントリは正直に報告する」と述べ、**アイドルなセッションは「使用中」ではなくアイドルとして表示される**ことを明記しています。
+
+**出典**: <https://kiro.dev/docs/crew/system/>
 
 ## スナップショットと復元
 

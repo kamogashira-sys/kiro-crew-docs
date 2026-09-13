@@ -6,6 +6,7 @@
 （参照: 2026-08-29 / commit `bba3f195212992eaa07d83c082e1ec55e395c32b` / 版 v0.4.1）
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/browser.md>
 （参照: 2026-08-29 / commit `bba3f195212992eaa07d83c082e1ec55e395c32b` / 版 v0.4.1）
+**出典**（v0.6.0 で公式ドキュメントに新設された2ページ）: <https://kiro.dev/docs/crew/features/computer-use/>・<https://kiro.dev/docs/crew/features/browser/>
 
 ---
 
@@ -13,6 +14,7 @@
 
 - [Computer Use（デスクトップGUI自動化）](#computer-useデスクトップgui自動化)
 - [ブラウザ自動化](#ブラウザ自動化)
+- [v0.6.0での変更（公式ドキュメントへのページ新設）](#v060での変更公式ドキュメントへのページ新設)
 - [v0.4.0での変更](#v040での変更)
 - [v0.3.0での変更](#v030での変更)
 - [未確認事項](#未確認事項)
@@ -59,6 +61,20 @@ agent turn ──shell──▶ playwright-cli <verb> …
 **stdoutの1行が契約です**: すべてのコマンドが結果のページURL・ページタイトル・スナップショットYAMLへのファイルシステムパスを出力します。約250文字のstdoutで1つの完全な操作結果を伝え、アクセシビリティツリーはエージェントが必要とするまでディスクに留まります。
 
 > **版差の注記**: AWS Japan社員のZenn記事（0.1.2時点）はブラウザ自動化を「Playwright MCP」と記述していますが、これは執筆時点の設計から変わった可能性があります。v0.2.0以降の一次情報は明確に「MCPサーバではなくシェル機能」と述べているため、本サイトはこれを正として採用します。
+
+## v0.6.0での変更（公式ドキュメントへのページ新設）
+
+**v0.6.0 で、公式ドキュメントに `features/computer-use/` と `features/browser/` の2ページが新設されました**（v0.4.1 時点の公式ドキュメントには両ページが存在しませんでした）。
+
+公式 `features/computer-use/` は対応プラットフォームを明記しています。
+
+- **Computer Use は既定でオフ**。**Settings → Computer Use** から有効化する
+- **macOS**（アクセシビリティレイヤ = AX 経由）と **Windows**（ネイティブバックエンド経由）で動作する
+- **Linux はサポート対象外**（"Linux is not supported."）
+
+これは上記「v0.4.0での変更」の内容と整合します（本サイトの記述を変更する必要はありません）。
+
+**出典**: <https://kiro.dev/docs/crew/features/computer-use/>
 
 ## v0.4.0での変更
 

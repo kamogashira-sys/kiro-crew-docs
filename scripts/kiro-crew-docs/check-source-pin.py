@@ -38,9 +38,14 @@ FORBIDDEN_SOURCE_PATHS = [
 ]
 
 REMOVED_SPEC_FILES = [
-    (re.compile(r"claude-code-provider\.md"), "削除済み機能の仕様書（Standalone provider — removed）"),
     (re.compile(r"post-launch-removals\.md"), "移行専用の仕様書（旧データホームの記述を含む）"),
 ]
+# ⚠️ v0.6.0 で claude-code-provider.md を本リストから外した（D-8）。
+#    v0.4.1 の docs/system-specs/features/claude-code-provider.md はタイトルが
+#    「# Standalone provider — removed」で削除済み機能の記録だったが、
+#    v0.6.0 の docs/system-specs/modules/claude-code-provider.md は
+#    「# Claude Code provider — a selectable ACP harness」＝現行機能（Agent Backends）の
+#    仕様書に変わったため、出典として使える（commit 8575209 で確認）。
 
 LEGACY_DATA_HOME_RE = re.compile(r"~/\.kirocrew\b(?!/)")
 # ただし「post-launch-removals.md の言及として~/.kirocrewは現行では使わない」という

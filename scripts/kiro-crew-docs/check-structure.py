@@ -56,6 +56,9 @@ SECTION_FILES = {
         "12_artifacts.md",
         "13_computer-and-browser.md",
         "14_migration-import.md",
+        "15_agent-backends.md",
+        "16_aws-control.md",
+        "17_workflows.md",
     ],
     "02_update": [
         "01_changelog.md",

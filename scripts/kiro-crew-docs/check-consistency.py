@@ -34,6 +34,20 @@ import sys
 DOC_ROOT = "kiro-crew-docs"
 LOCAL_ONLY = ("05_meta", "06_embedded-docs", "work_plans", "work_records")
 
+# 水平展開検証の対象に加える「DOC_ROOT の外にある公開ファイル」。
+# 背景: all_docs() は kiro-crew-docs/**/*.md しか走査しないため、ルート README.md・
+# .github/・Makefile に旧件数が残っても、どの検証器も検出できなかった。
+# v0.6.0 対応で実際に5箇所（CIワークフローのコメント2件・WORKFLOW.md 2件・
+# Makefile 1件）の取り残しが発生したため、走査対象へ加えて再発を防ぐ。
+# 注意: 出典日付の整合検証（check_source_dates_consistency）は文書固有の意味を
+# 持つため対象を広げない。ここで広げるのは値系SSoTの水平展開検証のみである。
+EXTRA_SCAN_GLOBS = (
+    "README.md",
+    ".github/**/*.md",
+    ".github/workflows/*.yml",
+    "Makefile",
+)
+
 # 両併記が必須の3件。それぞれ「両方の値が同一ページに存在するか」を検証する。
 DUAL_NOTATION = [
     {
@@ -81,7 +95,9 @@ SSOT = [
     # 注意: 文脈語を緩めると版節内の「当時の値」を誤検知する。文脈語は必ず
     # 「その値が現在値を指すときだけ現れる語」に限定すること。
     {"id": "S1", "label": "公式docsのcrewページ数", "value": "49",
-     "pattern": re.compile(r"(?:公式docsのcrewページ数|`kiro\.dev/docs/crew/`配下)\D{0,8}?\**\s*(\d{1,4})\s*\**"),
+     # `配下` の直前に空白が入る表記（`` `kiro.dev/docs/crew/` 配下49ページ ``）が
+     # .github/WORKFLOW.md に実在し、空白を許さないと取り逃す。\s* を必ず入れること。
+     "pattern": re.compile(r"(?:公式docsのcrewページ数|`kiro\.dev/docs/crew/`\s*配下)\D{0,8}?\**\s*(\d{1,4})\s*\**"),
      # 2桁以上に限定する理由: 「公式2ページと…で確認済み」のように、総数ではなく
      # 「特定の2ページ」を指す表現が実在し、1桁を許すと誤検知になる。公式ページの
      # 総数は2桁以上であるため、この制約で総数の指し先だけを拾える。
@@ -112,6 +128,21 @@ def is_local_only(path):
 def all_docs():
     docs = sorted(glob.glob(f"{DOC_ROOT}/**/*.md", recursive=True))
     return [d for d in docs if not is_local_only(d)]
+
+
+def ssot_scan_targets():
+    """値系SSoTの水平展開検証の対象。DOC_ROOT配下の公開文書に周辺ファイルを加える。"""
+    targets = list(all_docs())
+    seen = {os.path.abspath(t) for t in targets}
+    for pattern in EXTRA_SCAN_GLOBS:
+        for path in sorted(glob.glob(pattern, recursive=True)):
+            if not os.path.isfile(path) or is_local_only(path):
+                continue
+            key = os.path.abspath(path)
+            if key not in seen:
+                seen.add(key)
+                targets.append(path)
+    return targets
 
 
 def check_dual_notation(errors, notes):
@@ -159,7 +190,7 @@ def check_value_ssot(errors, notes):
     # SSoT値と異なっていないかを確認する。OWNER自身は既に上のループで検証済みなので除外する。
     # `pattern`（主パターン）と `extra_patterns`（同じ値を指す別表記。例: `localhost:PORT`）の
     # 両方を対象にし、実際にマッチした数値をSSoT値と比較する（固定値マッチだと改変を検出できないため）。
-    other_docs = [d for d in all_docs() if os.path.abspath(d) != os.path.abspath(OWNER)]
+    other_docs = [d for d in ssot_scan_targets() if os.path.abspath(d) != os.path.abspath(OWNER)]
     mismatches_by_id = {}
     matches_by_id = {}
     for path in other_docs:

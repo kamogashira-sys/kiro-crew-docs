@@ -22,7 +22,7 @@ Kiro Crew は **OSS であり、一次情報がリポジトリ（GitHub `kirodot
 |-----|-------|-----------|
 | 1 | リポジトリのソース／モジュール仕様（`docs/system-specs/`・`docs/architecture/`） | 仕様の最終根拠。設定キー名・既定値・制約 |
 | 2 | リポジトリの README／ガイド（`docs/guides/`・`docs/app-kit/`） | 導入手順・運用手順・App SDK |
-| 3 | 公式ドキュメント（`kiro.dev/docs/crew/` 配下43ページ） | 機能の公式な言い方・ユーザー向け説明 |
+| 3 | 公式ドキュメント（`kiro.dev/docs/crew/` 配下49ページ） | 機能の公式な言い方・ユーザー向け説明 |
 | 4 | CHANGELOG.md + GitHub Releases | 版ごとの変更点（**両者の日付が食い違う**。両併記） |
 | 5 | 公式ブログ（`kiro.dev/blog/introducing-kiro-crew/`） | 設計意図・背景・採用実績 |
 | 6 | AWS公式ブログ（日本語） | 日本語の公式用語 |
@@ -48,7 +48,7 @@ Kiro Crew は **OSS であり、一次情報がリポジトリ（GitHub `kirodot
 
 | 対象 | 理由 |
 |------|------|
-| `docs/request-for-change/`（20件） | 未確定の将来仕様 |
+| `docs/request-for-change/`（46件） | 未確定の将来仕様 |
 | `docs/ci/`・`docs/build/` | Crew 開発者向け |
 | 削除済み・移行専用の仕様書 | v0.2.0で既に存在しない機能の記録 |
 | `## [Unreleased]` | 未リリース |

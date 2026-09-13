@@ -54,7 +54,7 @@ help:
 	@echo "  make check-kiro-crew-counts      # 件数系 SSoT・ページ数3者一致"
 	@echo "  make check-kiro-crew-consistency # 値系 SSoT・両併記の対称性（S3a/S15/S22）"
 	@echo "  make check-kiro-crew-notation    # 表記規約 (a)〜(i)"
-	@echo "  make check-kiro-crew-coverage    # 公式43ページ台帳・未割当検出"
+	@echo "  make check-kiro-crew-coverage    # 公式49ページ台帳・未割当検出"
 	@echo "  make check-kiro-crew-changelog   # changelog 構造・日付2列"
 	@echo "  make check-kiro-crew-scope       # スコープ境界（Kiro CLI 混入検出）"
 	@echo "  make check-kiro-crew-source-pin  # 参照時点記録・削除済み仕様書の出典検出"

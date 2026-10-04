@@ -12,15 +12,10 @@
     （Rev 1 でこの3者が5節すべて不一致だった実際の不具合の再発防止）。
 
 検証する正準値（件数系。05_meta/10_update-guide.md §7 参照）:
-    S1  公式crewページ数        = 43
-    S2  docs/配下ファイル数      = 225
-    S4  安定版リリース数         = 8
-    S5  総リリース数            = 43
-    S6  CHANGELOG版節数         = 3（+Unreleased）
-    S12 builtin App数           = 20（defaultEnabled:true は projects のみ）
-    S13 メッセージングチャネル数  = 7
-    S14 インポートカテゴリ数     = 8
-    S21 公式カテゴリ数           = 5+単独5
+    値は下の SSOT 辞書が正本（docstring に値を書くと版更新で取り残されるため書かない）。
+    S1 公式crewページ数 / S2 docs/配下ファイル数 / S4 安定版リリース数 / S5 総リリース数 /
+    S12 builtin App数（ローカル台帳との一致のみ。v0.6.0以降は[要検証]）/
+    S13 メッセージングチャネル数 / S14 インポートソース数・カテゴリ数
 
 fail-safe:
     一次情報スナップショットが無い場合、公式実体との照合はスキップして exit 0。
@@ -38,9 +33,9 @@ LOCAL_ONLY = ("05_meta", "06_embedded-docs", "work_plans", "work_records")
 
 SSOT = {
     "S1": {"value": 49, "label": "公式crewページ数"},
-    "S2": {"value": 230, "label": "docs/配下ファイル数"},  # v0.6.0タグ実測
-    "S4": {"value": 10, "label": "安定版リリース数"},
-    "S5": {"value": 59, "label": "総リリース数"},
+    "S2": {"value": 281, "label": "docs/配下ファイル数"},  # v0.7.2タグ実測（v0.6.0タグは230）
+    "S4": {"value": 13, "label": "安定版リリース数"},  # v0.7.2対応時点（2026-10-04）
+    "S5": {"value": 77, "label": "総リリース数"},  # 2026-10-04取得時点（プレリリース64）
     "S11": {"value": 137, "label": "拒否コマンドルール件数"},
     "S12": {"value": 20, "label": "builtin App数"},
     "S13": {"value": 7, "label": "メッセージングチャネル数"},

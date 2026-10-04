@@ -6,7 +6,7 @@
 
 目的:
     計画書 §4.4 のスコープ境界（Kiro CLI との重複領域）が守られているかを検証する。
-    KiroCrew リポジトリには `docs/reference/kiro-cli/`（23ファイル）が同梱されており、
+    KiroCrew リポジトリには `docs/reference/kiro-cli/`（22ファイル）が同梱されており、
     これは q-cli-docs の領域である。本スクリプトはこの誤用を検出する。
 
 検証内容:
@@ -28,7 +28,7 @@ LOCAL_ONLY = ("05_meta", "06_embedded-docs", "work_plans", "work_records")
 
 FORBIDDEN_SOURCE_RE = re.compile(r"docs/reference/kiro-cli/[a-z0-9/_-]*\.md")
 # ⚠️ 設計意図: `.md`拡張子を要求するのは、ディレクトリ自体への言及
-# （「`docs/reference/kiro-cli/`（23ファイル）はKiro CLI単体のリファレンス」といった
+# （「`docs/reference/kiro-cli/`（22ファイル）はKiro CLI単体のリファレンス」といった
 # 事実説明）を誤検知しないため。個別ファイルを出典として引用する行のみを検出する。
 CLI_SOLO_FEATURE_RE = re.compile(
     r"(?:モデル選択|model selection)(?:機能)?(?:について)?(?!.*Kiro Crew)"

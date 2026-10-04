@@ -9,12 +9,13 @@
     check-counts.py が「表の実体 vs 宣言件数」を見るのに対し、本スクリプトは
     「文書 A の値 vs 文書 B の値 vs SSoT 定数」を見る。
 
-Crew 固有の最重要検証: **両併記3件の対称性**（出典間で値が食い違うため裁定せず
+Crew 固有の最重要検証: **両併記4件の対称性**（出典間で値が食い違うため裁定せず
 両方を書く決まりにしたもの。片方のページだけ書いて他方に書き忘れると
 「裁定した」ように読めてしまう）:
     S3a  版の日付（CHANGELOG日付 vs Release公開日）
     S15  Subagent上限（subagent.md=32 vs config.md=16）
     S22  サンドボックス呼称（公式docsのauto vs README/内部ティアのstandard）
+    S24  コンテキストバジェット（公式memoryページ「~55K tokens」 vs リポジトリ 33,000文字。v0.7.0〜）
 
 検証する正準値（値系。S8〜S20・S22・S24）:
     S8  Gatewayポート           = 5476
@@ -22,7 +23,8 @@ Crew 固有の最重要検証: **両併記3件の対称性**（出典間で値�
     S16 履歴減衰段数            = 5
     S19 Consolidation閾値       = 30メッセージ / 3時間idle
     S22 サンドボックスモード数   = 3（auto/strict/off）
-    S24 コンテキストバジェット   = 165,000文字
+    S24 コンテキストバジェット   = 33,000文字（リポジトリ `_CONTEXT_BUDGET_BASE`。v0.6.0までは165,000）
+    ※ S1〜S6（件数系）の値は下の SSOT リストが正本
 
 ⚠️ 数値だけを探さない。単位や文脈語とセットで照合する。
 """
@@ -48,7 +50,7 @@ EXTRA_SCAN_GLOBS = (
     "Makefile",
 )
 
-# 両併記が必須の3件。それぞれ「両方の値が同一ページに存在するか」を検証する。
+# 両併記が必須の4件。それぞれ「両方の値が同一ページに存在するか」を検証する。
 DUAL_NOTATION = [
     {
         "id": "S3a", "label": "版の日付（CHANGELOG vs Release公開日）",
@@ -68,6 +70,15 @@ DUAL_NOTATION = [
         "pattern_b": re.compile(r"`standard`|standard"),
         "target_glob": f"{DOC_ROOT}/01_features/09_security.md",
     },
+    {
+        # v0.7.0 でリポジトリの `_CONTEXT_BUDGET_BASE` が 165,000 → 固定 33,000 文字になったが、
+        # 公式 memory ページ（図「Context Window (~55K tokens)」）は v0.6.0 とバイト同一のまま。
+        # リポジトリ値だけを書くと公式を否定した（裁定した）ように読めるため、両方を必須にする。
+        "id": "S24", "label": "コンテキストバジェット（公式 ~55K tokens vs リポジトリ 33,000文字）",
+        "pattern_a": re.compile(r"55K\s*tokens"),
+        "pattern_b": re.compile(r"33,000\s*文字"),
+        "target_glob": f"{DOC_ROOT}/04_reference/05_limits.md",
+    },
 ]
 
 # 値系SSoT: 文脈語とセットで数値を検証（所有ファイル=04_reference/05_limits.md）
@@ -85,7 +96,7 @@ SSOT = [
      "pattern": re.compile(r"Consolidationトリガー[^\n]{0,20}?好み/プロジェクト[^\n]{0,20}?\**\s*(\d{1,6})\s*\**\s*メッセージ")},
     {"id": "S19b", "label": "Consolidationトリガー（履歴/レッスン）", "value": "3",
      "pattern": re.compile(r"Consolidationトリガー[^\n]{0,20}?履歴/レッスン[^\n]{0,20}?\**\s*(\d{1,3})\s*\**\s*時間アイドル")},
-    {"id": "S24", "label": "コンテキストバジェット", "value": "165000",
+    {"id": "S24", "label": "コンテキストバジェット（リポジトリ値）", "value": "33000",
      "pattern": re.compile(r"コンテキストバジェット[^\n]{0,20}?\**\s*([\d,]{3,10})\s*\**\s*文字")},
     # --- 件数系SSoT（S1〜S6）: D-15（案1）により追加 -------------------------
     # 背景: check-counts.py は「定数 ↔ 一次情報スナップショット実測」を突合するが
@@ -102,16 +113,16 @@ SSOT = [
      # 「特定の2ページ」を指す表現が実在し、1桁を許すと誤検知になる。公式ページの
      # 総数は2桁以上であるため、この制約で総数の指し先だけを拾える。
      "extra_patterns": [re.compile(r"公式\s*(\d{2,4})\s*ページ")]},
-    {"id": "S2", "label": "リポジトリdocs配下ファイル数", "value": "230",
+    {"id": "S2", "label": "リポジトリdocs配下ファイル数", "value": "281",
      "pattern": re.compile(r"(?:リポジトリ`docs/`配下ファイル数|`docs/`\s*配下は)\D{0,8}?\**\s*(\d{1,5})\s*\**")},
-    {"id": "S3", "label": "最新安定版", "value": "0.6.0",
+    {"id": "S3", "label": "最新安定版", "value": "0.7.2",
      "pattern": re.compile(r"最新安定版\D{0,8}?\**\s*v(\d+\.\d+\.\d+)\s*\**")},
-    {"id": "S4", "label": "安定版リリース数", "value": "10",
+    {"id": "S4", "label": "安定版リリース数", "value": "13",
      "pattern": re.compile(r"安定版リリース数\D{0,8}?\**\s*(\d{1,4})\s*\**")},
-    {"id": "S5", "label": "総リリース数", "value": "59",
+    {"id": "S5", "label": "総リリース数", "value": "77",
      "pattern": re.compile(r"総リリース数(?:（プレリリース含む）)?\D{0,8}?\**\s*(\d{1,4})\s*\**"),
      "extra_patterns": [re.compile(r"全\s*(\d{1,4})\s*Release")]},
-    {"id": "S6", "label": "CHANGELOG.mdの版節数", "value": "8",
+    {"id": "S6", "label": "CHANGELOG.mdの版節数", "value": "11",
      "pattern": re.compile(r"CHANGELOG\.mdの版節数\D{0,8}?\**\s*(\d{1,3})\s*\**")},
 ]
 

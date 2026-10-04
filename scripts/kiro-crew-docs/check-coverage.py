@@ -36,7 +36,7 @@ import sys
 LEDGER_PAGES = "kiro-crew-docs/05_meta/ledger-official-pages.md"
 LEDGER_MODULES = "kiro-crew-docs/05_meta/ledger-modules.md"
 EXPECTED_OFFICIAL_PAGES = 49
-EXPECTED_MODULES = 88  # v0.6.0タグ実測（直下3/common7/modules78）。v0.3.0時点の76から更新
+EXPECTED_MODULES = 104  # v0.7.2タグ実測（直下3/common7/modules94。.mdのみは101）。v0.6.0タグは88
 
 ROW_RE = re.compile(r'^\|\s*(\d+)\s*\|\s*`([^`]+)`\s*\|\s*(.+?)\s*\|', re.M)
 

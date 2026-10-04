@@ -29,7 +29,7 @@
 
 SCRIPTS := ./scripts/kiro-crew-docs
 
-# 一次情報スナップショットの置き場（日付ディレクトリ配下の入れ子。§7.4）。
+# 一次情報スナップショットの置き場（日付ディレクトリ配下の入れ子。05_meta/10_update-guide.md §5.4）。
 # 未指定・不在ならチェックはスキップする（ネットワークに依存させない）。
 SNAPSHOT_ROOT ?= kiro-crew-docs/06_embedded-docs
 REPO_DIR  ?= $(shell ls -d $(SNAPSHOT_ROOT)/*/repo     2>/dev/null | sort | tail -1)

@@ -71,7 +71,7 @@ curl -sS -A "Mozilla/5.0" -o /tmp/crew-page.md "https://kiro.dev/docs/crew/secur
 
 ### スコープ境界の確認
 
-- [ ] `docs/reference/kiro-cli/`（23ファイル）を出典として引用していない
+- [ ] `docs/reference/kiro-cli/`（22ファイル）を出典として引用していない
 - [ ] Kiro CLI 単体機能の解説が混入していない
 - [ ] Crew Gateway 自身の機能と、Kiro CLI への依存点（ACP・`agent.provider=acp`）を区別して書いている
 

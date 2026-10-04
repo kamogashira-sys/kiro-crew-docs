@@ -32,9 +32,9 @@ Kiro Crew は **OSS であり、一次情報がリポジトリ（GitHub `kirodot
 ### 情報収集の原則
 
 - **リポジトリを出典にする記述には commit SHA（短縮7桁）と参照日を必ず記録する**
-- Zenn 記事（0.1.2 時点）の値をそのまま最新版の値として書かない。**v0.2.0 の一次情報で再確認する**
+- Zenn 記事（0.1.2 時点）の値をそのまま最新版の値として書かない。**固定参照時点の最新安定版の一次情報で再確認する**（固定版はルート `README.md` の「更新範囲と参照時点」を参照）
 - `docs/request-for-change/`（RFC）・`[Unreleased]`・プレリリースを実装済みとして書かない
-- **削除済み・移行専用の仕様書を出典にしない**（`features/claude-code-provider.md`・`post-launch-removals.md` 等。冒頭に `removed`／`no longer exists`／`legacy` の断りがあるもの）
+- **削除済み・移行専用の仕様書を出典にしない**（`post-launch-removals.md` 等。冒頭に `removed`／`no longer exists`／`legacy` の断りがあるもの）。**`modules/claude-code-provider.md` は v0.6.0 で現行機能（selectable ACP harness）の仕様書に変わったため対象外**。版によって同名ファイルの性質が変わるので、固定版の本文で断りの有無を確認する
 
 ### 厳密な仕様調査での `src/` 解析確認（必須）
 
@@ -48,11 +48,11 @@ Kiro Crew は **OSS であり、一次情報がリポジトリ（GitHub `kirodot
 
 | 対象 | 理由 |
 |------|------|
-| `docs/request-for-change/`（46件） | 未確定の将来仕様 |
-| `docs/ci/`・`docs/build/` | Crew 開発者向け |
-| 削除済み・移行専用の仕様書 | v0.2.0で既に存在しない機能の記録 |
-| `## [Unreleased]` | 未リリース |
-| プレリリース（`-rc.N`） | 安定版のみを版番号として扱う |
+| `docs/request-for-change/`（v0.7.2 は再帰で Markdown 56件） | 未確定の将来仕様。件数は版で変わるため、数え方を含めて [情報源](../kiro-crew-docs/00_information/03_information-sources.md) を正本とする |
+| `docs/ci/`・`docs/build/` | Crew 開発者向け（リリース手順・changelog運用の一次情報としてのみ `docs/build/release.md`・`docs/build/changelog.md` を参照する） |
+| 削除済み・移行専用の仕様書 | 既に存在しない機能の記録 |
+| `## [Unreleased]` | 未リリース（固定版では節自体が存在しない。復活時に備え除外方針を維持） |
+| プレリリース（`-insider.N`・`-rc.N`） | 安定版のみを版番号として扱う |
 | `kiro.dev/llms.txt` | crew の言及が0件（URL網羅には使えない） |
 
 ### 公式 docs 取得時の注意
@@ -88,7 +88,7 @@ curl -s "https://api.github.com/repos/kirodotdev/KiroCrew/git/trees/main?recursi
 
 ### スコープ境界の確認（Crew 固有）
 
-リポジトリに `docs/reference/kiro-cli/`（23ファイル）が同梱されているが、これは **q-cli-docs の領域**。Crew Gateway 自身の機能とKiro CLIへの依存点（ACP・`agent.provider=acp`）は解説するが、Kiro CLI 単体の機能は解説しない。
+リポジトリに `docs/reference/kiro-cli/`（22ファイル）が同梱されているが、これは **q-cli-docs の領域**。Crew Gateway 自身の機能とKiro CLIへの依存点（ACP・`agent.provider=acp`）は解説するが、Kiro CLI 単体の機能は解説しない。
 
 ---
 
@@ -162,7 +162,7 @@ Crew はランタイムとして Kiro CLI に依存する（ACP経由）。こ�
 ### 値の確認
 
 - [ ] 表の値・件数を実測（HTML／JSON）から取った
-- [ ] SSoT（S1〜S24）と一致している
+- [ ] SSoT（S1〜S29。正本は [04_reference/05_limits.md](../kiro-crew-docs/04_reference/05_limits.md)）と一致している
 - [ ] 出典間で食い違う値は両併記した（裁定していない）
 
 ### 表現の確認
@@ -268,7 +268,7 @@ docs: 01_features/09_security.md を執筆
 | **出典不明の記述** | 一次情報を特定 → 出典を追加。検証不可能なら削除 |
 | **推測表現** | 一次情報で確認 → 確認できれば断定表現へ、できなければ「未確認」明示または削除 |
 | **理由・因果が書かれている** | 公式にその理由が明記されているか確認 → なければ**削除** |
-| **Kiro Crew / Kiro CLI の混同** | スコープ境界（§8）で確認 → Crew の一次情報で書き直すか、q-cli-docs へリンク |
+| **Kiro Crew / Kiro CLI の混同** | スコープ境界（[§2「スコープ境界の確認」](#スコープ境界の確認crew-固有)）で確認 → Crew の一次情報で書き直すか、q-cli-docs へリンク |
 | **出典間で値が食い違う** | **裁定しない**。両方を併記し「食い違いあり」と明示 |
 | **存在しない値の創作**（例: 公式8層） | 一次情報の該当箇所を正規表現等で再検査。無ければ削除 |
 | **削除済み仕様書を出典にしていた** | 該当記述を削除するか「削除済み」の事実として書き直す |
@@ -302,4 +302,4 @@ make check-kiro-crew-all
 
 ---
 
-**最終更新**: 2026-08-22（v0.3.0対応で出典記法の例を更新）
+**最終更新**: 2026-10-04（基準版に依存する記述を固定版非依存へ変更、出典にしないもの表を `00_information/03_information-sources.md` と同期、SSoT範囲をS1〜S29へ、スコープ境界の節参照を修正）

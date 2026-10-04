@@ -23,18 +23,18 @@
 
 ## 版番号の付け方
 
-`vX.Y.Z` 形式です。実在する安定版は固定参照時点（2026-09-13）で **v0.1.0／v0.1.1／v0.1.2／v0.1.3／v0.2.0／v0.3.0／v0.4.0／v0.4.1／v0.5.0／v0.6.0** の10件です（GitHub Releases実測、全59 Release中。残る49件はプレリリース）。
+`vX.Y.Z` 形式です。実在する安定版は固定参照時点（2026-10-04）で **v0.1.0／v0.1.1／v0.1.2／v0.1.3／v0.2.0／v0.3.0／v0.4.0／v0.4.1／v0.5.0／v0.6.0／v0.7.0／v0.7.1／v0.7.2** の13件です（GitHub Releases実測、全77 Release中。残る64件はプレリリース。プレリリースの件数は取得時点の値で、次期版の公開に伴って増えます）。
 
 本サイトは安定版のみを扱う方針のため、プレリリースは本文の解説対象にしていません。
 
 ## プレリリースの系統
 
-プレリリース49件のサフィックスは**2系統**あり、版によって使い分けられています。
+プレリリース64件のサフィックスは**2系統**あり、版によって使い分けられています。
 
 | サフィックス | 対象 | 件数 |
 |---|---|---|
 | `-rc.N` | **v0.2.0系のみ**（例: `v0.2.0-rc.1`） | 8件 |
-| `-insider.N` | v0.1.0／v0.1.1／v0.1.2／v0.1.3／v0.4.0／v0.4.1／v0.5.0／v0.6.0 系（例: `v0.1.3-insider.2`） | 41件 |
+| `-insider.N` | v0.1.0／v0.1.1／v0.1.2／v0.1.3／v0.4.0／v0.4.1／v0.5.0／v0.6.0／v0.7.0／v0.7.1／v0.7.2 系（例: `v0.1.3-insider.2`）＋安定版が未公開の次期版の系統5件 | 56件 |
 
 **v0.3.0系のプレリリースはGitHub Releases実測で0件**です（`v0.3.0` 本体のみで `-rc.N`・`-insider.N` いずれも存在しません）。
 
@@ -44,8 +44,11 @@
 > |---|---|---|---|
 > | `v0.5.0-insider.N` | 1, 2, 3, 5, 6, 7, 8, 9, 10, 11 | **10件** | `-insider.4` |
 > | `v0.6.0-insider.N` | 1, 2, 3, 4, 6, 7 | **6件** | `-insider.5` |
+> | `v0.7.0-insider.N` | 2, 3, 4, 5, 6, 8, 9 | **7件** | `-insider.1`・`-insider.7` |
+> | `v0.7.1-insider.N` | 2 | **1件** | `-insider.1` |
+> | `v0.7.2-insider.N` | 1, 2 | **2件** | なし |
 >
-> 最大番号（11・7）を件数として扱うと誤りになります。欠番の理由は公式に説明がなく**未確認**です。
+> 最大番号（11・7・9）を件数として扱うと誤りになります。欠番の理由は公式に説明がなく**未確認**です。
 
 ## 配布チャネル
 
@@ -81,7 +84,7 @@
 
 `CHANGELOG.md` 冒頭の `## [Unreleased]` 節は**未リリース**の項目であり、リリース済みの機能として扱うと誤情報になります。本サイトは常にこの節を出典から除外します。
 
-> **⚠️ 現在この節は存在しません。** 固定参照時点（2026-09-13 / 版 v0.6.0）の `CHANGELOG.md` に `## [Unreleased]` 節はありません（実測0件）。リポジトリの開発方針文書は「**There is no `## [Unreleased]` section, and the gate refuses one.**」と明記し、保留中の内容を見るには `git log --oneline <last-tag>..HEAD` を読むよう指示しています（`docs/build/changelog.md` 23行）。
+> **⚠️ 現在この節は存在しません。** 固定参照時点（2026-10-04 / 版 v0.7.2）の `CHANGELOG.md` に `## [Unreleased]` 節はありません（実測0件。v0.6.0 時点も0件）。リポジトリの開発方針文書は「**There is no `## [Unreleased]` section, and the gate refuses one.**」と明記し、保留中の内容を見るには `git log --oneline <last-tag>..HEAD` を読むよう指示しています（`docs/build/changelog.md` 23行）。
 >
 > gateの実体は `scripts/check_changelog_history.py` です。`docs/build/release.md` 1170-1172行は「There is no `## [Unreleased]` section to accumulate into and no in-progress prerelease heading to rename later — `scripts/check_changelog_history.py` refuses both」と記述し、**節を作ることも、進行中のプレリリース見出しを後で改名することも拒否される**としています。その結果、changelog の差分として合法な形は「新しい節を1つ先頭に足す」だけになります。
 >
@@ -90,14 +93,22 @@
 > **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/build/changelog.md>
 > （参照: 2026-09-13 / commit `8575209` / 版 v0.6.0）
 >
+> v0.7.2 タグでも `docs/build/changelog.md` 23行は同じ文で、`docs/build/release.md` の同趣旨の記述は 1275-1277行に移っています。
+>
+> **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/build/release.md>
+> （参照: 2026-10-04 / commit `c67c506` / 版 v0.7.2）
+>
 > 参考として、過去には存在していました（2026-08-16 時点の取得で約390行）。**この方針を述べた文の所在も版で移動しています**（v0.4.1 では `AGENTS.md` 254行、v0.6.0 では `docs/build/changelog.md` 23行）。
 
 ## 日付の食い違い
 
-CHANGELOG.mdの日付とGitHub Releaseの公開日は**一致しません**（実測で8版すべてで食い違い）。
+CHANGELOG.mdの日付とGitHub Releaseの公開日は**一致しません**（実測でCHANGELOGに版節を持つ11版すべてで食い違い）。
 
 | 版 | CHANGELOG.mdの日付 | Release公開日 |
 |----|-------------------|-------------|
+| v0.7.2 | 2026-09-28 | 2026-09-29 |
+| v0.7.1 | 2026-09-24 | 2026-09-25 |
+| v0.7.0 | 2026-09-15 | 2026-09-24 |
 | v0.6.0 | 2026-09-05 | 2026-09-11 |
 | v0.5.0 | 2026-08-29 | 2026-09-05 |
 | v0.4.1 | 2026-08-28 | 2026-08-29 |
@@ -112,7 +123,7 @@ CHANGELOG.mdの日付とGitHub Releaseの公開日は**一致しません**（�
 ## 未確認事項
 
 - 日付が食い違う理由（公式に明記された説明は見つかっていない。理由は未確認）
-- `-insider.N` の欠番（`v0.5.0-insider.4`・`v0.6.0-insider.5`）の理由
+- `-insider.N` の欠番（`v0.5.0-insider.4`・`v0.6.0-insider.5`・`v0.7.0-insider.1`・`v0.7.0-insider.7`・`v0.7.1-insider.1`）の理由
 - `packaging/MIN_VERSION` の現在の値（`src/`・`packaging/` はスナップショット取得対象外のため未確認）
 - `-rc.N` から `-insider.N` へ切り替わった経緯（v0.2.0系のみ `-rc.N` である理由は公式に説明が見つかっていない）
 

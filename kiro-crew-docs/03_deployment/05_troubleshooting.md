@@ -5,6 +5,8 @@
 **出典**: <https://kiro.dev/docs/crew/troubleshooting/>（Page updated 表記あり）
 **出典**（venvパスの不整合の指摘）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md>
 （参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
+**出典**（venvパスの再測定・公式 `troubleshooting/` 本文の差分確認）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md>
+（参照: 2026-10-04 / commit `c67c506` / 版 v0.7.2）
 
 ---
 
@@ -39,7 +41,10 @@ kirocrew doctor
 
 その後 `source ~/.bashrc`（またはシェルを再起動）。
 
-> **注記: 公式ドキュメントと本サイトの記述が異なります**。公式 `troubleshooting/` ページは「`pipx`が無ければ`~/.kiro/crew/venv`。`~/.local/bin`か`~/.kiro/crew/venv/bin`をPATHに追加」と案内していますが、リポジトリの `docs/guides/install.md` は「管理対象venvは`~/.kiro/crew-venv`（データホームの外）に作成され、`~/.local/bin/kirocrew`にsymlinkされる」と記述しており、パスが異なります。本サイトはより詳細な実装記述である`install.md`を採用しています。`~/.kiro/crew/venv/bin`を`PATH`に追加しても、そのディレクトリは存在しない可能性があります。
+> **venvパスの食い違いは解消しています（v0.7.2 実測）**。本サイトは以前「公式 `troubleshooting/` ページは `~/.kiro/crew/venv` と案内し、`install.md` の `~/.kiro/crew-venv` と異なる」と注記していました。しかし公式 `troubleshooting/` ページ（`docs_md/troubleshooting.md` 23行）は「else `~/.kiro/crew-venv`. Ensure `~/.local/bin` (pipx default) or `~/.kiro/crew-venv/bin` is on `PATH`」と記述しており、`install.md` 196-198行・公式 `installation/` ページ（`docs_md/installation.md` 59行）と一致します。**この一致は v0.6.0 の時点で既に成立しており**（`~/.kiro/crew/venv` は v0.3.0 時点の公式ページの記述）、本サイトの注記が追随していませんでした。`PATH` には `~/.local/bin` か `~/.kiro/crew-venv/bin` を追加します。
+>
+> **出典**: <https://kiro.dev/docs/crew/troubleshooting/>（Page updated 表記あり）、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md>
+> （参照: 2026-10-04 / commit `c67c506` / 版 v0.7.2）
 
 ### Windows: インストール後に `python: command not found`
 
@@ -73,7 +78,8 @@ python -m kiro_crew gateway
 ## 未確認事項
 
 - 完全なトラブルシューティング項目（本ページは主要な項目のみを記載。詳細は公式ページを参照）
-- venvパスについて、公式`troubleshooting/`（`~/.kiro/crew/venv`）と`install.md`（`~/.kiro/crew-venv`）の記述が一致しない（上記「インストール後に`kirocrew: command not found`」の注記参照）。本サイトは`install.md`の記述を採用しているが、公式ページ側が正しい可能性を排除できない
+
+> 以前ここに記載していた venvパスの食い違い（公式 `~/.kiro/crew/venv` と `install.md` `~/.kiro/crew-venv`）は、公式ページも `~/.kiro/crew-venv` に揃ったため**解消**として外しました（上記「インストール後に`kirocrew: command not found`」の注記参照）。
 
 ## 関連リンク
 

@@ -5,6 +5,9 @@
 **出典**: <https://kiro.dev/docs/crew/features/knowledge/>（Page updated 表記あり）
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/knowledge.md>
 （参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
+**出典**（v0.7.0での変更・エージェントの書き込み経路・SELイベント・タイムアウトの扱い）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/knowledge.md>
+（参照: 2026-10-04 / commit `c67c506` / 版 v0.7.2）
+**出典**（v0.7.0での変更）: <https://kiro.dev/docs/crew/features/knowledge/>（Page updated 2026-09-25）
 
 ---
 
@@ -15,6 +18,7 @@
 - [ハイブリッド検索](#ハイブリッド検索)
 - [埋め込みは共有in-process機構](#埋め込みは共有in-process機構)
 - [重複排除](#重複排除)
+- [v0.7.0での変更](#v070での変更)
 - [v0.3.0での変更](#v030での変更)
 - [未確認事項](#未確認事項)
 
@@ -49,11 +53,13 @@ files / uploads / artifacts / URLs
 | `knowledge/ingestion.py` | `IngestionPipeline` — 読み込み→チャンク分割→抽出→保存のオーケストレーション |
 | `knowledge/dedup.py` | ソース横断の重複排除 |
 
+**エージェントによる書き込み経路（既定オフ）**: エージェントは `knowledge_add_document` MCPツールでドキュメントを追加できます。この経路は**既定で無効**で、`knowledge.auto_add_documents` で有効化します。追加されたドキュメントは「Auto-added」という名前の `agent://` ソースに集約されます。`knowledge.md` は「Nothing registers a file or folder on its own」と記載し、フォルダはユーザーが追加して確認したときだけライブラリに入るとしています（`knowledge.md` v0.7.2 214-234行「§2b」）。artifact の自動取り込みは別の opt-in 設定です（「[v0.3.0での変更](#v030での変更)」参照）。
+
 ## ハイブリッド検索
 
 FTS5（キーワード）＋グラフ探索＋任意のベクトル検索を **RRF**（Reciprocal Rank Fusion）で融合します。埋め込みが未取得の場合はベクトル検索の脚が縮退し、キーワード＋グラフのみで動作します。
 
-`local_knowledge_search` MCP tool 経由でLLMに提供され、既定の `limit` は3件、`min_score = 0.012` 未満の結果は除外されます。出力は `redact_exfiltration_urls()` と `redact_credentials()` を通してから返され、呼び出しごとにSELの監査イベント（`success`／`no_results`／`not_configured`）が発生します。
+`local_knowledge_search` MCP tool 経由でLLMに提供され、既定の `limit` は3件、`min_score = 0.012` 未満の結果は除外されます。出力は `redact_exfiltration_urls()` と `redact_credentials()` を通してから返され、呼び出しごとにSELの監査イベント（`success`／`no_results`／`not_configured`／`unknown_source`）が発生します。`unknown_source` は、存在しない `source_id` を指定したときに例外ではなく `knowledge_list_sources` を案内するメッセージを返す場合のイベントです（`knowledge.md` v0.7.2 483-484行）。本サイトの従来の記述は3種のみを挙げていましたが、v0.6.0 の同ファイルにも4種が記載されています。
 
 ## 埋め込みは共有in-process機構
 
@@ -78,7 +84,7 @@ FTS5（キーワード）＋グラフ探索＋任意のベクトル検索を **R
 | 項目 | 値 |
 |------|-----|
 | 埋め込みモデル（共有GGUF） | `qwen3-embedding-0.6b-q8_0.gguf`（Memoryと共有。`memory-skills-hooks.md`の`ModelDownloadManager`が管理） |
-| リクエストごとのタイムアウト | 10秒（`knowledge.embed_timeout_secs` で上書き可） |
+| リクエストごとのタイムアウト | 10秒（`knowledge.embed_timeout_secs` で上書き可）。v0.7.2 の `knowledge.md` 135行は、この値を「Retained for config compatibility」（設定の互換性のために残す）とし、in-process ランタイムにはこの値が制限するリクエスト単位の呼び出しがないと記載しています（v0.6.0 の同ファイル133行は「Per-request embed timeout (s)」と記載） |
 | チャンクオーバーラップ | 200 |
 | ベクトルRRFの重み | 2.0 |
 
@@ -87,6 +93,23 @@ Knowledge Library の初回検索時には、共有embedderのバックグラウ
 ## 重複排除
 
 「1つのドキュメント・複数の場所」の原則で管理されます。2つのソースが同じドキュメントを持つ場合、1つの保存済みコピーと `source_locations` 行で管理され、片方が消えても別のソースが保持していれば削除されません。完全一致（ハッシュ）の重複は取り込み時にゲートされ、あいまい一致（埋め込みベース）は事後の掃き掃除で処理されます。
+
+## v0.7.0での変更
+
+v0.7.0 の CHANGELOG と公式 Knowledge ページ（Page updated 2026-09-25）で確認できる変更です。
+
+- **コードの対応拡張子が4言語増えた**: フォルダのスキャンが、これまでスキップしていた **C#（`.cs`）・Kotlin（`.kt`・`.kts`）・Swift（`.swift`）・Scala（`.scala`）** を取り込むようになりました（CHANGELOG 263-264行／公式ページ「Code and document coverage」「Crew 0.7 adds …」）。公式ページは、無視されたファイル・設定したバジェットを超えたファイル・読み込みに失敗したファイルを、成功として数えずに報告すると記載しています
+- **検索をソース／namespace に絞れる**: `local_knowledge_search` を1つのソースまたは namespace にスコープできます。公式ページは、識別子を推測せず先にソース一覧で安定した識別子を確認するよう案内し、スコープはキーワードとベクトルの起点の結果を絞るもので、グラフ探索はソースをまたぐ関係を引き続き使えると記載しています（公式ページ／CHANGELOG 265行は「scoped to one namespace」と記載）。仕様書では `source_id` 引数がこれにあたり、ソースの一覧と `source_id` は `knowledge_list_sources` ツールで得られます（`knowledge.md` 484-485行）
+- **ライブラリ統計 `kirocrew knowledge stats`**: マイグレーションや修復を実行せずに、ライブラリのソース数・ドキュメント数・アイテム数とソースごとの件数を表示します。`--json` でJSON出力になります（公式ページ「Library statistics」／CHANGELOG 265-267行）。仕様書は読み取り専用であることを境界として明記し、flush・rebuild・repair・reindex のコマンドは並べていません（`knowledge.md` 532-580行）
+- **検索結果が `limit` より1件多くなることがある**: キーワード検索で1位の結果は切り捨てから保護されるため、`local_knowledge_search` は `limit + 1` 件を返すことがあり、ツール側で切り詰め直しません（`knowledge.md` 483行）
+- **埋め込みのタイムアウト設定の扱い**: 上記「[埋め込みは共有in-process機構](#埋め込みは共有in-process機構)」の表のとおり、`knowledge.embed_timeout_secs` は設定の互換性のために残す値と記載されるようになりました（`knowledge.md` 135行）
+
+> 「検索結果が `limit` より1件多くなることがある」「埋め込みのタイムアウト設定の扱い」の2項目: 本内容は v0.7.2 タグの仕様書で確認したもので、CHANGELOG/Release 本文（「A small fix.」）は説明していません。
+
+出典: CHANGELOG.md v0.7.0節 263-267行（`c67c506`）。
+**出典**: <https://kiro.dev/docs/crew/features/knowledge/>（Page updated 2026-09-25）
+**出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/knowledge.md>
+（参照: 2026-10-04 / commit `c67c506` / 版 v0.7.2）
 
 ## v0.3.0での変更
 
@@ -111,7 +134,7 @@ Knowledge Libraryの支出（LLM抽出のコスト）が境界づけられまし
 
 ## 未確認事項
 
-- なし。Knowledge Libraryの埋め込み機構は、公式ドキュメント `features/knowledge/`（「Knowledge items are embedded … using the same in-process embedding runtime as Memory」）および `memory-skills-hooks.md`／`install.md`／`overview.md`／`config.md`で「Memoryと共有するin-process機構」と確認済み。リポジトリの`docs/system-specs/modules/knowledge.md`（本ページの主要出典）のみ、更新が反映されていないOllama依存の記述を残す（上記「埋め込みは共有in-process機構」参照）
+- なし。Knowledge Libraryの埋め込み機構は、公式ドキュメント `features/knowledge/`（「Knowledge items are embedded … using the same in-process embedding runtime as Memory」）および `memory-skills-hooks.md`／`install.md`／`overview.md`／`config.md`で「Memoryと共有するin-process機構」と確認済み。v0.4.1 までOllama依存の記述を残していたリポジトリの`docs/system-specs/modules/knowledge.md`（本ページの主要出典）も v0.6.0 で更新され、v0.7.2 の同ファイルでも `Ollama` の語は0件、`InProcessEmbedder` は「no server and no HTTP hop」と記載されている（108行。上記「埋め込みは共有in-process機構」参照）
 
 ## 関連リンク
 

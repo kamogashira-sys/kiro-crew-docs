@@ -5,6 +5,8 @@
 **出典**: <https://kiro.dev/docs/crew/installation/>（Page updated 表記あり）
 **出典**: リポジトリ README「App downloads」節、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md>
 （参照: 2026-08-29 / commit `bba3f195212992eaa07d83c082e1ec55e395c32b` / 版 v0.4.1）
+**出典**（v0.7.0での変更・Node.js要件とvenvパスの再測定・版ピン留めの下限）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md>
+（参照: 2026-10-04 / commit `c67c506` / 版 v0.7.2）
 
 ---
 
@@ -14,6 +16,7 @@
 - [デスクトップ版の配布物](#デスクトップ版の配布物)
 - [チャネル（stable/insider/nightly）](#チャネルstableinsidernightly)
 - [前提要件](#前提要件)
+- [v0.7.0での変更](#v070での変更)
 - [v0.6.0での変更](#v060での変更)
 - [v0.4.0での変更](#v040での変更)
 - [v0.3.0での変更](#v030での変更)
@@ -54,8 +57,14 @@
 
 ```bash
 curl -fsSL https://download.crew.kiro.dev/cli.sh | sh -s -- --channel insider
-curl -fsSL https://download.crew.kiro.dev/cli.sh | sh -s -- --version 0.1.0
+curl -fsSL https://download.crew.kiro.dev/cli.sh | sh -s -- --version 0.6.0
 ```
+
+**`--version` でピン留めできる最小の版は `0.1.2` です。** `--version` は版ごとの署名済みマニフェストを解決し、マニフェストが無いとインストールは失敗します（fail closed）。`0.1.0`・`0.1.1` は公開されていますが署名済みマニフェストを持たないため、**インストーラではインストールできません**（バックフィルもされません）。ロールバック手順書が `0.1.0`・`0.1.1` を指定している場合は `0.1.2` 以降に変えるか、`--version` を外して現行の `stable` を使います（`docs/guides/install.md` 172-193行）。**本サイトは以前、例として `--version 0.1.0` を掲載していました**（v0.6.0 の `install.md` 133行の例に従っていた）。v0.7.2 の `install.md` 160行の例は `--version 0.6.0` です。
+
+> ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**
+> - 公式 `installation/` ページ（`docs_md/installation.md` 55-56行）は「Pin an exact version」の例として `--version 0.1.0` を掲載しています
+> - リポジトリの `docs/guides/install.md` 172-176行は「`0.1.0` and `0.1.1` … cannot be installed by the installer」と記述しています
 
 インストーラはwheelのダイジェストを署名済みマニフェストと照合し、不一致なら**インストールを拒否**します（チェックサムのみのフォールバックはありません）。`pipx`が使えればそれを使い、無ければ管理対象venv（`~/.kiro/crew-venv`。`KIROCREW_VENV`で変更可）を**データホームの外**に作成します（ホーム全体を操作する処理が動いているインタープリタを削除しないため）。選択したチャネルは `~/.kiro/crew/channel` に記録されます。
 
@@ -64,8 +73,47 @@ curl -fsSL https://download.crew.kiro.dev/cli.sh | sh -s -- --version 0.1.0
 | 要件 | 用途 | 下限 |
 |------|------|------|
 | **Python** | バックエンド | **`>= 3.12`**（v0.6.0で3.10から引き上げ。`pyproject.toml` の `requires-python`） |
-| **Node.js + npm** | ダッシュボードのビルド | `20 \|\| >= 22`（ビルド時のみ必要。事前ビルド済みwheel/DMG/AppImageの利用者はNode不要） |
+| **Node.js + npm** | ダッシュボードのビルド | **`>= 22`**（Node 24 LTS推奨。ビルド時のみ必要。事前ビルド済みwheel/DMG/AppImage/`.deb`/`.rpm`の利用者はNode不要）。**本サイトは以前 `20 \|\| >= 22` と記載していましたが、これは v0.3.0〜v0.4.1 時点の `install.md` 40行の値で、v0.6.0 の `install.md` 40行は既に `>= 22` でした**（v0.7.2 も同じ。下記「[v0.3.0での変更](#v030での変更)」の注記参照） |
 | **`kiro-cli`** | LLM駆動 | 必須 |
+
+出典（Node.js要件）: `docs/guides/install.md` 40-45行（`c67c506`）、公式 `installation/` ページ（`docs_md/installation.md` 16・69行「Node.js 22+」）。
+
+## v0.7.0での変更
+
+v0.7.x に「Before you upgrade」節はありません。以下は機能追加・既定動作の変更です。
+
+### ソースチェックアウトの更新チェックが定期化
+
+- Gatewayは起動時に加えて**12時間ごと**に新しい版を確認します（設定キー `auto_update`、既定 `true`）
+- 自動適用は、まず**新規ターンの受付を止め**、進行中のターン・スケジュール実行・サブエージェント・Task Runnerステップ・ワークフローが落ち着くまで待ってから適用します。**作業中の処理はキャンセルされず、更新のほうが延期されます**
+
+出典: CHANGELOG.md v0.7.0節 148-150行（`c67c506`）、公式 `installation/` ページ（`docs_md/installation.md` 121行「Source checkouts」）、公式 `configuration/` ページ（`auto_update` 行）。
+
+### 更新前の Python 要件チェック
+
+- 更新先リビジョンの `requires-python` を現在のvenvのインタープリタが満たすかを、**チェックアウトを動かす前に**検査します。満たさない場合は、そのvenvとインタープリタのパスを示して**拒否**します。3.12未満のPythonは無条件に却下されます
+- 未コミットの変更がある・分岐したチェックアウトも、リセットせずに拒否します
+
+出典: CHANGELOG.md v0.7.0節 151-153行（`c67c506`）、公式 `installation/` ページ（`docs_md/installation.md` 123行）、`docs/system-specs/modules/cli.md` 234行（`kirocrew update`）。
+
+### インストーラは事前ビルドwheelのみを使う
+
+- 依存パッケージは**事前ビルドwheelのみ**（`pip --only-binary=:all:`）から入れるため、ホストにCコンパイラや `-dev` ヘッダは不要です
+- ホストで動くwheelをどのリリースも公開していない場合（glibcが古い・アーキテクチャ向けwheelが無い）は、ビルド開始前に**プラットフォームとパッケージ名を示して中止**します
+- ツールチェーンとヘッダがあるホストでは **`KIROCREW_ALLOW_SOURCE_BUILDS=1`** でソースビルドに戻せます。**この指定は記憶されません**。更新エンジンはGatewayが動く環境からこの変数を読むため、`kirocrew service install` で常駐させている場合はサービスユニット側にも設定が必要です
+
+出典: CHANGELOG.md v0.7.0節 461-464行（`c67c506`）、`docs/guides/install.md` 232-248行（`c67c506`）。
+
+> ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**
+> - CHANGELOG.md v0.7.0節 463-464行は「the Linux AppImage starts on distributions without the older FUSE library」と記述しています
+> - `docs/guides/install.md` 133行・444行（`c67c506`）は AppImage について「needs FUSE present」と記述しています
+
+### 版のピン留めは `0.1.2` 以降
+
+`--version` でピン留めできる最小の版は `0.1.2` です（上記「[チャネル](#チャネルstableinsidernightly)」参照）。本内容は v0.7.2 タグの仕様書で確認したもので、CHANGELOG/Release 本文（「A small fix.」）は説明していません（`docs/guides/install.md` 172-193行）。
+
+**出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md>
+（参照: 2026-10-04 / commit `c67c506` / 版 v0.7.2）
 
 ## v0.6.0での変更
 
@@ -102,7 +150,7 @@ Windowsは署名済みinstallerとin-app auto-updateをstableチャネルで提�
 
 **v0.3.0からNode.js 22が最小要件になりました。Node 20でのインストールは拒否されます。**
 
-**この値の出典は、上記「前提要件」表の出典とは異なります。** 上表のNode.js要件（`20 || >= 22`）は`docs/guides/install.md` 40行（`website/package.json`の`engines`）に基づきますが、**この記述は`21584ea`でも更新されていません**。v0.3.0の実際の下限は以下の一次情報で確認できます。
+**この値の出典は、当時の「前提要件」表の出典とは異なります。** 当時の表のNode.js要件（`20 || >= 22`）は`docs/guides/install.md` 40行（`website/package.json`の`engines`）に基づいていましたが、**この記述は`21584ea`では更新されていませんでした**。v0.3.0の実際の下限は以下の一次情報で確認できます。
 
 | 出典（`21584ea`） | 記述 |
 |---|---|
@@ -110,7 +158,17 @@ Windowsは署名済みinstallerとin-app auto-updateをstableチャネルで提�
 | `src/kiro_crew/constants.py` **33行** | `MIN_NODE_MAJOR = 22`。コメントは「22 is the oldest non-EOL line the frontend bundler supports（`ensure-node.sh`はより細かい22.12の下限を強制し、`.nvmrc`は推奨の24 LTSをピン留めする）」 |
 | `install.sh` **48行** | `NODE_MIN_MAJOR=22`。コメントは「Minimum Node major the frontend build actually supports」。**インストーラは検出段階でこの値を参照し、下限未満のnodeが既にある場合はそれを使わずインストールのはしごに進みます**（263行「Node.js ... is below the supported floor (>= $NODE_MIN_MAJOR) — installing a supported Node…」） |
 
-**⚠️ 本サイトは上表（`install.md`由来の`20 || >= 22`）を削除していません。** 公式`installation/`ページの「Node.js 18+」と`install.md`の「`20 || >= 22`」の食い違いは`21584ea`でも解消されておらず、そこに**インストーラ実体の22という第3の値**が加わった状態です。**どの記述が最終的に正か・なぜ更新が追随していないかは公式に説明がないため、本サイトは裁定しません。**
+**⚠️ 以下は `21584ea`（v0.3.0）時点の記録です。** 公式`installation/`ページの「Node.js 18+」と`install.md`の「`20 || >= 22`」の食い違いは`21584ea`では解消されておらず、そこに**インストーラ実体の22という第3の値**が加わった状態でした。
+
+> **この3値の食い違いは解消しています（v0.7.2 実測）。** 3つの記述はすべて「22」で一致しました。
+>
+> | 出典 | v0.3.0（`21584ea`） | v0.6.0（`8575209`） | v0.7.2（`c67c506`） |
+> |---|---|---|---|
+> | 公式 `installation/`（`docs_md/installation.md` 16行） | Node.js 18+ | **Node.js 22+**（24 LTS推奨） | **Node.js 22+**（24 LTS推奨） |
+> | `docs/guides/install.md` 40行 | `20 \|\| >= 22` | **`>= 22`**（Node 24 LTS推奨） | **`>= 22`**（Node 24 LTS推奨） |
+> | インストーラ実体（`install.sh` 48行 `NODE_MIN_MAJOR=22`・`constants.py` 33行 `MIN_NODE_MAJOR = 22`） | 22 | 未再測定 | 未再測定 |
+>
+> 公式ページと `install.md` は **v0.6.0 の時点で既に22に揃っていました**。本サイトの表と注記が追随していませんでした。インストーラ実体（`install.sh`・`constants.py`）は、本サイトの v0.6.0・v0.7.2 のリポジトリスナップショットにソースコードが含まれないため再測定していません。
 
 ### デスクトップ版のプラットフォームに関するCHANGELOGの記載
 
@@ -138,8 +196,12 @@ CHANGELOGは以下2件を新機能として挙げています。**ただし上�
 
 ## 未確認事項
 
-- Node.jsの下限バージョンについて、公式`installation/`ページは「Node.js 18+」と記述するが、リポジトリの`docs/guides/install.md`は「20 || >= 22」と記述しており一致しない。本サイトはリポジトリ側（一次情報順位1）を採用している
-- managed venvのパスについて、公式`installation/`ページ相当の`docs_md/installation.md:47`は`~/.kiro/crew/venv`と記述するが、リポジトリの`docs/guides/install.md`は`~/.kiro/crew-venv`と記述しており一致しない（[03_deployment/05_troubleshooting.md](05_troubleshooting.md)も参照）。本サイトはリポジトリ側を採用している
+- インストーラ実体のNode.js下限（`install.sh` の `NODE_MIN_MAJOR`・`constants.py` の `MIN_NODE_MAJOR`）の v0.7.2 での値（本サイトのスナップショットにソースコードが含まれないため未再測定。v0.3.0 時点は22）
+- AppImage の FUSE 要件（CHANGELOG と `install.md` の記述差。上記「[v0.7.0での変更](#v070での変更)」参照）
+
+> 以前ここに記載していた2件は**解消**したため外しました。
+> - **Node.jsの下限**: 公式`installation/`ページ・`install.md` 40行とも「22」で一致（v0.6.0 で既に一致。上記「[v0.3.0での変更](#v030での変更)」の注記参照）
+> - **managed venvのパス**: 公式`installation/`ページ（`docs_md/installation.md` 59行）・公式`troubleshooting/`ページ（`docs_md/troubleshooting.md` 23行）・`install.md` 196-198行のすべてが `~/.kiro/crew-venv` で一致（v0.6.0 で既に一致。`~/.kiro/crew/venv` は v0.3.0 時点の公式ページの記述）
 
 ## 関連リンク
 

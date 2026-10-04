@@ -91,7 +91,12 @@ User → Surface（Channel/Dashboard/CLI） → Gateway
 
 ## データの置き場所
 
-永続状態は `~/.kiro/crew/`（`KIROCREW_HOME` で上書き可能）に置かれます。このルートは kiro-cli 自身の `~/.kiro/` の下にネストしており、Kiro ファミリーの各アプリが1つのディレクトリを共有して保護できるようになっています。**旧パス `~/.kirocrew` は自動的に移行されます**（現行では使いません）。ディレクトリ構造の詳細は [04_reference/03_directory-layout.md](../04_reference/03_directory-layout.md) を参照してください。
+永続状態は `~/.kiro/crew/`（`KIROCREW_HOME` で上書き可能）に置かれます。このルートは kiro-cli 自身の `~/.kiro/` の下にネストしており、Kiro ファミリーの各アプリが1つのディレクトリを共有して保護できるようになっています。**旧パス `~/.kirocrew` は完全に非推奨で、自動移行されません**（現行では使いません）。旧パスが残っているのは、機密パスの拒否リスト（sensitive-path deny lists）の中だけです。ディレクトリ構造の詳細は [04_reference/03_directory-layout.md](../04_reference/03_directory-layout.md) を参照してください。
+
+> **以前の記述の訂正**: 本ページは以前「旧パス `~/.kirocrew` は自動的に移行される」と記載していました。これは v0.3.0（`21584ea`）・v0.4.1 の `architecture/overview.md` の記述（「a legacy `~/.kirocrew` is migrated automatically」）に基づくもので、**v0.6.0 タグ以降の同ファイルは「fully deprecated and does not auto-migrate」と記述しています**。v0.7.2 タグでも同文です。変更の理由は CHANGELOG に説明がありません。
+>
+> **出典**（旧パスの扱い）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/overview.md>
+> （参照: 2026-10-04 / commit `c67c506` / 版 v0.7.2。628-629行）
 
 生成された kiro-cli 用のエージェント JSON は、ここではなく `~/.kiro/agents/`（kiro-cli がエージェント仕様を読む場所）に書かれます。
 

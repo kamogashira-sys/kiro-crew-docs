@@ -77,6 +77,11 @@ kirocrew telemetry status         # 送信内容を正確に表示
  "capabilities": {"telemetry": {"enabled": false}}}
 ```
 
+> **policy層のみで有効**: `docs/system-specs/modules/governance.md` は、この強制無効化を「**POLICY LAYER ONLY**」と明記しています。判定は `layer == "policy"` を要求するため、**Level-2 profile** に `capabilities.telemetry.enabled: false` を書いてもビーコンは抑止されません（読み取り専用ビューアがその行を `profile` 由来の governed として表示する場合でも同じです）。同じ記述は v0.6.0 タグの同ファイルにもあり、v0.7.x での変更ではありません（本サイトがこれまで記載していなかった事項です）。
+>
+> **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/governance.md>（2558-2561行）
+> （参照: 2026-10-04 / commit `c67c506` / 版 v0.7.2）
+
 ## メトリクス／OTLPエクスポート（別系統・既定オフ）
 
 > **⚠️ 本ページのここまでの内容とは別の仕組みです。混同しないでください。**
@@ -113,7 +118,7 @@ kirocrew telemetry status         # 送信内容を正確に表示
 
 ## 未確認事項
 
-- なし（本ページの記述はREADMEの該当節で確認済み）
+- なし（本ページの記述はREADMEの該当節で確認済み。v0.7.2 タグ（`c67c506`）の README「Anonymous usage telemetry」節は v0.6.0 タグと同一の内容）
 
 ## 関連リンク
 

@@ -3,14 +3,17 @@
 > **本ページは Kiro Crew（OSS）の仕様です。**
 
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/CHANGELOG.md>
-（参照: 2026-09-13 / commit `8575209` / 版 v0.6.0）
+（参照: 2026-10-04 / commit `c67c506` / 版 v0.7.2）
 **出典**: <https://github.com/kirodotdev/KiroCrew/releases>
-（参照: 2026-09-13 / commit `8575209` / 版 v0.6.0）
+（参照: 2026-10-04 / commit `c67c506` / 版 v0.7.2）
 
 ---
 
 ## 📑 このページの内容
 
+- [v0.7.2](#v072)
+- [v0.7.1](#v071)
+- [v0.7.0](#v070)
 - [v0.6.0](#v060)
 - [v0.5.0](#v050)
 - [v0.4.1](#v041)
@@ -24,7 +27,101 @@
 
 ---
 
-> このページは **v0.1.2〜v0.6.0** をCHANGELOG.mdに版節があるものから要約しています。CHANGELOG.mdは開発者向けの詳細記述（PR番号付き・1項目10行超）のため、そのまま転記せず、利用者に影響する変更に絞っています。
+> このページは **v0.1.2〜v0.7.2** をCHANGELOG.mdに版節があるものから要約しています。CHANGELOG.mdは開発者向けの詳細記述（PR番号付き・1項目10行超）のため、そのまま転記せず、利用者に影響する変更に絞っています。
+
+### v0.7.2
+
+| 日付系統 | 値 |
+|---------|-----|
+| CHANGELOG.md | 2026-09-28 |
+| GitHub Release 公開日 | 2026-09-29 |
+
+**出典**: <https://github.com/kirodotdev/KiroCrew/releases/tag/v0.7.2>
+（参照: 2026-10-04 / commit `c67c506` / 版 v0.7.2）
+
+CHANGELOG.md と Release 本文はともに「**A small fix.**」の1文だけで、内容を説明していません（Release 本文の PR 一覧は「drop the rc suffix for the 0.7.2 stable cut」の1件）。
+
+> **仕様書側の差分（本サイトの実測）**: v0.7.1 タグと v0.7.2 タグの `docs/` の差分は `modules/messaging.md`・`modules/security.md`・`modules/subagent.md` の3ファイルです。内容は、オペレーターとして信頼されないチャネル送信者のターンをツールを持たないエージェント `kirocrew-guest` で動かすこと、および Subagent の run 操作（steer・status・retry など）を起点セッションに限定すること（範囲外は 404 `task_scope_denied`）です。これらが v0.7.2 の変更であると CHANGELOG/Release は述べていません。
+>  → 詳細は [01_features/09_security.md](../01_features/09_security.md) / [01_features/06_autonomy.md](../01_features/06_autonomy.md)
+
+### v0.7.1
+
+| 日付系統 | 値 |
+|---------|-----|
+| CHANGELOG.md | 2026-09-24 |
+| GitHub Release 公開日 | 2026-09-25 |
+
+**出典**: <https://github.com/kirodotdev/KiroCrew/releases/tag/v0.7.1>
+（参照: 2026-10-04 / commit `c67c506` / 版 v0.7.2）
+
+ダッシュボードの遅さ2点（チャット開始が遅い・チャット間の移動が遅い）に対するホットパッチです（CHANGELOG.md 9-26行）。
+
+- **セッションとサブエージェント**: エージェントバックエンド用に公開するエージェント単位のビューファイルを、実行中のセッションが保持しなくなった時点で回収するようになりました。数千件まで増えたホストでは新しいチャットとバックグラウンドのサブエージェントが最初の応答まで数秒待ち、さらに増えるとエージェントを読み込めずチャットが開始できなくなっていました。掃除は次にセッションを開いたときに自動で行われます
+- **チャットペイン**: タブ切り替えでダッシュボードが止まらなくなりました。再接続するペインは表示する行だけを要求し、読み直したメッセージは計算済みの秘匿化（redaction）結果を再利用します
+
+### v0.7.0
+
+| 日付系統 | 値 |
+|---------|-----|
+| CHANGELOG.md | 2026-09-15 |
+| GitHub Release 公開日 | 2026-09-24 |
+
+**出典**: <https://github.com/kirodotdev/KiroCrew/releases/tag/v0.7.0>
+（参照: 2026-10-04 / commit `c67c506` / 版 v0.7.2）
+
+> v0.7.0 の CHANGELOG.md・Release 本文には「**Before you upgrade**」節が**ありません**。本サイトは破壊的変更として分類せず、既定値が変わった項目を下に分けて示します。Release 本文は CHANGELOG.md の版節全文に PR 一覧（What's Changed）を付けたものです。
+
+#### 既定値が変わったもの（一次情報で確認したもの）
+
+- **`agent.subagent_max_turns` の既定が 100 → 1000**（`config.md` 407・1849行）。キー未設定なら更新後も自動で1000に従い、保存済みの値は保持されます
+  → 詳細は [04_reference/02_configuration-keys.md](../04_reference/02_configuration-keys.md)
+- **`skills.lazy_load` の既定が true**（v0.6.0 の仕様書は false）。スキル本文を一括注入せず、短い索引と `skill_search` で見つける方式です
+  → 詳細は [01_features/07_agents-skills-steering.md](../01_features/07_agents-skills-steering.md)
+- **リポジトリのコンテキストバジェット（`_CONTEXT_BUDGET_BASE`）が固定 33,000 文字**（v0.6.0 は 165,000 文字）。公式 memory ページは変わっておらず、出典間で食い違います
+  → 詳細は [01_features/04_memory-and-learning.md](../01_features/04_memory-and-learning.md) / [04_reference/05_limits.md](../04_reference/05_limits.md)
+- **Windows で委譲できるサンドボックスがない経路が既定で非サンドボックス実行**（`windows-install.md`。v0.6.0 は fail closed）。公式ページ・README は fail-closed と記述しており、出典間で食い違います。CHANGELOG はこの変更に触れていません
+  → 詳細は [03_deployment/02_windows.md](../03_deployment/02_windows.md)
+- **Windows・Linux の「設定を開く」ショートカットが `Alt+,`**（macOS は `Cmd+,` のまま）
+- **`session.watchdog_rss_max_mb` の既定が 1536 MiB**（v0.6.0 は 0＝無効）
+  → 詳細は [04_reference/02_configuration-keys.md](../04_reference/02_configuration-keys.md)
+
+#### 新機能・変更（利用者に影響するもの・抜粋）
+
+- **設定が再起動なしで反映** — `config.json` の保存や Settings の変更がほぼすべて実行中の Gateway に即時反映されます
+- **更新チェックが12時間ごと** — 自動適用は新しいターンを止め、進行中の作業が終わるまで待ちます。必要な Python を満たさないソース更新はチェックアウトを動かす前に拒否します
+  → 詳細は [03_deployment/01_installation.md](../03_deployment/01_installation.md)
+- **キューに入った作業が再起動を越えて残る** — サブエージェント・TaskRunner のステップ・workflow 呼び出しが永続キューに入り、並行数はホストの実際の空きに合わせて変わります。`spawn_run` は理由のない単独タスクを拒否します
+  → 詳細は [01_features/06_autonomy.md](../01_features/06_autonomy.md) / [01_features/17_workflows.md](../01_features/17_workflows.md)
+- **チャット** — ターンのミニマップ、Steer/Queue の既定の選択、Default Memory Mode、Text Link Patterns、Side Chat の `/btw` と読み取り専用ツール、`/sessions` ページ、セッションのファイル書き出し・取り込み
+  → 詳細は [01_features/03_chat.md](../01_features/03_chat.md) / [01_features/02_sessions.md](../01_features/02_sessions.md)
+- **Jev がターンごとにモデルを選ぶ（Preview）** — Settings → Developer → Feature Previews の Decisions (Jev) をオンにし、`decisions.model_route` で対応付けます。`capabilities.decisions` でプレビュー全体を無効化できます
+  → 詳細は [01_features/03_chat.md](../01_features/03_chat.md)
+- **エージェントバックエンドの追加（Preview・Developer Mode 前提）** — OpenCode・Pi・goose が選択肢に加わりました。Pi のセッションは Kiro Crew 自身の MCP ツールを持ちません
+  → 詳細は [01_features/15_agent-backends.md](../01_features/15_agent-backends.md)
+- **チャネル** — 任意のファイル種別の添付（最大50MB）、再起動中に届いたメッセージへの通知、Slack の `update_message` ツール。Settings → Channels は Messaging Channels に改称
+  → 詳細は [01_features/11_interfaces.md](../01_features/11_interfaces.md)
+- **PR の監視が GitHub 以外にも対応** — GitLab・Bitbucket Cloud・Azure DevOps Services。監視ループは種類を問わず停止・確認できます
+  → 詳細は [01_features/17_workflows.md](../01_features/17_workflows.md)
+- **Windows** — 隔離 pod が Task Scheduler 経由で動作（`pod api` を除く）、デスクトップ版 Gateway のコールドスタートが約4倍速く、TLS 検査プロキシの背後でもターンが動作
+  → 詳細は [03_deployment/02_windows.md](../03_deployment/02_windows.md)
+- **セキュリティ** — 資格情報スキャナが止めたファイル配信の承認（`kirocrew file-delivery approve`）、同意による SSH agent forwarding（既定オフ）、ポリシーが読めない場合の fail closed、既知のギャップに7点目（同一ユーザーによるランチャの自己汚染は受容・非防御）
+  → 詳細は [01_features/09_security.md](../01_features/09_security.md) / [03_deployment/04_security-hardening.md](../03_deployment/04_security-hardening.md)
+- **エージェントとスキル** — 親テンプレートからの継承、Markdown 1ファイルのエージェント、リポジトリからのスキル取り込み、lesson の `applies`（`always`／`on_topic`）
+  → 詳細は [01_features/07_agents-skills-steering.md](../01_features/07_agents-skills-steering.md) / [01_features/04_memory-and-learning.md](../01_features/04_memory-and-learning.md)
+- **Knowledge** — C#・Kotlin・Swift・Scala の取り込み、検索のスコープ指定、`kirocrew knowledge stats`
+  → 詳細は [01_features/05_knowledge-library.md](../01_features/05_knowledge-library.md)
+- **Apps** — `kirocrew app import` による他ハーネスのプラグイン取り込み（パッケージ内のコードは実行しない）、App によるセッション操作（App ごとに既定オフ）、ソース別のストア表示
+  → 詳細は [01_features/10_apps.md](../01_features/10_apps.md)
+- **Cron** — Minimal context トグル、`cron-cost-optimize` スキル
+  → 詳細は [01_features/06_autonomy.md](../01_features/06_autonomy.md)
+- **Remote crews** — 接続方式に Fargate が加わりました（AWS CLI と Session Manager plugin が必要）
+  → 詳細は [03_deployment/03_running-24-7.md](../03_deployment/03_running-24-7.md)
+- **インストーラ** — 事前ビルドの wheel のみを使い、ない場合は理由を表示して止まります（`KIROCREW_ALLOW_SOURCE_BUILDS=1` で従来動作）
+  → 詳細は [03_deployment/01_installation.md](../03_deployment/01_installation.md)
+
+#### Notable fixes
+
+チャット・モバイル・セキュリティ・承認・MCP・メッセージング・Windows/macOS など22分野の修正が列挙されています（CHANGELOG.md 485-675行）。本サイトの既存記述と矛盾するものは各ページに反映しました。
 
 ### v0.6.0
 

@@ -20,7 +20,15 @@
 ## 2つの引き継ぎ経路
 
 1. **`.kiro` はランタイムがネイティブに読む**（移行不要）: Kiro CLIの設定はKiro Crewがそのまま利用します
-2. **他エージェントからは一度きりのインポート**: Claude Code・Codex・OpenClaw・Hermes・MeshClawの**5ソース**から、`onboarding_import.py` が設定を移行します
+2. **他エージェントからは一度きりのインポート**: 組み込みの**5ソース**（Codex・Claude Code・Gemini・OpenClaw・Hermes）に加え、エディションが `ImportSourceProvider`（CPPシーム）で登録したソースから、`onboarding_import.py` が設定を移行します
+
+> **以前の記述の訂正**: 本ページは以前、5ソースの1つを「MeshClaw」と記載していました。これは v0.3.0（`21584ea`）の `modules/onboarding-import.md`（26行: `codex`, `claude_code`, `meshclaw`, `openclaw`, `hermes`）に基づくもので、**v0.4.1・v0.6.0・v0.7.0・v0.7.2 の各タグの同ファイルでは `meshclaw` に代わって `gemini` が並び、「plus any an edition registers through the `ImportSourceProvider` CPP seam」が付記されています**。CHANGELOG v0.4.0節（1420行）は「First-run setup imports from Gemini CLI and Antigravity, including their MCP servers and workspaces」と記載しています。MeshClaw が対象から外れたことは CHANGELOG に記載がありません。
+>
+> `gemini` は Google の端末エージェントの系譜を1つのIDでまとめたソースです。Antigravity CLI が独自のディレクトリを持たず `~/.gemini` を再利用するため、1つのルートに Gemini CLI の設定と Antigravity のインストールの両方が入ります（同ファイル26-30行）。
+>
+> **出典**（ソース一覧）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/onboarding-import.md>
+> （参照: 2026-10-04 / commit `c67c506` / 版 v0.7.2。22-30行）
+> 出典: CHANGELOG.md v0.4.0節 1420行（`c67c506`）
 
 このモジュールは**投影（projection）であり、ミラーではありません**。他エージェントのレイアウトを読み、Kiro Crew自身のコンテナにKiro Crew自身のAPI経由でのみ書き込みます。独自のストレージ形式を発明したり、Kiro Crewが読まないファイルを書いたり、他エージェントのストアをそのまま複製することはありません。
 

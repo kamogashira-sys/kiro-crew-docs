@@ -13,6 +13,7 @@
 - [2つのArtifacts概念](#2つのartifacts概念)
 - [チャット内Artifacts](#チャット内artifacts)
 - [Artifact Deploy](#artifact-deploy)
+- [v0.7.0での変更](#v070での変更)
 - [v0.3.0での変更](#v030での変更)
 - [未確認事項](#未確認事項)
 
@@ -82,6 +83,15 @@
 ### TTLとreaper
 
 既定のTTL（72時間）のクリーンアップには**reaperスタック**（`install-reaper.sh`）— アカウント内のLambdaが期限切れのデプロイを削除します。これがない場合、有限TTLのデプロイは拒否されます（409）。
+
+## v0.7.0での変更
+
+- **Cmd+K から Artifacts を探せる**: Command Bar（Cmd+K）の **Search Artifacts** 行が最新の artifact を一覧し、入力に応じて名前で絞り込み、選んだものを開きます
+- **「From your chats」の読み取り専用プレビュー**: Artifacts ページの **From your chats** の行から、ヘッダに保存スター付きの読み取り専用プレビューを開けます
+
+出典: CHANGELOG.md v0.7.0節 370-373行（`c67c506`）。公式ページ `chat/artifacts/`・`features/artifact-deploy/` の内容は、v0.6.0 対応時と v0.7.2 対応時の取得内容で差分がありません（Deploy の3ティア・ベーススタック・reaper・TTL の記述も不変）。
+
+**出典**: <https://kiro.dev/docs/crew/chat/artifacts/>・<https://kiro.dev/docs/crew/features/artifact-deploy/>（Page updated 表記あり）
 
 ## v0.3.0での変更
 

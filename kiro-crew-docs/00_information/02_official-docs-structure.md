@@ -50,6 +50,10 @@
 >
 > `features/computer-use/`・`features/browser/` は **v0.4.1 まで公式ページが存在せず**、モジュール仕様書のみが出典でした。単独ページは5→6（`system/` の追加）です。1対1の割当は `05_meta/ledger-official-pages.md` で管理しています（非公開）。
 
+> **v0.7.2 対応時点の確認**: sitemap 上の `docs/crew/` 配下は**49件で、URL 集合は v0.6.0 対応時点と完全に一致**します（新規0件・消滅0件）。内容は49ページ中32ページが更新されています（Page updated 表記が 2026-09-25 のページが29件、2026-09-30 のページが3件: `features/subagents/`・`interfaces/`・`security/`）。
+>
+> **出典**: <https://kiro.dev/sitemap.xml>（参照: 2026-10-04）
+
 ## `changelog/crew/`は存在しない
 
 Kiro公式サイトにはCrew用changelogパスがありません（changelogのカテゴリはcli/ide/models/web/generalのみ）。更新履歴の一次情報はGitHub（CHANGELOG.md・Releases）のみです。

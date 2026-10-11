@@ -1,12 +1,12 @@
-# CLI サブコマンド 3系統突合表（Phase 0-10）→ **4系統に訂正（Phase 4で発見）**
+# CLI サブコマンド突合表（当初の3系統 → **4系統に訂正**）
 
 - **取得日**: 2026-08-16
 - **commit SHA**: `64060f3ffecdf4aebeb764b4e3108e7375249ad8`
-- **出典**: ① 公式 `kiro.dev/docs/crew/interfaces/cli-reference/`（`.md` companion）② リポジトリ `README.md` ③ `kirocrew --help`（**実機なしのため未実施。注記する**）④ **`docs/system-specs/modules/cli.md`（リポジトリのモジュール仕様。Phase 4執筆時に発見。最も完全で正確な一次情報）**
+- **出典**: ① 公式 `kiro.dev/docs/crew/interfaces/cli-reference/`（`.md` companion）② リポジトリ `README.md` ③ `kirocrew --help`（**実機なしのため未実施。注記する**）④ **`docs/system-specs/modules/cli.md`（リポジトリのモジュール仕様。当初の突合の後に追加。最も完全で正確な一次情報）**
 
-> **v0.3.0再確認（2026-08-22・v0.3.0タグ`21584ea`）**: 系統④の全コマンドの実在を`21584ea`のfull cloneで再確認済み（変化なし・70行）。`tailnet`（F-9f）を追加、`policy show`の詳細（F-13）を反映。（v0.3.0 対応。コミット `aaaefa9`）
+> **v0.3.0再確認（2026-08-22・v0.3.0タグ`21584ea`）**: 系統④の全コマンドの実在を`21584ea`のfull cloneで再確認済み（変化なし・70行）。`tailnet`を追加、`policy show`の詳細を反映。（v0.3.0 対応。コミット `aaaefa9`）
 
-> **重要な訂正（2026-08-16 Phase 4）**: 当初①②③の3系統に限定したが、**一次情報ヒエラルキー順位1のリポジトリモジュール仕様（`modules/cli.md`）を検索対象に含めていなかった**ことが判明した。`modules/cli.md`には`cloud`・`pod`を含む、公式cli-referenceより遥かに完全なコマンド一覧が存在する。以下は訂正後の内容。
+> **重要な訂正（2026-08-16）**: 当初①②③の3系統に限定したが、**一次情報ヒエラルキー順位1のリポジトリモジュール仕様（`modules/cli.md`）を検索対象に含めていなかった**ことが判明した。`modules/cli.md`には`cloud`・`pod`を含む、公式cli-referenceより遥かに完全なコマンド一覧が存在する。以下は訂正後の内容。
 
 > **v0.6.0再測定（2026-09-13・`8575209`）**: 系統④（`modules/cli.md`）の表形式コマンド一覧を機械抽出して再測定した。
 >
@@ -15,7 +15,7 @@
 > | v0.4.1（`bba3f19`） | **32件** |
 > | v0.6.0（`8575209`） | **39件** |
 >
-> **新規7件**: `agent`／`artifact`／`consolidate`／`eval`／`sandbox`／`tailnet`／`telemetry`（`tailnet` は v0.3.0 で F-9f として既に台帳へ追加済み）。**消滅0件**。
+> **新規7件**: `agent`／`artifact`／`consolidate`／`eval`／`sandbox`／`tailnet`／`telemetry`（`tailnet` は v0.3.0 で既に台帳へ追加済み）。**消滅0件**。
 >
 > **⚠️ 一次情報間の差（裁定しない）**: **`kirocrew secrets import` は `modules/cli.md` の表に載っていません**が、`docs/guides/secrets-env.md` 54・58・84行と CHANGELOG の `[0.5.0]` 節507行（「**`kirocrew secrets import`** — Move plaintext credentials out of `.env`」）に実在します。`modules/cli.md` の表が網羅的でない可能性がありますが、公式の説明がないため本サイトは裁定せず、両方の事実を記録します。`check-notation.py` の `ALLOWED_CLI_COMMANDS` には `secrets` と `artifact` の両方を登録済み。
 >
@@ -58,7 +58,7 @@
 
 ## 系統③: `kirocrew --help`
 
-**未実施**（実機の Kiro Crew インストールが本環境に存在しないため）。Phase 3 執筆時に実機確認が可能であれば追加する。それまでは①②のみで判定する。
+**未実施**（実機の Kiro Crew インストールが本環境に存在しないため）。実機確認が可能になれば追加する。それまでは①②のみで判定する。
 
 ## 突合結果
 
@@ -82,10 +82,10 @@
 | **`telemetry`** | **×** | ○ | 未確認 | **記載する。「公式ページに独立見出しはないが README に実在」と注記** |
 | **`security`** | **×** | ○ | 未確認 | 同上 |
 | **`policy`** | **×** | ○ | 未確認 | 同上 |
-| **`cloud`** | **×** | **×** | 未確認 | **記載しない**（U14 解消：いずれの系統にも出現しない） |
+| **`cloud`** | **×** | **×** | 未確認 | **記載しない**（いずれの系統にも出現しない） |
 | **`pod`** | **×** | **×** | 未確認 | **記載しない**（`modules/security.md` に言及があるとされていたが、README・公式ページのいずれにも出現しないため見送り） |
 
-## 確定事項（U14 の解消 → 撤回・訂正）
+## 確定事項（`cloud` の当初の判定 → 撤回・訂正）
 
 **当初の判定「`kirocrew cloud`はいずれの系統にも出現しないため記載しない」は誤りだった。** `docs/system-specs/modules/cli.md`「## Commands」節に完全なサブコマンド一覧が存在し、`cloud`・`pod`ともに実在するコマンドである。
 
@@ -116,7 +116,7 @@
 | `kirocrew restore <file> [--mode] [--components] [--dry-run]` | スナップショット復元 |
 | `kirocrew config get/set/edit` | 設定操作 |
 | `kirocrew memory list/search/stats/audit/export/import/migrate` | ベクトルメモリ検査 |
-| `kirocrew policy show/validate/explain/profile` | 実効セキュリティポリシー検査。**`show`はカテゴリ別グループ件数で拒否コマンドカタログを要約、`--ids`で各カテゴリのrule idを列挙。エンタープライズポリシー無効でも利用可**（`modules/cli.md` 135行・v0.3.0タグ`21584ea`で確認。F-13） |
+| `kirocrew policy show/validate/explain/profile` | 実効セキュリティポリシー検査。**`show`はカテゴリ別グループ件数で拒否コマンドカタログを要約、`--ids`で各カテゴリのrule idを列挙。エンタープライズポリシー無効でも利用可**（`modules/cli.md` 135行・v0.3.0タグ`21584ea`で確認） |
 | `kirocrew pod up/down/ls/status/token/url/logs/exec/install/provision` | 孤立ワークツリーのテストGateway（Linux `systemd --user`限定。実在確認済み） |
 | `kirocrew knowledge dedup [--apply]` | Knowledge Library重複排除 |
 | `kirocrew cron preview <script>` | Cronスクリプトのローカル実行プレビュー |
@@ -124,7 +124,7 @@
 | `kirocrew computer doctor/apps/call` | Computer Use操作 |
 | `kirocrew mcp-cron`/`mcp-core`/`mcp-computer` | kiro-cliが起動する内部MCPサーバ（`argparse.SUPPRESS`で隠されている場合あり） |
 | `kirocrew --version` | 版表示 |
-| **`kirocrew tailnet up`** | **⚠️ `modules/cli.md`に記載なし（系統④に不在）。CHANGELOG v0.3.0節122行に記述があり、実体は`docs/guides/remote-and-mobile.md` 286・290・294行（`tailscale serve`実行・443でHTTPS・印字URLはセッション非含有）と`docs/system-specs/modules/governance.md` 1310行（`capabilities.tailnet_origin`）で確認できる（v0.3.0タグ`21584ea`。F-9f・F-31）。`docs/request-for-change/rfc-tailnet-dashboard-access.md`にも記載があるが、RFCは出典として使用しない** |
+| **`kirocrew tailnet up`** | **⚠️ `modules/cli.md`に記載なし（系統④に不在）。CHANGELOG v0.3.0節122行に記述があり、実体は`docs/guides/remote-and-mobile.md` 286・290・294行（`tailscale serve`実行・443でHTTPS・印字URLはセッション非含有）と`docs/system-specs/modules/governance.md` 1310行（`capabilities.tailnet_origin`）で確認できる（v0.3.0タグ`21584ea`）。`docs/request-for-change/rfc-tailnet-dashboard-access.md`にも記載があるが、RFCは出典として使用しない** |
 
 ## 反映方針（v0.3.0タグ`21584ea`再確認済み・2026-08-22）
 

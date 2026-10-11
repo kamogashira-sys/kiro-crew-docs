@@ -1,13 +1,13 @@
-# builtin App 20件 台帳（Phase 0-9）
+# builtin App 20件 台帳
 
 - **取得日**: 2026-08-16
 - **commit SHA**: `64060f3ffecdf4aebeb764b4e3108e7375249ad8`
 - **出典**: `src/kiro_crew/apps/builtins/*/app.json`（clone --depth 1 で取得したソース全件を機械抽出）
 - **検証コマンド**: `python3` で `json.load` し `displayName` / `defaultEnabled` を抽出（本ファイル下部に再現コマンドを記載）
 
-> **v0.3.0再確認（2026-08-22・v0.3.0タグ`21584ea`）**: `ls -d src/kiro_crew/apps/builtins/*/`実測20件＝台帳記録21行（ヘッダ含む）で一致確認済み（変化なし・S12）。`defaultEnabled:true`は`projects`のみ（変化なし）。`personal_shopper`・`issue_radar`（F-9g）は実在しともに`defaultEnabled: false`。main HEAD `32872ff`に存在する`command_bar`・`design_tweak`（v0.4.0系）は`21584ea`に不在であり本台帳に含めない。（v0.3.0 対応。コミット `aaaefa9`）
+> **v0.3.0再確認（2026-08-22・v0.3.0タグ`21584ea`）**: `ls -d src/kiro_crew/apps/builtins/*/`実測20件＝台帳記録21行（ヘッダ含む）で一致確認済み（変化なし・S12）。`defaultEnabled:true`は`projects`のみ（変化なし）。`personal_shopper`・`issue_radar`は実在しともに`defaultEnabled: false`。main HEAD `32872ff`に存在する`command_bar`・`design_tweak`（v0.4.0系）は`21584ea`に不在であり本台帳に含めない。（v0.3.0 対応。コミット `aaaefa9`）
 >
-> **⚠️ 重要な訂正（D-12）**: CHANGELOG v0.3.0節は`personal_shopper`・`issue_radar`を「Two new apps」（2つの新しいApp）として発表しているが、**両Appの実装は既存**であることを`64060f3`（v0.2.0時点）のフルクローンで確認した。`personal_shopper`の`app.json`は`64060f3`と`21584ea`で**完全に同一（差分0）**。`issue_radar`は`displayName: "Issue Radar"`のまま変更なしで、**v0.1.2のCHANGELOG（628行）に既に「Shipping in the box」として記載**されている。CHANGELOGの「新規」という表現と実装年代は矛盾するため、裁定せず両面を記載する（D-12）。
+> **⚠️ 重要な訂正**: CHANGELOG v0.3.0節は`personal_shopper`・`issue_radar`を「Two new apps」（2つの新しいApp）として発表しているが、**両Appの実装は既存**であることを`64060f3`（v0.2.0時点）のフルクローンで確認した。`personal_shopper`の`app.json`は`64060f3`と`21584ea`で**完全に同一（差分0）**。`issue_radar`は`displayName: "Issue Radar"`のまま変更なしで、**v0.1.2のCHANGELOG（628行）に既に「Shipping in the box」として記載**されている。CHANGELOGの「新規」という表現と実装年代は矛盾するため、裁定せず両面を記載する。
 >
 > **v0.6.0では再測定していない（2026-09-13）**: 本台帳の出典は `src/kiro_crew/apps/builtins/*/app.json` であり、v0.6.0 のスナップショット取得スクリプト（`fetch-snapshot.sh`）は **`src/` を取得しません**。したがって **v0.6.0 時点の builtin App 数は再測定できておらず、`[要検証]` を継続します**。本台帳の20件は `21584ea`（v0.3.0）時点の実測値であり、**v0.6.0 の値として追認しません**。
 >
@@ -47,7 +47,6 @@
 - **合計20件**。全ディレクトリに `app.json` が存在（S12 と一致）
 - **`defaultEnabled: true` は `projects`（表示名 Task Runner）の1件のみ**。他19件は `defaultEnabled` キー自体が存在しない（＝false相当、App Store で opt-in）→ S12「既定で有効なのは Task Runner のみ」を再確認
 - ディレクトリ名と表示名が異なるもの: `projects`→Task Runner／`file_explorer`→Files／`md_notebook`→Notes／`auto_research`→Research Lab
-- **Rev 2 のレビューでは `code_review_sage`（Code Review Sage）・`spec_builder`（Spec Builder）が「追加11件」の列挙から漏れていた**が、これは概要説明であり、当時の計画は「全20件の一覧表を作る」という方針のみを規定しているため、本台帳が正となる
 
 ## 再現コマンド
 

@@ -215,7 +215,7 @@ def main():
                     errors.append(
                         f"{path}:{i} (h) 存在しないCLIサブコマンド `kirocrew {cmd}` が"
                         "記載されています（scripts/kiro-crew-docs/ledgers/cli-commands.md でいずれの系統にも"
-                        "出現しないと確定済み。U14参照）"
+                        "出現しないと確定済み）"
                     )
                 elif cmd not in ALLOWED_CLI_COMMANDS:
                     allowed_cli.append((path, i, cmd))

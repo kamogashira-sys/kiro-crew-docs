@@ -1,4 +1,4 @@
-# 公式49ページ 1対1割当台帳（Phase 0-7）
+# 公式49ページ 1対1割当台帳
 
 - **取得日**: 2026-10-04（v0.7.2対応で再取得。URL集合は 2026-09-13 取得分と完全一致・新規0・消滅0。担当ページの変更なし）
 - **出典**: `https://kiro.dev/sitemap.xml`（`docs/crew/` 配下の抽出。49件）
@@ -31,7 +31,7 @@
 | 18 | `/docs/crew/features/` | `06_autonomy.md` | Features の索引（cron/task-runner/subagents 中心） | 2026-09-25 | `f109569999e87c2f94c98c0222834f1e03829047a74cabe43c0ec0ae0ab093bc` |
 | 19 | `/docs/crew/features/subagents/` | `06_autonomy.md` |  | 2026-09-30 | `9e4ebbad99e7da2b6f872c0dcf7c193ed66f86bb14ec212070682d396d8aaeb6` |
 | 20 | `/docs/crew/features/cron/` | `06_autonomy.md` | 表示名「Scheduling」 | 2026-09-25 | `757cabd105da8a8f986558359f895634b18c97d51d6ea45f71eaa1bb884ea3b9` |
-| 21 | `/docs/crew/features/artifact-deploy/` | `12_artifacts.md` | Artifact Deploy（②）。表示名「Artifacts」。**Rev 1 で唯一未割当だったページ** | 2026-09-12 | `62a02e3e142ea08d55e7b325219f9a057e1e6a9a51bbfd1e3f3d8125c4d4e2c7` |
+| 21 | `/docs/crew/features/artifact-deploy/` | `12_artifacts.md` | Artifact Deploy（②）。表示名「Artifacts」 | 2026-09-12 | `62a02e3e142ea08d55e7b325219f9a057e1e6a9a51bbfd1e3f3d8125c4d4e2c7` |
 | 22 | `/docs/crew/features/multi-instance/` | `03_deployment/03_running-24-7.md` |  | 2026-09-25 | `01e9d34db8e6767368723780ae1d2a312a23eb96ab92ae436ed17feed0c5b13b` |
 | 23 | `/docs/crew/features/task-runner/` | `06_autonomy.md` |  | 2026-09-25 | `c6f2c0b022167b6c0608bfb30a88d80ad2ede75110bc4e063793c7c43bb8d192` |
 | 24 | `/docs/crew/features/memory/` | `04_memory-and-learning.md` |  | 2026-08-04 | `89ff511eaf8d75a96b586fbff91a2d2bee457c94416e895987119f44fdb2434b` |
@@ -57,7 +57,7 @@
 | 44 | `/docs/crew/apps/publishing/` | `10_apps.md` |  | 2026-09-25 | `befee13d25cb04658cc58b5bab25187e4aaa389a6613d079dec131abaf907be0` |
 | 45 | `/docs/crew/apps/aws-control/` | `16_aws-control.md` | **v0.6.0で公式に新設**。builtin App・既定オフ | 2026-09-12 | `9fb7c06ddeae772c6721459759f68cedc05e623e6d25341500404e7af91f57f7` |
 | 46 | `/docs/crew/configuration/` | `04_reference/02_configuration-keys.md` | 01_features 外 | 2026-09-25 | `3493696c59c657b2736fbff4e4fc10b02e1568d67ffd52a6ac1e262569d6c398` |
-| 47 | `/docs/crew/security/` | `09_security.md` ＋ `03_deployment/04_security-hardening.md` | 二層構成（§4.7） | 2026-09-30 | `dba2db95c4669e4d113040750b797ed6dbc6739c9348a527d54fe7cce1be8d34` |
+| 47 | `/docs/crew/security/` | `09_security.md` ＋ `03_deployment/04_security-hardening.md` | 二層構成 | 2026-09-30 | `dba2db95c4669e4d113040750b797ed6dbc6739c9348a527d54fe7cce1be8d34` |
 | 48 | `/docs/crew/system/` | `03_deployment/03_running-24-7.md` | **v0.6.0で公式に新設**。System & storage 節 | 2026-09-25 | `d370dd18113ea68890186ef182f0dff3db6c457a1a6428541c6da609a9b99fd3` |
 | 49 | `/docs/crew/troubleshooting/` | `03_deployment/05_troubleshooting.md` | 01_features 外 | 2026-09-12 | `0c9ac2f2db6e6c6299ccf8848c1b319d25f166a35eb13626f9d8c67f00a0f69a` |
 
@@ -67,4 +67,3 @@
 - **v0.6.0 で前提が変わった点**: Computer Use・ブラウザ自動化（`13_computer-and-browser.md`）は v0.4.1 まで「公式ページに専用ページが無く、モジュール仕様書 `modules/{computer-use,browser}.md` のみが出典」でしたが、**v0.6.0 で公式に `features/computer-use/`・`features/browser/` が新設**され、割当対象になりました
 - テレメトリ（`06_telemetry-and-privacy.md`）は引き続き**公式49ページに専用ページが無く**、README の独立セクションと `modules/metrics.md`・`guides/telemetry-otlp-export.md` が出典です（割当対象外）
 - `system/`（v0.6.0新設）は `03_deployment/03_running-24-7.md` の「System & storage」節が担当します
-- Rev 1 で未割当だった `#21 features/artifact-deploy`（現 #21）は `12_artifacts.md` に割当済み

@@ -37,6 +37,9 @@
 #   すべての HTTP 取得で 200 以外・0バイトを失敗（exit 1）にする。.md companion の 404 も失敗。
 #   sitemap の crew URL が0件、取得した HTML・.md の件数が sitemap の件数と一致しない、
 #   Page updated が抽出できないページがある、--base の版が releases.json に無い、のいずれも exit 1。
+#   途中で失敗した場合（中断を含む）は、この実行で新しく作った保存先（<out-root>/<YYYYMMDD>・経由版の
+#   <via-root>/<版>、およびこの実行で作ったルート）を削除する。実行前から中身のあった保存先は削除しない。
+#   取得失敗の残骸が「取得済み」「保存先が空ではない」と扱われて、再実行・Retry が止まるのを防ぐため。
 #
 # 制約:
 #   - **src/ は取得しない**（docs/ とルート .md のみ）。builtin App数など src/ 由来の
@@ -112,8 +115,47 @@ if [ -n "${GITHUB_TOKEN:-}" ]; then
 fi
 
 WORK=$(mktemp -d /tmp/kcd-fetch.XXXX)
-cleanup() { rm -rf "$WORK"; }
+
+# 失敗時に片付ける保存先（この実行で作ったものだけ）。NEW_DIRS は実行前に存在しなかったディレクトリ
+# （失敗時に丸ごと削除）、EMPTIED_DIRS は実行前に空だったディレクトリ（失敗時に中身だけ削除）
+NEW_DIRS=()
+EMPTIED_DIRS=()
+mark_new() {
+  if [ ! -e "$1" ]; then
+    NEW_DIRS+=("$1")
+  elif [ -d "$1" ] && [ -z "$(ls -A "$1" 2>/dev/null)" ]; then
+    EMPTIED_DIRS+=("$1")
+  fi
+}
+cleanup() {
+  local rc=$? i d
+  rm -rf "$WORK"
+  [ "$rc" -eq 0 ] && return 0
+  # 作った順の逆（経由版 → 保存先 → ルート）に片付ける
+  for ((i = ${#EMPTIED_DIRS[@]} - 1; i >= 0; i--)); do
+    d="${EMPTIED_DIRS[$i]}"
+    if [ -d "$d" ] && [ -n "$(ls -A "$d" 2>/dev/null)" ]; then
+      find "$d" -mindepth 1 -delete
+      echo "（失敗したため、この実行で書き込んだ中身を削除しました: $d）" >&2
+    fi
+  done
+  for ((i = ${#NEW_DIRS[@]} - 1; i >= 0; i--)); do
+    d="${NEW_DIRS[$i]}"
+    if [ -e "$d" ]; then
+      rm -rf "$d"
+      echo "（失敗したため、この実行で作った保存先を削除しました: $d）" >&2
+    fi
+  done
+}
 trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+mark_new "${OUT_ROOT%/}"
+mark_new "$SNAP"
+if [ -n "$VIA_ROOT" ]; then
+  mark_new "${VIA_ROOT%/}"
+fi
 
 # http_get <url> <out> [curl の追加引数...]: 200 以外・0バイトなら失敗（return 1）
 http_get() {
@@ -134,19 +176,20 @@ http_get() {
 }
 
 # clone_repo <ref> <snapdir>: --depth 1 で clone し docs/ とルート .md・LICENSE・NOTICE と COMMIT_SHA・REF を保存
+# 保存先の repo/ は clone に成功してから作り、COMMIT_SHA は最後に書く（途中の失敗で「取得済み」に見せない）
 clone_repo() {
   local ref="$1" dir="$2" tmp
-  mkdir -p "$dir/repo"
   tmp=$(mktemp -d "$WORK/clone.XXXX")
   if ! git -c advice.detachedHead=false clone -q --depth 1 --branch "$ref" "$GH_REPO_URL" "$tmp/r"; then
     echo "❌ clone に失敗しました（ref: $ref。存在しないタグ・ネットワーク不通の可能性）" >&2
     exit 1
   fi
-  git -C "$tmp/r" rev-parse HEAD > "$dir/repo/COMMIT_SHA"
+  mkdir -p "$dir/repo"
   printf '%s\n' "$ref" > "$dir/repo/REF"
   cp -r "$tmp/r/docs" "$dir/repo/"
   cp "$tmp/r"/*.md "$dir/repo/" 2>/dev/null || true
   cp "$tmp/r/LICENSE" "$tmp/r/NOTICE" "$dir/repo/" 2>/dev/null || true
+  git -C "$tmp/r" rev-parse HEAD > "$dir/repo/COMMIT_SHA"
   rm -rf "$tmp"
 }
 
@@ -286,6 +329,7 @@ PY
       echo "経由版 ${vref}: 取得済み（${vdir}）。COMMIT_SHA を読みます"
     else
       echo "経由版 ${vref}: ${vdir} に取得します（--repo-only と同じ内容）"
+      mark_new "$vdir"
       clone_repo "$vref" "$vdir"
     fi
     echo "  COMMIT_SHA: $(cat "$vdir/repo/COMMIT_SHA")"

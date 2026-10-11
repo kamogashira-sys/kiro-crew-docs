@@ -1,4 +1,4 @@
-# `docs/system-specs/` 全104ファイル 扱う／扱わない台帳（Phase 0-8）
+# `docs/system-specs/` 全104ファイル 扱う／扱わない台帳
 
 - **取得日**: 2026-10-04
 - **commit SHA**: `c67c506`（版 v0.7.2）
@@ -8,7 +8,7 @@
 
 > **v0.3.0再確認（2026-08-22・`21584ea`）**: `find -type f` 実測76件（直下2・common 5・features 13・modules 56）。
 >
-> **v0.6.0再構築（2026-09-13・`8575209`）**: 実測**88件**（直下3・common 7・modules 74・modules/examples/workflows 4）。v0.4.1（81件）からの差分は**継続62件・`features/`→`modules/` の同名移動13件・完全新規13件・消滅6件**（`features/README.md`／`features/code-approvers.md`／`features/inline-action-buttons.md`／`modules/auto-improvement-test-plan.md`／`modules/kas-backend.md`／`modules/workflow-gates.md`）。**`features/` ディレクトリ自体が消滅**した。<br>**v0.4.1 の台帳（76件）は実体81件に対して判定漏れがあった**（`command-bar.md`・`session-control.md` など）。本再構築で全88件に判定を付与し、この乖離を解消した（D-11 の既存乖離⑤）。
+> **v0.6.0再構築（2026-09-13・`8575209`）**: 実測**88件**（直下3・common 7・modules 74・modules/examples/workflows 4）。v0.4.1（81件）からの差分は**継続62件・`features/`→`modules/` の同名移動13件・完全新規13件・消滅6件**（`features/README.md`／`features/code-approvers.md`／`features/inline-action-buttons.md`／`modules/auto-improvement-test-plan.md`／`modules/kas-backend.md`／`modules/workflow-gates.md`）。**`features/` ディレクトリ自体が消滅**した。<br>**v0.4.1 の台帳（76件）は実体81件に対して判定漏れがあった**（`command-bar.md`・`session-control.md` など）。本再構築で全88件に判定を付与し、この乖離を解消した。
 >
 > **v0.7.2更新（2026-10-04・`c67c506`）**: 実測**104件**（直下3・common 7・modules 90・modules/examples/workflows 4）。v0.6.0 からの差分は**新規16件（すべて `modules/`）・消滅0件**（88＋16＝104）。新規16件の判定は「扱う」6件・「開発者向け・出典にしない」9件・「未割当・扱わない」1件（`monitor-architecture.md`）。新規16件の冒頭500バイトに `removed`／`no longer exist`／`legacy`／`deprecated` は0件。
 
@@ -49,9 +49,9 @@
 | `modules/babysit-pr-watch.md` | 扱う（機能解説の出典） | PR監視ループ → `01_features/17_workflows.md` **【v0.6.0で `features/` から移動】** |
 | `modules/browser.md` | 扱う（機能解説の出典） | `13_computer-and-browser.md`（ブラウザ自動化。MCPでないことを明記） |
 | `modules/channel-history.md` | 扱う（機能解説の出典） | `02_sessions.md`（チャネル履歴） |
-| `modules/claude-code-provider.md` | 扱う（機能解説の出典） | **v0.6.0でタイトルが `# Claude Code provider — a selectable ACP harness` に変わり、削除済み機能の記録ではなく現行機能の仕様書になった**（D-8） → `01_features/15_agent-backends.md` **【v0.6.0で `features/` から移動】** |
+| `modules/claude-code-provider.md` | 扱う（機能解説の出典） | **v0.6.0でタイトルが `# Claude Code provider — a selectable ACP harness` に変わり、削除済み機能の記録ではなく現行機能の仕様書になった** → `01_features/15_agent-backends.md` **【v0.6.0で `features/` から移動】** |
 | `modules/cli.md` | 扱う（機能解説の出典） | `04_reference/01_cli-commands.md` |
-| `modules/cloud.md` | 未割当・扱わない | クラウド関連の内部仕様だが、CLI・README・公式ページに `cloud` サブコマンドとして現れない（0-10 で確認済み）。**扱わない**理由: 利用者向けの公開インターフェースとして確認できないため |
+| `modules/cloud.md` | 未割当・扱わない | クラウド関連の内部仕様だが、CLI・README・公式ページに `cloud` サブコマンドとして現れない。**扱わない**理由: 利用者向けの公開インターフェースとして確認できないため |
 | `modules/command-bar.md` | 扱う（機能解説の出典） | Command Bar（Cmd+K）。v0.6.0で `contributes.commands` により App が行を追加できる → `01_features/10_apps.md` |
 | `modules/computer-use.md` | 扱う（機能解説の出典） | `13_computer-and-browser.md`（Computer Use） |
 | `modules/config.md` | 扱う（機能解説の出典） | `04_reference/02_configuration-keys.md` ※内部に "migrated from the older ... " の言及があるが、ファイル自体は現行の設定キー仕様であり削除済みではない |
@@ -111,7 +111,7 @@
 | `modules/session-storage.md` | 扱う（機能解説の出典） | `02_sessions.md` |
 | `modules/session-summary.md` | 扱う（機能解説の出典） | `02_sessions.md`（セッション要約） |
 | `modules/session-work-ledger.md` | 扱う（機能解説の出典） | セッションの作業台帳 → `01_features/02_sessions.md` **【v0.6.0で `features/` から移動】** |
-| `modules/session.md` | 扱う（機能解説の出典） | `02_sessions.md`（`session_key` の形式を含む。U13） |
+| `modules/session.md` | 扱う（機能解説の出典） | `02_sessions.md`（`session_key` の形式を含む） |
 | `modules/side.md` | 扱う（機能解説の出典） | `03_chat.md`（`/side`） |
 | `modules/slack-gateway.md` | 扱う（機能解説の出典） | `11_interfaces.md`（Slack連携の詳細） |
 | `modules/steering-viewer.md` | 扱う（機能解説の出典） | `07_agents-skills-steering.md`（軽く触れる） **【v0.6.0で `features/` から移動】** |

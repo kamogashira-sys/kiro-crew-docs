@@ -12,7 +12,8 @@
 #     いずれかのファイルの連続5行と一致する転記（行末の空白は無視。5行すべてが空行の窓は数えない）
 #
 # 表示は行番号と種別だけで、一致した値を出力しない。
-# PR 本文が無い、--snapshot の repo/ と docs_md/ がどちらも無い場合は、検査を行わずに exit 1。
+# PR 本文が無い、--snapshot の repo/ と docs_md/ がどちらも無い、repo/・docs_md/ に照合できるファイルが
+# 1件も無い（取得失敗後に残った空のディレクトリ等）場合は、検査を行わずに exit 1。
 set -uo pipefail
 
 usage() { echo "使い方: $0 <pr-body.md> [--snapshot <dir>]" >&2; }
@@ -79,6 +80,10 @@ if snapshot:
                     w = tuple(flines[k:k + WINDOW])
                     if any(w):
                         windows.add(w)
+    if nfiles == 0:
+        # 0ファイルとの照合を「検査済み」にしない（フェイルクローズド）
+        print(f"❌ --snapshot {snapshot} の repo/・docs_md/ に照合できるファイルが0件です（取得に失敗した可能性）。検査を行いませんでした")
+        sys.exit(1)
     # 本文のコードブロック内の行を、ブロックごとに（開始行番号, 行）で集める
     blocks, cur, in_fence = [], None, False
     for i, line in enumerate(lines, 1):

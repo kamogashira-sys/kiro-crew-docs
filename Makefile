@@ -79,7 +79,7 @@ help:
 	@echo "  make check-kiro-crew-pr-scope PROFILE=version-update|infra [BASE=origin/main] [HEAD_REV=<rev>]"
 	@echo "                                      # PR の変更範囲が許可パス・許可行に収まるか"
 	@echo "  make check-kiro-crew-pr-body PR_BODY=<file>|RUN_DIR=<dir> [CLOUD_ROOT=<dir>]"
-	@echo "                                      # 公開される PR 本文の公開前検査（スナップショット1件が必須）"
+	@echo "                                      # 公開される PR 本文の公開前検査（PIN.json のあるスナップショット1件が必須）"
 	@echo "  make list-kiro-crew-open-items      # 公開ページの「食い違い」「未確認」「要検証」の全行と件数"
 	@echo ""
 	@echo "保守用:"
@@ -291,6 +291,8 @@ check-kiro-crew-pr-body:
 	@set -- $(SNAPSHOT); \
 	if [ "$$#" -ne 1 ]; then echo "❌ SNAPSHOT が $$# 件です（CLOUD_ROOT=$(CLOUD_ROOT) 直下に1件である必要があります）。検査を行いませんでした"; exit 1; fi; \
 	if [ ! -f "$(PR_BODY)" ]; then echo "❌ PR 本文 $(PR_BODY) がありません。検査を行いませんでした"; exit 1; fi; \
+	if [ ! -f "$${1%/}/PIN.json" ]; then echo "❌ SNAPSHOT $${1%/} に PIN.json がありません（取得が完了していません）。検査を行いませんでした"; \
+	    echo "   → make fetch-kiro-crew-primary VERSION=<版> PREV=<前回版> CLOUD_ROOT=$(CLOUD_ROOT)"; exit 1; fi; \
 	$(SCRIPTS)/check-pr-body.sh "$(PR_BODY)" --snapshot "$${1%/}"
 
 # 公開ページの「食い違い」「未確認」「要検証」を全行列挙し、最終行に件数を出す。0件なら exit 1（検索の空振りを合格にしない）

@@ -259,6 +259,7 @@ check-kiro-crew-cloud:
 	run 06-notation-strict $(SCRIPTS)/check-notation.py --strict; \
 	run 07-measure-ssot $(SCRIPTS)/measure-ssot.py --snapshot "$$snap" --expect-constants; \
 	run 08-urls-important $(MAKE) --no-print-directory check-kiro-crew-urls-important; \
+	run 09-audit-groups $(SCRIPTS)/check-audit-groups.py; \
 	echo ""; echo "=== check-kiro-crew-cloud 要約（PR 本文⑤へ転記）==="; \
 	echo "一次情報: $$snap"; cat "$$log/rc.txt"; \
 	grep -h '^KCD-SUMMARY:' "$$log"/0*.txt | sed 's/^KCD-SUMMARY: /要約: /'; \

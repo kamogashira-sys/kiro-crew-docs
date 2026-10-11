@@ -48,7 +48,7 @@
 > | `apps/aws-control/` | [01_features/16_aws-control.md](../01_features/16_aws-control.md) |
 > | `system/` | [03_deployment/03_running-24-7.md](../03_deployment/03_running-24-7.md)（System & storage 節） |
 >
-> `features/computer-use/`・`features/browser/` は **v0.4.1 まで公式ページが存在せず**、モジュール仕様書のみが出典でした。単独ページは5→6（`system/` の追加）です。1対1の割当は `05_meta/ledger-official-pages.md` で管理しています（非公開）。
+> `features/computer-use/`・`features/browser/` は **v0.4.1 まで公式ページが存在せず**、モジュール仕様書のみが出典でした。単独ページは5→6（`system/` の追加）です。1対1の割当は [`scripts/kiro-crew-docs/ledgers/official-pages.md`](../../scripts/kiro-crew-docs/ledgers/official-pages.md) で管理しています。
 
 > **v0.7.2 対応時点の確認**: sitemap 上の `docs/crew/` 配下は**49件で、URL 集合は v0.6.0 対応時点と完全に一致**します（新規0件・消滅0件）。内容は49ページ中32ページが更新されています（Page updated 表記が 2026-09-25 のページが29件、2026-09-30 のページが3件: `features/subagents/`・`interfaces/`・`security/`）。
 >

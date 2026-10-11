@@ -174,7 +174,7 @@ v0.3.0のCHANGELOG（93行）は「**### Two new apps, and a store worth browsin
 
 - **v0.7.2 時点の builtin App の件数**（v0.7.2 のスナップショットに `src/` が含まれないため再計数できない。上表の20件は v0.3.0 時点の実測）
 - `minCrewVersion`（旧キー名）を書いたマニフェストの扱い（公式・仕様書ともに記載なし）
-- v0.3.0 時点の件数については、**v0.3.0対応時（2026-08-22）に`21584ea`のfull cloneで`src/kiro_crew/apps/builtins/*/`を直接実測し、20件・`defaultEnabled: true`は`projects`のみを再確認済み**（台帳は `05_meta/ledger-builtin-apps.md`）
+- v0.3.0 時点の件数については、**v0.3.0対応時（2026-08-22）に`21584ea`のfull cloneで`src/kiro_crew/apps/builtins/*/`を直接実測し、20件・`defaultEnabled: true`は`projects`のみを再確認済み**（台帳は [`scripts/kiro-crew-docs/ledgers/builtin-apps.md`](../../scripts/kiro-crew-docs/ledgers/builtin-apps.md)）
 
 ## 関連リンク
 

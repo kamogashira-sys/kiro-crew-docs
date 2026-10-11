@@ -22,6 +22,8 @@
                       (i)   許可定数（ALLOWED_CONSTANTS）のトップレベル代入文の行範囲（ast の Assign／AnnAssign）
                       (ii)  モジュール docstring の行範囲
                       (iii) tokenize で COMMENT トークンだけから成る行（文字列リテラル内の # 行は含まれない）
+                    ただし (i)(ii) の行範囲のうち、ほかのトップレベル文（許可定数の代入文・モジュール docstring 以外）と
+                    重なる行は除く（例: `EXPECTED_MODULES = 104; print(...)` の行は許可しない）。
                     .github/WORKFLOW.md・.github/COMMIT_CHECKLIST.md・.github/workflows/*.yml・Makefile は許可しない
                     （CI・Release・検証の手順という安全装置を版更新 PR で変えないため）。
     infra           PR-1〜PR-4 用。上記に加えて scripts/kiro-crew-docs/**・Makefile・.github/**・AGENTS.md・
@@ -125,15 +127,23 @@ def allowed_lines(source, filename):
     except SyntaxError:
         return None
     lines = set()
+    other = set()  # (i)(ii) 以外のトップレベル文が占める行（同じ物理行に置いた別の文を許可しないため）
+    docstring = tree.body[0] if tree.body and isinstance(tree.body[0], ast.Expr) \
+        and isinstance(getattr(tree.body[0], "value", None), ast.Constant) \
+        and isinstance(tree.body[0].value.value, str) else None
     for node in tree.body:
         if isinstance(node, (ast.Assign, ast.AnnAssign)):
             targets = node.targets if isinstance(node, ast.Assign) else [node.target]
             names = {t.id for t in targets if isinstance(t, ast.Name)}
             if any((filename, n) in ALLOWED_CONSTANTS for n in names):
                 lines.update(range(node.lineno, node.end_lineno + 1))
-    if tree.body and isinstance(tree.body[0], ast.Expr) and isinstance(getattr(tree.body[0], "value", None), ast.Constant) \
-            and isinstance(tree.body[0].value.value, str):
-        lines.update(range(tree.body[0].lineno, tree.body[0].end_lineno + 1))
+                continue
+        if node is docstring:
+            lines.update(range(node.lineno, node.end_lineno + 1))
+            continue
+        start = min([node.lineno] + [d.lineno for d in getattr(node, "decorator_list", [])])
+        other.update(range(start, node.end_lineno + 1))
+    lines -= other
     kinds = {}
     ignore = {tokenize.NL, tokenize.NEWLINE, tokenize.INDENT, tokenize.DEDENT, tokenize.ENDMARKER}
     try:

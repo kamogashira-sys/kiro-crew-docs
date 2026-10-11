@@ -63,6 +63,38 @@ If this change is based on the repository directly, give the **commit SHA (short
 - [ ] I have verified that all links work correctly
 - [ ] I have checked that tables render properly (if applicable)
 
+## 版更新（クラウド）
+
+Kiro Crew の新しい安定版への追随（版更新）の PR では、次の7節を書きます（Kiro Web のクラウドセッション・Workflow で作業した場合も、ローカルで作業した場合も同じ）。PR 本文が作業記録の一次記録になります。書き方は [更新手順書](UPDATE_GUIDE.md) §15、作成前に `make check-kiro-crew-pr-body PR_BODY=<file> CLOUD_ROOT=<dir>` が exit 0 であることを確かめます。版更新以外の PR ではこの節を削除してください。
+
+### ① 更新計画
+
+対象版・経由版・基準点、粒度（C-L1〜C-L3）の判定。
+
+### ② 一次情報の固定
+
+`PIN.json` の値の表（ref・commit・CHANGELOG 日付・Release 公開日・参照日・sitemap 件数・経由版）。
+
+### ③ SSoT 変更点
+
+ID・前回値（更新前の定数）・新値・測定コマンド・出典（パスと行）を全件。
+
+### ④ 実施内容
+
+ファイル別の変更点（`git log --oneline origin/main..HEAD` と `git diff --stat origin/main...HEAD` から作る）。
+
+### ⑤ 検証結果
+
+実行した全コマンドと exit code（`check-kiro-crew-cloud`・`check-kiro-crew-ledger-current`・`check-kiro-crew-cloud-freshness` の `freshness-result` 行・`check-kiro-crew-pr-scope PROFILE=version-update`・`check-kiro-crew-pr-body`）、`check-kiro-crew-cloud` の要約行の数値、ネガティブテストの exit code。
+
+### ⑥ 未確認・据え置き
+
+更新手順書 §18 の解消判定表（必須。行数は `make list-kiro-crew-open-items` の `open-items: N` と一致させる）。対象版より新しい版を検知した場合はその版も。
+
+### ⑦ 人の判断事項
+
+計画承認（G1）での人の返答を逐語で記録（`SRC_ANALYSIS: APPROVED` または `SRC_ANALYSIS: DENIED` の行を含む）。正準値の変更・公式間の食い違いの扱い・公開方針。
+
 ## Related Issues
 
 Closes #(issue number)

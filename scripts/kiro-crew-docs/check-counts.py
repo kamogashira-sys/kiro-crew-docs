@@ -20,6 +20,17 @@
 fail-safe:
     一次情報スナップショットが無い場合、公式実体との照合はスキップして exit 0。
     「未検証です」と明示表示する。
+
+--strict（クラウド入口 check-kiro-crew-cloud から呼ぶ。既定はオフ）:
+    --docs-dir・--meta-dir 不在、sitemap・releases.json 不在、builtin App 台帳不在をエラーにする。
+
+PIN.json のあるスナップショット（fetch-snapshot.sh が `<meta-dir>/../PIN.json` を書いたもの。オプションに関係なく適用）:
+    Releases の照合は `published_at <= PIN.release_published_at` に絞り込んだ安定版で S4 と照合する。
+    S5（総リリース数）は取得時点で変わる値なので照合せず、総件数を「取得時点の値（照合しない）」として表示する。
+    PIN.json の無い旧形式のスナップショットでは従来どおり全件で S4・S5 を照合する。
+
+環境変数:
+    KCD_LEDGER_DIR  builtin App 台帳のディレクトリ（既定 kiro-crew-docs/05_meta）
 """
 import argparse
 import glob
@@ -30,6 +41,7 @@ import sys
 
 DOC_ROOT = "kiro-crew-docs"
 LOCAL_ONLY = ("05_meta", "06_embedded-docs", "work_plans", "work_records")
+LEDGER_DIR = os.environ.get("KCD_LEDGER_DIR") or f"{DOC_ROOT}/05_meta"
 
 SSOT = {
     "S1": {"value": 49, "label": "公式crewページ数"},
@@ -112,10 +124,13 @@ def check_page_counts_3way(errors, notes):
         notes.append(f"サイト全体: 実ファイル {total_actual} / 計画値 {TOTAL_PAGES}")
 
 
-def check_builtin_apps_ledger(errors, notes):
+def check_builtin_apps_ledger(errors, notes, strict=False):
     """05_meta/ledger-builtin-apps.md の件数が S12 と一致するか（ローカル台帳の検証）。"""
-    path = f"{DOC_ROOT}/05_meta/ledger-builtin-apps.md"
+    path = os.path.join(LEDGER_DIR, "ledger-builtin-apps.md")
     if not os.path.isfile(path):
+        if strict:
+            errors.append(f"{path} がありません（--strict では builtin App 台帳の不在を合格にしません）")
+            return
         notes.append("builtin App台帳: 未作成（Phase 0-9 で作成予定）")
         return
     txt = open(path, encoding="utf-8").read()
@@ -153,7 +168,7 @@ def check_declared_page_counts(errors, notes):
             notes.append(f"{path}: 宣言 {declared}ページ = 実ファイル {actual}（一致）")
 
 
-def check_against_snapshot(docs_dir, meta_dir, errors, notes):
+def check_against_snapshot(docs_dir, meta_dir, errors, notes, strict=False):
     """一次情報スナップショットとSSoTを照合する。"""
     if docs_dir and os.path.isdir(docs_dir):
         n = sum(len(files) for _, _, files in os.walk(docs_dir))
@@ -165,8 +180,13 @@ def check_against_snapshot(docs_dir, meta_dir, errors, notes):
         else:
             notes.append(f"S2: スナップショット docs/ {n} ファイル（一致）")
 
+    if strict and not (meta_dir and os.path.isdir(meta_dir)):
+        errors.append(f"--meta-dir {meta_dir!r} がありません（--strict では sitemap・Releases 照合のスキップを合格にしません）")
+
     if meta_dir and os.path.isdir(meta_dir):
         sitemap = os.path.join(meta_dir, "sitemap.xml")
+        if strict and not os.path.isfile(sitemap):
+            errors.append(f"{sitemap} がありません（--strict ではエラー）")
         if os.path.isfile(sitemap):
             s = open(sitemap, encoding="utf-8").read()
             urls = re.findall(r"<loc>(https://kiro\.dev/docs/crew/[^<]*)</loc>", s)
@@ -179,9 +199,19 @@ def check_against_snapshot(docs_dir, meta_dir, errors, notes):
                 notes.append(f"S1: sitemap の crew ページ {len(urls)} 件（一致）")
 
         releases = os.path.join(meta_dir, "..", "releases", "releases.json")
+        pin_path = os.path.join(meta_dir, "..", "PIN.json")
+        if strict and not os.path.isfile(releases):
+            errors.append(f"{releases} がありません（--strict ではエラー）")
         if os.path.isfile(releases):
             data = json.load(open(releases, encoding="utf-8"))
-            stable = sum(1 for r in data if not r.get("prerelease"))
+            pin = json.load(open(pin_path, encoding="utf-8")) if os.path.isfile(pin_path) else None
+            cutoff = pin.get("release_published_at") if pin else None
+            if cutoff:
+                # 取得時点より前に固定した版の時点に揃える（target の公開時刻以前に公開された安定版だけを数える）
+                stable = sum(1 for r in data if not r.get("prerelease") and r["published_at"] <= cutoff)
+                notes.append(f"PIN.json あり: Releases を published_at <= {cutoff}（{pin.get('ref')} の公開時刻）に絞って照合")
+            else:
+                stable = sum(1 for r in data if not r.get("prerelease"))
             total = len(data)
             if stable != SSOT["S4"]["value"]:
                 errors.append(
@@ -189,7 +219,9 @@ def check_against_snapshot(docs_dir, meta_dir, errors, notes):
                 )
             else:
                 notes.append(f"S4: 安定版リリース {stable} 件（一致）")
-            if total != SSOT["S5"]["value"]:
+            if pin is not None:
+                notes.append(f"S5: 総リリース {total} 件（取得時点の値（照合しない））")
+            elif total != SSOT["S5"]["value"]:
                 errors.append(
                     f"Releases の総数が {total} 件ですが SSoT S5 は {SSOT['S5']['value']} です"
                 )
@@ -201,6 +233,8 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--docs-dir", help="スナップショット内の repo/docs ディレクトリ（任意）")
     ap.add_argument("--meta-dir", help="スナップショット内の meta ディレクトリ（任意）")
+    ap.add_argument("--strict", action="store_true",
+                    help="スキップを合格にしない（--docs-dir・--meta-dir・builtin App 台帳の不在をエラーにする）")
     args = ap.parse_args()
     os.chdir(repo_root())
 
@@ -216,11 +250,13 @@ def main():
     check_declared_page_counts(errors, notes)
 
     print("🔍 builtin App台帳を検証中...")
-    check_builtin_apps_ledger(errors, notes)
+    check_builtin_apps_ledger(errors, notes, args.strict)
 
     if args.docs_dir and os.path.isdir(args.docs_dir):
         print(f"🔍 一次情報スナップショットと照合中（{args.docs_dir}）...")
-        check_against_snapshot(args.docs_dir, args.meta_dir, errors, notes)
+        check_against_snapshot(args.docs_dir, args.meta_dir, errors, notes, args.strict)
+    elif args.strict:
+        errors.append(f"--docs-dir {args.docs_dir!r} がありません（--strict では一次情報との照合のスキップを合格にしません）")
     else:
         print("⚠️  一次情報スナップショットとの照合をスキップしました")
         print("   → これは「公式と一致することを検証した」ではありません（**未検証**です）")

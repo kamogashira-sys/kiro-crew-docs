@@ -16,8 +16,16 @@
     5. 目次の版リンクが本文版見出しと同じ順序・集合であり、アンカーが対応すること
 
 fail-safe: スナップショットが無い場合は実体との突き合わせをスキップしexit 0。
+
+--strict（クラウド入口 check-kiro-crew-cloud から呼ぶ。既定はオフ）:
+    --repo-dir 不在・CHANGELOG.md 不在・releases.json 不在をエラーにする。
+    タグ版 CHANGELOG の安定版のうち本文に無いものをエラーにする（既定は注記）。安定版の判定には
+    VALID_STABLE_VERSIONS ではなくスナップショットの releases/releases.json（prerelease == false）を使い、
+    PIN.json がある場合は published_at <= PIN.release_published_at に絞る（定数の更新漏れと本文の反映漏れが
+    同時に起きても検出するため）。
 """
 import argparse
+import json
 import os
 import re
 import sys
@@ -50,10 +58,32 @@ def expected_anchor(version):
     return f"v{version.replace('.', '')}"
 
 
+def strict_stable_versions(repo_dir, errors, notes):
+    """--strict: スナップショットの releases.json から安定版の集合（先頭の v を除く）を返す。"""
+    releases = os.path.join(repo_dir, "..", "releases", "releases.json")
+    if not os.path.isfile(releases):
+        errors.append(f"{releases} がありません（--strict ではエラー）")
+        return None
+    data = json.load(open(releases, encoding="utf-8"))
+    pin_path = os.path.join(repo_dir, "..", "PIN.json")
+    cutoff = None
+    if os.path.isfile(pin_path):
+        cutoff = json.load(open(pin_path, encoding="utf-8")).get("release_published_at")
+    stable = {
+        r["tag_name"].lstrip("v") for r in data
+        if not r.get("prerelease") and (cutoff is None or r["published_at"] <= cutoff)
+    }
+    basis = f"published_at <= {cutoff}" if cutoff else "全件"
+    notes.append(f"releases.json の安定版（{basis}）: {len(stable)} 件を判定に使用")
+    return stable
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--repo-dir", help="スナップショット内の repo ディレクトリ（任意）")
     ap.add_argument("--doc-file", default=DOC_FILE, help=f"検証するchangelog（既定: {DOC_FILE}）")
+    ap.add_argument("--strict", action="store_true",
+                    help="スキップを合格にしない（--repo-dir 不在をエラーにし、本文未反映の安定版をエラーにする）")
     args = ap.parse_args()
     os.chdir(repo_root())
 
@@ -130,11 +160,24 @@ def main():
         if os.path.isfile(changelog_path):
             real_txt = open(changelog_path, encoding="utf-8").read()
             real_versions = re.findall(r"(?m)^## \[(\d+\.\d+\.\d+)\]", real_txt)
-            missing = [version for version in real_versions if version not in versions and version in VALID_STABLE_VERSIONS]
-            if missing:
-                notes.append(f"CHANGELOG.md実体にある安定版で本文未反映: {missing}（Phase 4で執筆予定なら問題なし）")
+            if args.strict:
+                stable = strict_stable_versions(args.repo_dir, errors, notes)
+                if stable is not None:
+                    missing = [version for version in real_versions if version not in versions and version in stable]
+                    if missing:
+                        errors.append(f"CHANGELOG.md実体にある安定版で本文未反映: {missing}（--strict ではエラー）")
+                    else:
+                        notes.append("CHANGELOG.md実体の安定版（releases.json 基準）はすべて本文に反映済み")
             else:
-                notes.append("CHANGELOG.md実体の安定版はすべて本文に反映済み")
+                missing = [version for version in real_versions if version not in versions and version in VALID_STABLE_VERSIONS]
+                if missing:
+                    notes.append(f"CHANGELOG.md実体にある安定版で本文未反映: {missing}（Phase 4で執筆予定なら問題なし）")
+                else:
+                    notes.append("CHANGELOG.md実体の安定版はすべて本文に反映済み")
+        elif args.strict:
+            errors.append(f"{changelog_path} がありません（--strict ではエラー）")
+    elif args.strict:
+        errors.append(f"--repo-dir {args.repo_dir!r} がありません（--strict では一次情報との照合のスキップを合格にしません）")
     else:
         print("⚠️  一次情報スナップショットとの照合をスキップしました（未検証です）")
 

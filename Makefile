@@ -15,7 +15,7 @@
 #
 # Kiro Crew は OSS であり一次情報がリポジトリ（GitHub）と公式 docs（kiro.dev）の
 # 二重構造である。main ブランチは日次で動くため、リポジトリを出典にした記述には
-# 参照時点（取得日・commit SHA・版）の記録が必須（05_meta/10_update-guide.md §4）。
+# 参照時点（取得日・commit SHA・版）の記録が必須（.github/UPDATE_GUIDE.md §4）。
 
 .DEFAULT_GOAL := help
 
@@ -28,11 +28,11 @@
         fetch-kiro-crew-snapshot extract-kiro-crew-changelog extract-kiro-crew-doc-index \
         check-kiro-crew-cleanroom fetch-kiro-crew-primary check-kiro-crew-cloud \
         check-kiro-crew-ledger-current check-kiro-crew-cloud-freshness check-kiro-crew-pr-scope \
-        check-kiro-crew-pr-body list-kiro-crew-open-items
+        check-kiro-crew-pr-body list-kiro-crew-open-items check-kiro-crew-peripheral-values
 
 SCRIPTS := ./scripts/kiro-crew-docs
 
-# 一次情報スナップショットの置き場（日付ディレクトリ配下の入れ子。05_meta/10_update-guide.md §5.4）。
+# 一次情報スナップショットの置き場（日付ディレクトリ配下の入れ子。.github/UPDATE_GUIDE.md §5.4）。
 # 未指定・不在ならチェックはスキップする（ネットワークに依存させない）。
 SNAPSHOT_ROOT ?= kiro-crew-docs/06_embedded-docs
 REPO_DIR  ?= $(shell ls -d $(SNAPSHOT_ROOT)/*/repo     2>/dev/null | sort | tail -1)
@@ -57,10 +57,11 @@ help:
 	@echo "  make check-kiro-crew-counts      # 件数系 SSoT・ページ数3者一致"
 	@echo "  make check-kiro-crew-consistency # 値系 SSoT・両併記の対称性（S3a/S15/S22）"
 	@echo "  make check-kiro-crew-notation    # 表記規約 (a)〜(i)"
-	@echo "  make check-kiro-crew-coverage    # 公式49ページ台帳・未割当検出"
+	@echo "  make check-kiro-crew-coverage    # 公式ページ台帳（sitemap の docs/crew/ 全件）・未割当検出"
 	@echo "  make check-kiro-crew-changelog   # changelog 構造・日付2列"
 	@echo "  make check-kiro-crew-scope       # スコープ境界（Kiro CLI 混入検出）"
 	@echo "  make check-kiro-crew-source-pin  # 参照時点記録・削除済み仕様書の出典検出"
+	@echo "  make check-kiro-crew-peripheral-values # .github/・Makefile に版依存の値が無いこと（.github/・Makefile の変更時）"
 	@echo ""
 	@echo "個別に実行（★外部サイトに依存。all / CI（PR）には含めない）:"
 	@echo "  make check-kiro-crew-urls           # 公開文書の外部 URL 到達性"
@@ -154,6 +155,11 @@ check-kiro-crew-scope:
 
 check-kiro-crew-source-pin:
 	@$(SCRIPTS)/check-source-pin.py
+
+# .github/・Makefile に版依存の値（check-consistency.py の SSOT のパターン）が無いこと。
+# 版更新 PR はこれらのファイルを変更できないため、値を書かない規則にしている（.github/UPDATE_GUIDE.md §19）
+check-kiro-crew-peripheral-values:
+	@$(SCRIPTS)/check-peripheral-values.py
 
 # ------------------------------------------------------------
 # 個別ターゲット（★外部サイトに依存。all / CI（PR）には含めない）
@@ -259,9 +265,11 @@ check-kiro-crew-cloud:
 	run 06-notation-strict $(SCRIPTS)/check-notation.py --strict; \
 	run 07-measure-ssot $(SCRIPTS)/measure-ssot.py --snapshot "$$snap" --expect-constants; \
 	run 08-urls-important $(MAKE) --no-print-directory check-kiro-crew-urls-important; \
+	run 09-audit-groups $(SCRIPTS)/check-audit-groups.py; \
+	run 10-peripheral-values $(SCRIPTS)/check-peripheral-values.py; \
 	echo ""; echo "=== check-kiro-crew-cloud 要約（PR 本文⑤へ転記）==="; \
 	echo "一次情報: $$snap"; cat "$$log/rc.txt"; \
-	grep -h '^KCD-SUMMARY:' "$$log"/0*.txt | sed 's/^KCD-SUMMARY: /要約: /'; \
+	grep -h '^KCD-SUMMARY:' "$$log"/[0-9]*.txt | sed 's/^KCD-SUMMARY: /要約: /'; \
 	rm -rf "$$log"; \
 	if [ "$$fail" -ne 0 ]; then echo "❌ check-kiro-crew-cloud: 失敗あり"; exit 1; fi; \
 	echo "✅ check-kiro-crew-cloud: すべて exit 0"

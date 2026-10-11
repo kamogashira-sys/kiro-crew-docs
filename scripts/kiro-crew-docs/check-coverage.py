@@ -9,7 +9,7 @@
 Crew 版の設計（Rev 1 からの再設計理由）:
     兄弟サイトは「changelog エントリの網羅性」を検証するが、Crew は changelog が
     GitHub のため、それに相当する検証対象が無い。代わりに **「公式ページのどれを
-    扱い、どれを意図的に扱わないか」の台帳（05_meta/ledger-official-pages.md）**を
+    扱い、どれを意図的に扱わないか」の台帳（scripts/kiro-crew-docs/ledgers/official-pages.md）**を
     検証対象にする。
 
     ⚠️ **Rev 1 はこの検証を設計しながら台帳自体を成果物にしておらず、実際に
@@ -17,12 +17,12 @@ Crew 版の設計（Rev 1 からの再設計理由）:
     台帳の各行に「担当ページ」または「不扱い理由」が明記されているかを検証する。
 
 検証内容:
-    1. 台帳（ledger-official-pages.md）が EXPECTED_OFFICIAL_PAGES 行（README分含む）持っていること
+    1. 台帳（official-pages.md）が EXPECTED_OFFICIAL_PAGES 行（README分含む）持っていること
     2. 各行に担当ページ（`01_features/NN_xxx.md` 等）が記載されていること
        （未割当が0件であること）
     3. 台帳が指す担当ページが実際に公開対象ディレクトリに存在すること
        （ファイル名だけの記載は`01_features/`配下、`/`を含む記載はフルパスとして解決する）
-    4. モジュール台帳（ledger-modules.md）が EXPECTED_MODULES 件すべてに判定を持つこと
+    4. モジュール台帳（modules.md）が EXPECTED_MODULES 件すべてに判定を持つこと
 
 fail-safe:
     台帳ファイルが無い場合は exit 0＋警告（Phase 0 未実施の場合はスキップ）。
@@ -33,7 +33,7 @@ fail-safe:
     末尾に `KCD-SUMMARY:` で始まる要約行（公式ページ台帳 N/N・モジュール台帳 N/N・sitemap 実測 N）を出す。
 
 環境変数:
-    KCD_LEDGER_DIR  台帳のディレクトリ（既定 kiro-crew-docs/05_meta）。ネガティブテストで /tmp の複製に差し替える
+    KCD_LEDGER_DIR  台帳のディレクトリ（既定 scripts/kiro-crew-docs/ledgers）。ネガティブテストで /tmp の複製に差し替える
 """
 import argparse
 import glob
@@ -41,9 +41,9 @@ import os
 import re
 import sys
 
-LEDGER_DIR = os.environ.get("KCD_LEDGER_DIR") or "kiro-crew-docs/05_meta"
-LEDGER_PAGES = os.path.join(LEDGER_DIR, "ledger-official-pages.md")
-LEDGER_MODULES = os.path.join(LEDGER_DIR, "ledger-modules.md")
+LEDGER_DIR = os.environ.get("KCD_LEDGER_DIR") or "scripts/kiro-crew-docs/ledgers"
+LEDGER_PAGES = os.path.join(LEDGER_DIR, "official-pages.md")
+LEDGER_MODULES = os.path.join(LEDGER_DIR, "modules.md")
 EXPECTED_OFFICIAL_PAGES = 49
 EXPECTED_MODULES = 104  # v0.7.2タグ実測（直下3/common7/modules94。.mdのみは101）。v0.6.0タグは88
 

@@ -19,7 +19,7 @@
     同じ値が複数の検証器に重複して定義されているため（S1: 4箇所、S3: 4箇所、S4: 5箇所 など）、
     一部だけ更新する漏れも検出する。
 
-測定方法（数え方は ledger-modules.md の「数え方」と同じく `find -type f` 相当の全ファイル）:
+測定方法（数え方は ledgers/modules.md の「数え方」と同じく `find -type f` 相当の全ファイル）:
     S1  meta/sitemap.xml の docs/crew/ URL 件数
     S2  repo/docs 配下のファイル数
     S3  releases.json の安定版のうち published_at が PIN.release_published_at 以前で最新の tag_name
@@ -33,7 +33,7 @@
     台帳が無い、または2列が無い場合は比較できないため、どちらのオプションでも exit 1（未検証を合格にしない）。
 
 環境変数:
-    KCD_LEDGER_DIR  公式ページ台帳のディレクトリ（既定 kiro-crew-docs/05_meta）
+    KCD_LEDGER_DIR  公式ページ台帳のディレクトリ（既定 scripts/kiro-crew-docs/ledgers）
 """
 import argparse
 import json
@@ -213,7 +213,7 @@ def parse_ledger(path):
 
 
 def page_updated_diff(pin, ledger_dir):
-    path = os.path.join(ledger_dir, "ledger-official-pages.md")
+    path = os.path.join(ledger_dir, "official-pages.md")
     if not os.path.isfile(path):
         return None, f"{path} がありません"
     ledger, err = parse_ledger(path)
@@ -247,7 +247,7 @@ def main():
     ap.add_argument("--expect-ledger-current", action="store_true", help="台帳と PIN.json の差分が1件でもあれば exit 1")
     args = ap.parse_args()
     os.chdir(repo_root())
-    ledger_dir = os.environ.get("KCD_LEDGER_DIR") or "kiro-crew-docs/05_meta"
+    ledger_dir = os.environ.get("KCD_LEDGER_DIR") or "scripts/kiro-crew-docs/ledgers"
 
     pin, measured = measure(args.snapshot)
     mods = {k: load_checker(k) for k in CHECKERS}

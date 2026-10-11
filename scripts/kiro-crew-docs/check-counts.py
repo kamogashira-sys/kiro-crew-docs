@@ -11,7 +11,7 @@
     Crew 固有の最重要検証は **§5 各節の見出しページ数・§5.8合計表・実ファイル数の3者一致**
     （Rev 1 でこの3者が5節すべて不一致だった実際の不具合の再発防止）。
 
-検証する正準値（件数系。05_meta/10_update-guide.md §7 参照）:
+検証する正準値（件数系。.github/UPDATE_GUIDE.md §7 参照）:
     値は下の SSOT 辞書が正本（docstring に値を書くと版更新で取り残されるため書かない）。
     S1 公式crewページ数 / S2 docs/配下ファイル数 / S4 安定版リリース数 / S5 総リリース数 /
     S12 builtin App数（ローカル台帳との一致のみ。v0.6.0以降は[要検証]）/
@@ -30,7 +30,7 @@ PIN.json のあるスナップショット（fetch-snapshot.sh が `<meta-dir>/.
     PIN.json の無い旧形式のスナップショットでは従来どおり全件で S4・S5 を照合する。
 
 環境変数:
-    KCD_LEDGER_DIR  builtin App 台帳のディレクトリ（既定 kiro-crew-docs/05_meta）
+    KCD_LEDGER_DIR  builtin App 台帳のディレクトリ（既定 scripts/kiro-crew-docs/ledgers）
 """
 import argparse
 import glob
@@ -41,7 +41,7 @@ import sys
 
 DOC_ROOT = "kiro-crew-docs"
 LOCAL_ONLY = ("05_meta", "06_embedded-docs", "work_plans", "work_records")
-LEDGER_DIR = os.environ.get("KCD_LEDGER_DIR") or f"{DOC_ROOT}/05_meta"
+LEDGER_DIR = os.environ.get("KCD_LEDGER_DIR") or "scripts/kiro-crew-docs/ledgers"
 
 SSOT = {
     "S1": {"value": 49, "label": "公式crewページ数"},
@@ -125,8 +125,8 @@ def check_page_counts_3way(errors, notes):
 
 
 def check_builtin_apps_ledger(errors, notes, strict=False):
-    """05_meta/ledger-builtin-apps.md の件数が S12 と一致するか（ローカル台帳の検証）。"""
-    path = os.path.join(LEDGER_DIR, "ledger-builtin-apps.md")
+    """scripts/kiro-crew-docs/ledgers/builtin-apps.md の件数が S12 と一致するか（台帳の検証）。"""
+    path = os.path.join(LEDGER_DIR, "builtin-apps.md")
     if not os.path.isfile(path):
         if strict:
             errors.append(f"{path} がありません（--strict では builtin App 台帳の不在を合格にしません）")

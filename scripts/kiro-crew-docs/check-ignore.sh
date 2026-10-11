@@ -41,6 +41,7 @@ LOCAL_ONLY=(
 # 公開対象: ignore されていたら NG
 PUBLIC=(
   "README.md"
+  "AGENTS.md"
   "LICENSE"
   "CODE_OF_CONDUCT.md"
   ".github/ISSUE_TEMPLATE/bug_report.yml"
@@ -48,6 +49,7 @@ PUBLIC=(
   ".github/COMMIT_CHECKLIST.md"
   ".github/pull_request_template.md"
   ".github/workflows/validate-kiro-crew-docs.yml"
+  ".github/UPDATE_GUIDE.md"
   "kiro-crew-docs/README.md"
   "kiro-crew-docs/00_information/README.md"
   "kiro-crew-docs/01_features/README.md"
@@ -55,6 +57,13 @@ PUBLIC=(
   "kiro-crew-docs/03_deployment/README.md"
   "kiro-crew-docs/04_reference/README.md"
   "scripts/kiro-crew-docs/check-ignore.sh"
+  "scripts/kiro-crew-docs/check-audit-groups.py"
+  "scripts/kiro-crew-docs/check-peripheral-values.py"
+  "scripts/kiro-crew-docs/ledgers/official-pages.md"
+  "scripts/kiro-crew-docs/ledgers/modules.md"
+  "scripts/kiro-crew-docs/ledgers/builtin-apps.md"
+  "scripts/kiro-crew-docs/ledgers/cli-commands.md"
+  "scripts/kiro-crew-docs/ledgers/ssot-status.md"
   "Makefile"
 )
 

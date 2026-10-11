@@ -22,7 +22,7 @@
 
 | カテゴリ | ファイル数 | 本サイトでの扱い |
 |---------|-----------|----------------|
-| `docs/system-specs/` | 104 | **機能解説の最重要出典**。104ファイル全件の扱い判定は `05_meta/ledger-modules.md`（ローカル管理）。**`.md` のみなら101件**（差の3件は `modules/examples/workflows/*.py`）。v0.6.0 から `modules/` に16件追加（taskq・adaptive-concurrency・decisions・crew-log 系など） |
+| `docs/system-specs/` | 104 | **機能解説の最重要出典**。104ファイル全件の扱い判定は [`scripts/kiro-crew-docs/ledgers/modules.md`](../../scripts/kiro-crew-docs/ledgers/modules.md)。**`.md` のみなら101件**（差の3件は `modules/examples/workflows/*.py`）。v0.6.0 から `modules/` に16件追加（taskq・adaptive-concurrency・decisions・crew-log 系など） |
 | `docs/request-for-change/` | 57 | RFC。**未確定の将来仕様のため出典にしない**（Markdown は56件・画像1件。[03_information-sources.md](03_information-sources.md)参照） |
 | `docs/reference/` | 31 | `kiro-cli/` 22件は**Kiro CLIのリファレンス**（Crew本体ではない。[03_information-sources.md](03_information-sources.md)参照）。ほかに `crew-log/` 7件（v0.7.x で追加）・`ledger-conductor-sequence.md`・`README.md` |
 | `docs/architecture/` | 21 | `overview.md`・`mcp.md`・`security-deep-dive.md`・`resource-protection.md`・`context-management.md`（v0.7.x で追加）等 |

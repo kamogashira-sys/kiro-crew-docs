@@ -1,7 +1,7 @@
 name: Release kiro-crew-docs
 
 # 本サイトの GitHub Release（タグ vX.Y.Z とリリース）の作成を Actions が行う。
-# 人の承認点は「リリースノートを含む PR のマージ」に一元化する（.github/UPDATE_GUIDE.md §7.3 ⑦・§13 W-17）。
+# 人の承認点は「リリースノートを含む PR のマージ」に一元化する（.github/UPDATE_GUIDE.md §7.3 ⑦・§13 W-16・W-17）。
 # エージェント（Kiro Web）と人はリリースノート .github/release-notes/vX.Y.Z.md を PR に含めるだけで、
 # タグの作成とリリースの公開は行わない。
 #

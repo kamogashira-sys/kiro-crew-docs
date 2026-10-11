@@ -41,6 +41,7 @@ LOCAL_ONLY=(
 # 公開対象: ignore されていたら NG
 PUBLIC=(
   "README.md"
+  "AGENTS.md"
   "LICENSE"
   "CODE_OF_CONDUCT.md"
   ".github/ISSUE_TEMPLATE/bug_report.yml"

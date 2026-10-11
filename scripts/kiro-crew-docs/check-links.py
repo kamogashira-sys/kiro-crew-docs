@@ -7,7 +7,7 @@
     ./scripts/kiro-crew-docs/check-links.py --check-anchors --paths <file...>
 
 機能:
-    - kiro-crew-docs/**/*.md ＋ ルート README.md ＋ .github/*.md の
+    - kiro-crew-docs/**/*.md ＋ ルート README.md ＋ ルート AGENTS.md ＋ .github/*.md の
       相対 Markdown リンクを抽出し、リンク先ファイルの実在を検証
     - 同一ファイル内アンカー（`#...`）と他ファイルのアンカーの実在を検証
     - 外部リンクの書式を検証（Crew 固有: kiro.dev と GitHub の2種類の分岐）:
@@ -153,7 +153,7 @@ def main():
         files = sorted(target_paths)
     else:
         files = (sorted(glob.glob("kiro-crew-docs/**/*.md", recursive=True))
-                 + ["README.md"]
+                 + ["README.md", "AGENTS.md"]
                  + sorted(glob.glob(".github/*.md")))
 
     checked = 0

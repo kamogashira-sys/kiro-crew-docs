@@ -49,6 +49,7 @@ PUBLIC=(
   ".github/COMMIT_CHECKLIST.md"
   ".github/pull_request_template.md"
   ".github/workflows/validate-kiro-crew-docs.yml"
+  ".github/workflows/release-kiro-crew-docs.yml"
   ".github/UPDATE_GUIDE.md"
   "kiro-crew-docs/README.md"
   "kiro-crew-docs/00_information/README.md"

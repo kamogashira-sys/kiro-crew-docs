@@ -142,12 +142,20 @@ def all_docs():
 
 
 def ssot_scan_targets():
-    """値系SSoTの水平展開検証の対象。DOC_ROOT配下の公開文書に周辺ファイルを加える。"""
+    """値系SSoTの水平展開検証の対象。DOC_ROOT配下の公開文書に周辺ファイルを加える。
+
+    `.github/release-notes/` 配下は除外する。リリースノートは公開した時点の値を記録する文書で、
+    過去版のノートに当時の件数が残るため、次の版で水平展開検証が誤検出する。
+    除外をこの関数の中で行うのは、check-peripheral-values.py も同じ関数を走査対象にするため。
+    """
+    release_notes_dir = ".github/release-notes/"
     targets = list(all_docs())
     seen = {os.path.abspath(t) for t in targets}
     for pattern in EXTRA_SCAN_GLOBS:
         for path in sorted(glob.glob(pattern, recursive=True)):
             if not os.path.isfile(path) or is_local_only(path):
+                continue
+            if os.path.normpath(path).replace(os.sep, "/").startswith(release_notes_dir):
                 continue
             key = os.path.abspath(path)
             if key not in seen:

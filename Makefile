@@ -28,7 +28,8 @@
         fetch-kiro-crew-snapshot extract-kiro-crew-changelog extract-kiro-crew-doc-index \
         check-kiro-crew-cleanroom fetch-kiro-crew-primary check-kiro-crew-cloud \
         check-kiro-crew-ledger-current check-kiro-crew-cloud-freshness check-kiro-crew-pr-scope \
-        check-kiro-crew-pr-body list-kiro-crew-open-items check-kiro-crew-peripheral-values
+        check-kiro-crew-pr-body list-kiro-crew-open-items check-kiro-crew-peripheral-values \
+        check-kiro-crew-release-note
 
 SCRIPTS := ./scripts/kiro-crew-docs
 
@@ -82,6 +83,8 @@ help:
 	@echo "  make check-kiro-crew-pr-body PR_BODY=<file>|RUN_DIR=<dir> [CLOUD_ROOT=<dir>]"
 	@echo "                                      # 公開される PR 本文の公開前検査（PIN.json のあるスナップショット1件が必須）"
 	@echo "  make list-kiro-crew-open-items      # 公開ページの「食い違い」「未確認」「要検証」の全行と件数"
+	@echo "  make check-kiro-crew-release-note NOTE=.github/release-notes/vX.Y.Z.md"
+	@echo "                                      # リリースノートの版の4者一致（ファイル名・H1・README の固定版・changelog 先頭）"
 	@echo ""
 	@echo "保守用:"
 	@echo "  make fetch-kiro-crew-snapshot        # 一次情報スナップショットの取得"
@@ -307,3 +310,10 @@ check-kiro-crew-pr-body:
 OPEN_ITEMS_PATHS ?= kiro-crew-docs/0[0-4]_*
 list-kiro-crew-open-items:
 	@out=$$(grep -rnE '食い違い|未確認|要検証' $(OPEN_ITEMS_PATHS)); printf '%s\n' "$$out"; n=$$(printf '%s\n' "$$out" | grep -c .); echo "open-items: $$n"; test "$$n" -ge 1
+
+# リリースノートの版の4者一致（ファイル名・H1・README の固定版・changelog 先頭の ### vX.Y.Z）。
+# 呼び出し元: validate CI の PR 実行・Kiro Web Workflow の converge（マージ前）、Release ワークフロー（マージ後）
+NOTE ?=
+check-kiro-crew-release-note:
+	@if [ -z "$(NOTE)" ]; then echo "❌ NOTE を指定してください（例: NOTE=.github/release-notes/vX.Y.Z.md）"; exit 1; fi
+	@$(SCRIPTS)/check-release-note.sh "$(NOTE)"

@@ -7,17 +7,21 @@ on:
     paths:
       - 'kiro-crew-docs/**'
       - 'README.md'
+      - 'AGENTS.md'
       - 'scripts/kiro-crew-docs/**'
       - 'Makefile'
-      - '.github/workflows/validate-kiro-crew-docs.yml'
+      - '.github/**'
+      - '.kiro/workflows/**'
   pull_request:
     branches: [ main ]
     paths:
       - 'kiro-crew-docs/**'
       - 'README.md'
+      - 'AGENTS.md'
       - 'scripts/kiro-crew-docs/**'
       - 'Makefile'
-      - '.github/workflows/validate-kiro-crew-docs.yml'
+      - '.github/**'
+      - '.kiro/workflows/**'
   schedule:
     # nightly。Kiro Crew は main ブランチが日次で動き（週100コミット超）、
     # リリースも約2週間で v0.1.0 → v0.2.0 と進んでいる。
@@ -26,6 +30,11 @@ on:
     - cron: '23 20 * * *'
   workflow_dispatch:
 
+# ⚠️ permissions を明示すると、書いていないスコープは none になる。checkout に contents: read が必要。
+#    下の Issue 起票ステップ（無効化中）を有効にする場合は issues: write を加える。
+permissions:
+  contents: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -33,6 +42,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # PR で追加・変更されたリリースノートを origin/<base> との差分で判定するため
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -51,22 +62,51 @@ jobs:
       - name: 全チェック（ネットワーク不要）
         run: make check-kiro-crew-all
 
-      # ⚠️ 重要: CI には一次情報スナップショット（06_embedded-docs/）が無い。
-      # .gitignore 対象のため clone されず、次が「スキップして exit 0」になる。
-      #   - check-kiro-crew-coverage … 公式ページ台帳（sitemap の docs/crew/ 全件）の網羅性
-      #   - check-kiro-crew-counts の公式実体との照合部分
-      # つまり **CI の green は網羅性を保証しません**。
-      - name: 網羅性チェックの状態を明示
+      # PR で追加・変更されたリリースノート（.github/release-notes/v*.md）だけを対象に、
+      # 版の4者一致（ファイル名・H1・README の固定版・changelog 先頭）をマージ前に検査する。
+      # マージ後は Release ワークフロー（release-kiro-crew-docs.yml）のゲートでも同じ検査を行う。
+      - name: リリースノートの版の4者一致（PR で追加・変更されたノートのみ）
+        if: github.event_name == 'pull_request'
+        shell: bash
         run: |
-          if ls kiro-crew-docs/06_embedded-docs/*/repo/docs >/dev/null 2>&1; then
-            echo "::notice::一次情報スナップショットがあるため網羅性を検証しました"
-          else
-            echo "::warning::一次情報スナップショット（06_embedded-docs/）が無いため" \
-                 "網羅性チェックと公式実体との照合はスキップされました。" \
-                 "CI の green は公式ページ台帳（sitemap の docs/crew/ 全件）の網羅性を保証しません。" \
-                 "ローカルで make check-kiro-crew-coverage と make check-kiro-crew-counts を" \
-                 "実行してください（取得手順は .github/UPDATE_GUIDE.md §5）"
-          fi
+          set -euo pipefail
+          git diff --name-only --diff-filter=AM "origin/${GITHUB_BASE_REF}...HEAD" -- '.github/release-notes/v*.md' \
+            > "$RUNNER_TEMP/release-notes.txt"
+          n=$(grep -c . "$RUNNER_TEMP/release-notes.txt" || true)
+          echo "対象ノート${n}件"
+          while IFS= read -r note; do
+            [ -n "$note" ] || continue
+            make check-kiro-crew-release-note NOTE="$note"
+          done < "$RUNNER_TEMP/release-notes.txt"
+
+      # ⚠️ 重要: push / PR では一次情報スナップショットを取得しない。check-kiro-crew-all の
+      # 網羅性チェックと公式実体との照合は「スキップして exit 0」になる。
+      # つまり **push / PR の CI の green は網羅性を保証しません**。網羅性は nightly と手動実行で、
+      # 次のステップ（make check-kiro-crew-cloud）が実測する。
+      - name: 網羅性チェックの状態を明示（push / PR）
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
+        run: |
+          echo "::warning::push / PR では一次情報スナップショットを取得しないため" \
+               "網羅性チェックと公式実体との照合はスキップされました。" \
+               "CI の green は公式ページ台帳（sitemap の docs/crew/ 全件）の網羅性を保証しません。" \
+               "網羅性は nightly と手動実行の make check-kiro-crew-cloud で実測します" \
+               "（手順は .github/UPDATE_GUIDE.md §5.4）"
+
+      # nightly と手動実行に限り、README の固定版の一次情報を取得して網羅性を実測する
+      # （スキップを合格にしない。make check-kiro-crew-cloud）。版の抽出は check-release-note.sh の共通関数。
+      # 取得するスナップショットには PIN.json があるため、固定版より新しい上流の公開だけでは
+      # 件数の照合は失敗しない。新版の検知は下の更新検知が担う。
+      - name: 網羅性の実測（nightly と手動のみ）
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          version=$(scripts/kiro-crew-docs/check-release-note.sh --print-readme-version)
+          echo "README の固定版: ${version}"
+          make fetch-kiro-crew-primary VERSION="${version}"
+          make check-kiro-crew-cloud
 
       # 外部サイトに依存するチェックは PR では実行しない（レート制限・一時障害で
       # PR が赤くなるのを避ける）。push / nightly / 手動で実施する。
@@ -74,8 +114,36 @@ jobs:
         if: github.event_name != 'pull_request'
         run: make check-kiro-crew-urls-important
 
-      # 新安定版・CHANGELOG変化・公式crewページ数変化・docs/ファイル数変化の検知（4系統）。
+      # 更新検知。--release-only により、失敗するのは ① 新しい安定版・安定版数の変化と
+      # ③ 公式 crew ページ数の変化だけ（④ main の docs/ 件数の変化は表示のみ。② は従来から表示のみ）。
+      # 前のステップが失敗しても実行する（新版の検知を止めないため）。
       # ⚠️ ここでの failure は「文書のバグ」ではなく「更新作業が必要」の合図。
       - name: 更新検知（nightly と手動のみ）
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-        run: make check-kiro-crew-freshness
+        id: freshness
+        if: ${{ !cancelled() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: make check-kiro-crew-freshness FRESHNESS_ARGS="--release-only" 2>&1 | tee "$RUNNER_TEMP/freshness.log"
+
+      # 更新検知の失敗を `kiro` ラベルの Issue にする。ラベルが付くと Kiro Web のタスクになる。
+      # ⚠️ ジョブ全体の failure() で判定しない（URL の一時的失敗でも真になり、誤起票するため）。
+      #    更新検知ステップの結果だけを見る。
+      # ⚠️ if: false で無効化してある（有効化は `false &&` を削り、permissions に issues: write を加える）。
+      - name: 更新検知の失敗を Issue として起票（無効化中）
+        if: false && steps.freshness.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          title="Kiro Crew の更新を検知"
+          body=$(printf '%s\n\n```\n%s\n```\n' \
+            "nightly の check-kiro-crew-freshness が失敗しました。版更新を行ってください（.github/UPDATE_GUIDE.md）。" \
+            "$(tail -40 "$RUNNER_TEMP/freshness.log")")
+          # 既存の open issue があれば重複起票せずコメントを足す
+          n=$(gh issue list --label kiro --search "$title in:title" --state open \
+              --json number -q '.[0].number')
+          if [ -n "$n" ]; then
+            gh issue comment "$n" --body "$body"
+          else
+            gh issue create --title "$title" --label kiro --body "$body"
+          fi

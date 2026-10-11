@@ -5,6 +5,10 @@
 # 公開対象が誤って除外されていないことを機械確認する。
 #
 # 使い方: make check-kiro-crew-ignore  または  scripts/kiro-crew-docs/check-ignore.sh
+#
+# 走査対象（ローカル絶対パス・トークン・秘密鍵・スナップショット由来ファイル）は
+# git ls-files -co --exclude-standard（追跡＋未追跡かつ非除外）。git add 前の未追跡ファイルの漏えいも検出する。
+# トークン・秘密鍵の書式は一致箇所のファイル名と行番号だけを表示し、値を出力しない。
 set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -26,6 +30,12 @@ LOCAL_ONLY=(
   "x_investigation.md"
   "x_worklog.md"
   ".claude/settings.local.json"
+  ".kiro/settings/mcp.json"
+  ".kiro/steering/x.md"
+  ".kiro/agents/x.json"
+  ".kiro/hooks/x.kiro.hook"
+  ".kiro/specs/x/requirements.md"
+  "kiro-crew-docs/work_plans/cloud-runs/r/x.md"
 )
 
 # 公開対象: ignore されていたら NG
@@ -79,18 +89,43 @@ else
 fi
 
 echo "=== 公開ファイルにローカル絶対パス・ユーザー名が含まれていないことを確認 ==="
-# 対象は git が追跡する（＝公開される）ファイルのみ。バイナリは除外。
+# 対象は公開されうるファイル（追跡＋未追跡かつ非除外）。バイナリは除外。
 # `/home/kirocrew` はDockerコンテナ内のホームディレクトリを指す一次情報由来の記述
 # （公式 running-24-7.md の Docker 実行例 `-v kirocrew-home:/home/kirocrew` と同一）であり、
 # レビュアーのローカル環境のユーザー名ではない。本スクリプト自身の説明コメントも除外する。
-leak=$(git ls-files -z | xargs -0 -r grep -n -I -E '/home/[a-z_][a-z0-9_-]*|/Users/[A-Za-z0-9_-]+' 2>/dev/null \
+leak=$(git ls-files -co --exclude-standard -z | xargs -0 -r grep -n -I -E '/home/[a-z_][a-z0-9_-]*|/Users/[A-Za-z0-9_-]+' 2>/dev/null \
   | grep -v -E '(^|[^a-z0-9_-])home/kirocrew([^a-z0-9_-]|$)' || true)
 if [ -n "$leak" ]; then
   echo "  FAIL ローカル絶対パスらしい記述があります:"
   echo "$leak" | sed 's/^/    /'
   fail=1
 else
-  echo "  OK   no local absolute paths in tracked files"
+  echo "  OK   no local absolute paths in tracked or untracked (non-ignored) files"
+fi
+
+echo "=== 公開ファイルにトークン・秘密鍵の書式が含まれていないことを確認 ==="
+# 書式: GitHub トークンの接頭辞（gh + p/o/s + "_"、github + "_pat_"）と PEM 秘密鍵の見出し。
+# 本スクリプト自身が一致しないよう、正規表現は文字クラスで書く。値は出力せず「ファイル:行」だけを表示する。
+secret=$(git ls-files -co --exclude-standard -z | xargs -0 -r grep -n -I -E 'gh[pos]_|github[_]pat_|-----BEGIN [A-Z ]*PRIVATE[ ]KEY-----' 2>/dev/null \
+  | cut -d: -f1,2 || true)
+if [ -n "$secret" ]; then
+  echo "  FAIL トークン・秘密鍵の書式に一致する行があります（値は表示しません）:"
+  echo "$secret" | sed 's/^/    /'
+  fail=1
+else
+  echo "  OK   no token / private key formats"
+fi
+
+echo "=== スナップショット由来のファイルが公開されうる位置に無いことを確認 ==="
+# 一次情報スナップショット（fetch-snapshot.sh の出力）は /tmp またはローカル管理領域にだけ置く
+snap=$(git ls-files -co --exclude-standard \
+  | grep -E '(^|/)(COMMIT_SHA|PIN\.json|releases\.json|tree\.json|sitemap\.xml)$|(^|/)docs_md/' || true)
+if [ -n "$snap" ]; then
+  echo "  FAIL スナップショット由来らしいファイルがあります:"
+  echo "$snap" | sed 's/^/    /'
+  fail=1
+else
+  echo "  OK   no snapshot-derived files"
 fi
 
 if [ "$fail" -eq 0 ]; then

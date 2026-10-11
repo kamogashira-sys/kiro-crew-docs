@@ -57,6 +57,7 @@ PUBLIC=(
   "kiro-crew-docs/04_reference/README.md"
   "scripts/kiro-crew-docs/check-ignore.sh"
   "scripts/kiro-crew-docs/check-audit-groups.py"
+  "scripts/kiro-crew-docs/check-peripheral-values.py"
   "scripts/kiro-crew-docs/ledgers/official-pages.md"
   "scripts/kiro-crew-docs/ledgers/modules.md"
   "scripts/kiro-crew-docs/ledgers/builtin-apps.md"

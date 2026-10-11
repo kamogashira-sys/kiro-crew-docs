@@ -132,7 +132,7 @@ kiro.dev は末尾スラッシュ必須（無しは301）。`-A "Mozilla/5.0"` �
 
 ### 5.3 レート制限への対処
 
-GitHub API は未認証の上限が 60 req/h です。Tree API・Releases API は1回ずつに抑えます。`fetch-snapshot.sh` は環境変数 `GITHUB_TOKEN` があれば api.github.com への要求に `Authorization` ヘッダを付けます（値は出力しません）。Kiro Web の Secrets にはトークンを置きません。CI からトークンを渡す設定は未導入です。
+GitHub API は未認証の上限が 60 req/h です。Tree API・Releases API は1回ずつに抑えます。`fetch-snapshot.sh` と `check-freshness.py` は、環境変数 `GITHUB_TOKEN` があれば api.github.com への要求にだけ `Authorization` ヘッダを付けます（値は出力しません）。Kiro Web の Secrets にはトークンを置きません。CI（`validate-kiro-crew-docs.yml` の網羅性の実測と更新検知のステップ）は Actions の `GITHUB_TOKEN` を渡します。
 
 ### 5.4 スナップショット取得手順
 
@@ -182,6 +182,7 @@ CLOUD_ROOT='<cloud_root の値>'; ls -d "$CLOUD_ROOT"/*/ 2>/dev/null | wc -l; ls
 | `check-peripheral-values.py` | `.github/`・`Makefile` に版依存の値が無いこと | `check-kiro-crew-peripheral-values`・`check-kiro-crew-cloud` |
 | `check-pr-scope.py` | PR の変更範囲（`PROFILE=version-update`／`infra`） | `check-kiro-crew-pr-scope` |
 | `check-pr-body.sh` | 公開される PR 本文の公開前検査 | `check-kiro-crew-pr-body` |
+| `check-release-note.sh` | リリースノートの版の4者一致（ファイル名・H1・README の固定版・changelog 先頭）。`--print-readme-version` で README の固定版を出力 | `check-kiro-crew-release-note`（validate CI の PR 実行・Release ワークフローのゲート） |
 | `measure-ssot.py` | 機械測定できる SSoT と検証器定数の比較・公式ページ台帳と `PIN.json` の比較 | `check-kiro-crew-cloud`・`check-kiro-crew-ledger-current` |
 | `clean-room.sh` | 公開されるファイルだけの複製で make を実行 | `check-kiro-crew-cleanroom` |
 | `fetch-snapshot.sh` | 一次情報の取得 | `fetch-kiro-crew-primary` |

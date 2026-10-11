@@ -1,0 +1,219 @@
+name: Release kiro-crew-docs
+
+# 本サイトの GitHub Release（タグ vX.Y.Z とリリース）の作成を Actions が行う。
+# 人の承認点は「リリースノートを含む PR のマージ」に一元化する（.github/WORKFLOW.md §8）。
+# エージェント（Kiro Web）と人はリリースノート .github/release-notes/vX.Y.Z.md を PR に含めるだけで、
+# タグの作成とリリースの公開は行わない。
+#
+# 契機:
+#   - main への push のうち、.github/release-notes/v*.md が変わったもの（このファイル自身・.gitkeep・
+#     ほかのファイルだけの変更では起動しない）
+#   - workflow_dispatch（入力 version。main でだけ実行できる）
+#
+# 誤作動の防止:
+#   - 最初に同名タグの有無を確認し、既にあればタグの作成とリリースの公開をスキップして ::notice:: を出し、
+#     exit 0 で終える（マージ後にノートの誤字を直す PR で再起動しても、作り直さず CI も赤くしない）
+#   - push では、その push で追加・変更されたノートだけを対象にする（既存のノートを一括で対象にしない）。
+#     差分の起点（github.event.before）が取れない push は対象を決めずに失敗させる
+#   - タグの無いノートが2件以上ある push は失敗させる（README の固定版と changelog の先頭の版は1つなので、
+#     4者一致を満たすノートは1件だけのため）
+#   - タグの作成前のゲート: make check-kiro-crew-ignore・make check-kiro-crew-all・
+#     make check-kiro-crew-release-note（4者一致）・上流 kirodotdev/KiroCrew の同名 Release が安定版
+#
+# 権限: 既定は無し。ゲートのジョブは contents: read、タグ作成とリリース公開のジョブだけ contents: write。
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/release-notes/v*.md'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'リリースする版（vX.Y.Z。.github/release-notes/vX.Y.Z.md が main にあること）'
+        required: true
+        type: string
+
+permissions: {}
+
+# 同時に2本走らせない（タグの有無の確認と作成の間に別の run が割り込まないようにする）
+concurrency:
+  group: release-kiro-crew-docs
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.target.outputs.version }}
+      note: ${{ steps.target.outputs.note }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # push の差分（before..sha）を取るため全履歴を取る
+
+      - name: 実行ブランチの確認（main のみ）
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::Release は main でだけ実行できます（実行ブランチ: ${GITHUB_REF}）"
+          exit 1
+
+      # 対象ノートの決定と同名タグの確認（最初に行う）。
+      # 出力 version が空なら、後続のゲートとリリースのジョブは実行しない
+      - name: 対象リリースノートと同名タグの確認
+        id: target
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ inputs.version }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          version_re='^v[0-9]+\.[0-9]+\.[0-9]+$'
+
+          # 同名タグの有無。0=ある、2=無い（git ls-remote --exit-code）。それ以外は判定不能として失敗
+          tag_state() {
+            local rc=0
+            git ls-remote --exit-code --tags origin "refs/tags/$1" >/dev/null || rc=$?
+            case "$rc" in
+              0) echo exists ;;
+              2) echo absent ;;
+              *) echo "::error::タグ $1 の有無を確認できません（git ls-remote exit $rc）" >&2; return 1 ;;
+            esac
+          }
+
+          : > "$RUNNER_TEMP/candidates.txt"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            if ! [[ "$INPUT_VERSION" =~ $version_re ]]; then
+              echo "::error::入力 version は vX.Y.Z の形式で指定してください"
+              exit 1
+            fi
+            printf '%s\n' ".github/release-notes/${INPUT_VERSION}.md" > "$RUNNER_TEMP/candidates.txt"
+          else
+            if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ] \
+               || ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
+              echo "::error::push の差分の起点（github.event.before）を取得できないため、対象のノートを決めません"
+              exit 1
+            fi
+            git diff --name-only --diff-filter=AM "$BEFORE" "$AFTER" -- '.github/release-notes/v*.md' \
+              > "$RUNNER_TEMP/candidates.txt"
+          fi
+          echo "候補のノート:"; sed 's/^/  /' "$RUNNER_TEMP/candidates.txt"
+
+          pending=()
+          while IFS= read -r note; do
+            [ -n "$note" ] || continue
+            v=$(basename "$note" .md)
+            if ! [[ "$v" =~ $version_re ]]; then
+              echo "::error::$note のファイル名が vX.Y.Z.md の形式ではありません"
+              exit 1
+            fi
+            state=$(tag_state "$v")
+            if [ "$state" = "exists" ]; then
+              echo "::notice::タグ $v は既に存在するため、タグの作成とリリースの公開をスキップします"
+              continue
+            fi
+            if [ ! -f "$note" ]; then
+              echo "::error::$note がありません"
+              exit 1
+            fi
+            pending+=("$note")
+          done < "$RUNNER_TEMP/candidates.txt"
+
+          if [ "${#pending[@]}" -eq 0 ]; then
+            echo "::notice::タグの作成とリリースの公開の対象はありません"
+            echo "version=" >> "$GITHUB_OUTPUT"
+            echo "note=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "${#pending[@]}" -gt 1 ]; then
+            echo "::error::タグの無いノートが ${#pending[@]} 件あります（1回に公開できるのは1版です）: ${pending[*]}"
+            exit 1
+          fi
+          note="${pending[0]}"
+          echo "対象: $note"
+          echo "version=$(basename "$note" .md)" >> "$GITHUB_OUTPUT"
+          echo "note=$note" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Python
+        if: steps.target.outputs.version != ''
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # 公開範囲の機械検証を最初に行う（公開事故は取り返しがつかない）
+      - name: ゲート 公開範囲チェック
+        if: steps.target.outputs.version != ''
+        run: make check-kiro-crew-ignore
+
+      - name: ゲート 全チェック（ネットワーク不要）
+        if: steps.target.outputs.version != ''
+        run: make check-kiro-crew-all
+
+      - name: ゲート リリースノートの版の4者一致
+        if: steps.target.outputs.version != ''
+        env:
+          NOTE: ${{ steps.target.outputs.note }}
+        run: make check-kiro-crew-release-note NOTE="$NOTE"
+
+      # 上流 kirodotdev/KiroCrew の同名 Release が安定版であること（プレリリースを対象にしない。WORKFLOW.md §8）
+      - name: ゲート 上流の同名 Release が安定版
+        if: steps.target.outputs.version != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          V: ${{ steps.target.outputs.version }}
+        run: |
+          set -euo pipefail
+          pre=$(gh api "repos/kirodotdev/KiroCrew/releases/tags/${V}" --jq '.prerelease')
+          echo "kirodotdev/KiroCrew ${V}: prerelease=${pre}"
+          if [ "$pre" != "false" ]; then
+            echo "::error::上流の ${V} は安定版ではありません（prerelease=${pre}）"
+            exit 1
+          fi
+
+  release:
+    needs: gate
+    if: needs.gate.outputs.version != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # タグの push とリリースの公開に必要
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}   # ゲートを通した commit にタグを打つ
+
+      - name: タグ作成とリリース公開
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          V: ${{ needs.gate.outputs.version }}
+          NOTE: ${{ needs.gate.outputs.note }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          # ゲートの後に同名タグが作られていた場合も作り直さない
+          rc=0
+          git ls-remote --exit-code --tags origin "refs/tags/${V}" >/dev/null || rc=$?
+          if [ "$rc" -eq 0 ]; then
+            echo "::notice::タグ ${V} は既に存在するため、タグの作成とリリースの公開をスキップします"
+            exit 0
+          elif [ "$rc" -ne 2 ]; then
+            echo "::error::タグ ${V} の有無を確認できません（git ls-remote exit ${rc}）"
+            exit 1
+          fi
+          # 1行目（H1）をタイトル、2行目以降を本文にする
+          title=$(head -1 "$NOTE" | sed -E 's/^#[[:space:]]+//')
+          tail -n +2 "$NOTE" > "$RUNNER_TEMP/body.md"
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$V" -m "$title" "$SHA"
+          git push origin "refs/tags/${V}"
+          gh release create "$V" --verify-tag --latest --title "$title" --notes-file "$RUNNER_TEMP/body.md"
+          echo "::notice::${V} を公開しました（${title}）"

@@ -24,6 +24,9 @@ fail-safe:
 Releases のページング（オプションに関係なく適用）:
     1ページの件数は環境変数 KCD_RELEASES_PER_PAGE（既定 100）。応答の Link ヘッダに rel="next" が
     無くなるまで取得して連結し、取得したページ数を notes に出す。
+GitHub API の認証（オプションに関係なく適用）:
+    環境変数 GITHUB_TOKEN があれば、api.github.com への要求（①④）に Authorization ヘッダを付ける
+    （値は出力しない。CI は Actions の GITHUB_TOKEN を渡す）。未設定なら未認証で取得する。
 参考表示（⑤。終了コードに影響しない）:
     kiro.dev の changelog/crew/0-N/（既知の最新安定版の系列と次の系列）の HTTP ステータス
 """
@@ -58,15 +61,28 @@ def repo_root():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 
-def fetch(url):
+def build_request(url):
+    """User-Agent に加え、GITHUB_TOKEN があり URL が api.github.com のときだけ Authorization を付ける。
+
+    トークンの値はヘッダ以外で参照せず、出力しない。Authorization は add_unredirected_header で付け、
+    リダイレクト先の要求には引き継がない（api.github.com 以外へ送らないため）。
+    """
     req = urllib.request.Request(url, headers={"User-Agent": UA})
+    token = os.environ.get("GITHUB_TOKEN")
+    if token and url.startswith("https://api.github.com/"):
+        req.add_unredirected_header("Authorization", f"Bearer {token}")
+    return req
+
+
+def fetch(url):
+    req = build_request(url)
     with urllib.request.urlopen(req, timeout=20) as r:
         return r.read().decode("utf-8", errors="replace")
 
 
 def fetch_with_headers(url):
     """本文と応答ヘッダを返す（Link ヘッダによるページングのため）。"""
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
+    req = build_request(url)
     with urllib.request.urlopen(req, timeout=20) as r:
         return r.read().decode("utf-8", errors="replace"), r.headers
 
@@ -209,6 +225,9 @@ def main():
 
     print("=== kiro-crew-docs 更新検知（4系統） ===")
     print("")
+    if os.environ.get("GITHUB_TOKEN") and not args.offline:
+        print("（GITHUB_TOKEN が設定されているため api.github.com に認証ヘッダを付けます。値は表示しません）")
+        print("")
 
     notes, errors = [], []
     fetch_failed = 0

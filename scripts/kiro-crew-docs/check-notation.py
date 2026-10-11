@@ -102,7 +102,7 @@ BANNED = ["おそらく", "と思われる", "と思われます", "かもしれ
 # ------------------------------------------------------------
 # (h) 存在しないCLIサブコマンド
 # ------------------------------------------------------------
-# 05_meta/ledger-cli-commands.md（Phase 0-10で確定・Phase 4でmodules/cli.mdを追加して訂正）の
+# scripts/kiro-crew-docs/ledgers/cli-commands.md（Phase 0-10で確定・Phase 4でmodules/cli.mdを追加して訂正）の
 # 突合結果から許可リストを生成する。
 ALLOWED_CLI_COMMANDS = {
     "setup", "doctor", "gateway", "stop", "restart", "logs", "service", "update", "token",
@@ -127,7 +127,7 @@ ALLOWED_CLI_COMMANDS = {
     "file-delivery",
     # ↑ v0.7.0。`kirocrew file-delivery approve`。CHANGELOG v0.7.0節「Security you can operate」445-448行と
     #   docs/feature-map/README.md でのみ確認（commit c67c506）。**modules/cli.md の表・公式cli-reference・READMEには無い**
-    #   （`secrets import` と同じ状況。台帳 ledger-cli-commands.md に記録）
+    #   （`secrets import` と同じ状況。台帳 ledgers/cli-commands.md に記録）
 }
 # 明示的に「記載しない」と判定した語。現時点では該当なし（cloud/podはmodules/cli.mdで実在確認済み）
 DENIED_CLI_COMMANDS = set()
@@ -214,7 +214,7 @@ def main():
                         continue  # 「記載しない」という事実の説明は許容
                     errors.append(
                         f"{path}:{i} (h) 存在しないCLIサブコマンド `kirocrew {cmd}` が"
-                        "記載されています（05_meta/ledger-cli-commands.md でいずれの系統にも"
+                        "記載されています（scripts/kiro-crew-docs/ledgers/cli-commands.md でいずれの系統にも"
                         "出現しないと確定済み。U14参照）"
                     )
                 elif cmd not in ALLOWED_CLI_COMMANDS:
@@ -297,7 +297,7 @@ def main():
     print("")
     print(f"(h) 許可リスト外だが denied でもない CLI コマンド（要確認）: {len(allowed_cli)} 件")
     for path, line, cmd in allowed_cli:
-        print(f"      {path}:{line} `kirocrew {cmd}`（許可リストに未登録。05_meta/ledger-cli-commands.md で確認してください）")
+        print(f"      {path}:{line} `kirocrew {cmd}`（許可リストに未登録。scripts/kiro-crew-docs/ledgers/cli-commands.md で確認してください）")
     print("")
     if args.strict:
         for path, line, cmd in allowed_cli:

@@ -55,6 +55,11 @@ PUBLIC=(
   "kiro-crew-docs/03_deployment/README.md"
   "kiro-crew-docs/04_reference/README.md"
   "scripts/kiro-crew-docs/check-ignore.sh"
+  "scripts/kiro-crew-docs/ledgers/official-pages.md"
+  "scripts/kiro-crew-docs/ledgers/modules.md"
+  "scripts/kiro-crew-docs/ledgers/builtin-apps.md"
+  "scripts/kiro-crew-docs/ledgers/cli-commands.md"
+  "scripts/kiro-crew-docs/ledgers/ssot-status.md"
   "Makefile"
 )
 

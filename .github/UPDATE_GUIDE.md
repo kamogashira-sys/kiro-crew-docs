@@ -152,11 +152,13 @@ make fetch-kiro-crew-primary VERSION=vX.Y.Z PREV=vA.B.C
 - `CLOUD_ROOT` 直下のスナップショットが1件でなければ `snapshot count mismatch` で exit 1 になります（別の版の混在を検出）
 - `PIN.json` には、対象版の `ref`・`tag_object_sha`・`commit_sha`・`commit_short`・`release_published_at`・`prerelease`・`changelog_date`・`reference_date`・`sitemap_crew_count`・`official_page_updated`（公式ページごとの Page updated）・`official_md_sha256`（公式ページの `.md` companion の sha256。内容は保存しない）・`base`・`via`（経由版の配列）が入ります。PR 本文②（§15）はこの値を転記します
 - `.md` companion の取得ごとの安定性は sha256 の比較で確かめています。取得ごとに値が変わるページがあると偽の差分が出るため、`--page-updated-diff` の差分は人が `.md` を確認してから扱います
-- Kiro Web の Workflow では、run ごとに分けた置き場所（`/tmp` を共有できる場合は `/tmp/kcd-<run_id>`。前回版・経由版・`src/` の clone は `-prev`・`-via`・`-src` を付けた名前）を `CLOUD_ROOT`・`CLOUD_PREV_ROOT`・`CLOUD_VIA_ROOT` に渡します。`/tmp` をステップ間で共有できない場合の置き場所は Workflow 定義で決めます（リポジトリの ignore 対象の場所に限ります）。run の起動前に、置き場所が空であることを次で確かめます（2行とも `0` であること）
+- Kiro Web の Workflow では、run ごとに分けた置き場所を `CLOUD_ROOT`・`CLOUD_PREV_ROOT`・`CLOUD_VIA_ROOT` に渡します。Kiro Web のクラウドセッションでは `/tmp` がコマンド呼び出しをまたいで残らず、ワークスペースのファイルは残ります。このため、置き場所はリポジトリのルートからの相対パス `.kiro/cloud-runs/<run_id>/primary` とし、`CLOUD_ROOT` に渡します。前回版・経由版・`src/` の clone は `-prev`・`-via`・`-src` を付けた名前（`.kiro/cloud-runs/<run_id>/primary-prev`・`.kiro/cloud-runs/<run_id>/primary-via`・`.kiro/cloud-runs/<run_id>/primary-src`）にし、前の2つを `CLOUD_PREV_ROOT`・`CLOUD_VIA_ROOT` に渡します。make はリポジトリのルートで実行します。`.kiro/` は `.gitignore` の対象です。ローカル管理領域（§19）には置きません。`.gitignore` の `.kiro/` を部分的に除外する場合は `.kiro/*` と `!.kiro/workflows/` の形にし、`.kiro/cloud-runs/` を ignore のまま保ちます（`make check-kiro-crew-ignore` が確かめます）。run の起動前に、置き場所が空であることを次で確かめます（2行とも `0` であること）
 
 ```bash
 CLOUD_ROOT='<cloud_root の値>'; ls -d "$CLOUD_ROOT"/*/ 2>/dev/null | wc -l; ls -d "$CLOUD_ROOT-prev" "$CLOUD_ROOT-via" "$CLOUD_ROOT-src" 2>/dev/null | wc -l
 ```
+
+- **`KCD_GIT_ISOLATE=1`**: 指定すると `fetch-snapshot.sh` は KiroCrew へのリモート git 操作（`git clone`・`git ls-remote`）だけを、git のグローバル設定・システム設定を読まない環境（`HOME`・`XDG_CONFIG_HOME` を作業用の空のディレクトリにし、`GIT_CONFIG_NOSYSTEM=1` を付け、`GIT_CONFIG_GLOBAL` を外す）で実行します。git のグローバル設定が `https://github.com/` の URL を書き換えて KiroCrew の clone が失敗する環境（Kiro Web のクラウドセッション）で使います。`make fetch-kiro-crew-primary VERSION=vX.Y.Z PREV=vA.B.C KCD_GIT_ISOLATE=1 CLOUD_ROOT=.kiro/cloud-runs/<run_id>/primary CLOUD_PREV_ROOT=.kiro/cloud-runs/<run_id>/primary-prev CLOUD_VIA_ROOT=.kiro/cloud-runs/<run_id>/primary-via` の形で渡せます。既定は無効で、ローカルの動作は変わりません。`1`・`0`・未設定（空を含む）以外の値は exit 1 です。git の設定の値は出力しません。`api.github.com` への要求（curl。§5.3）と、`src/` の clone（§13 W-4。`fetch-snapshot.sh` を通らない）は対象外です
 
 引数なしの `make fetch-kiro-crew-snapshot` は、ローカル管理領域へ保存する従来の動作です。クラウドでは使いません。
 

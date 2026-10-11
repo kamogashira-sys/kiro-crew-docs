@@ -36,6 +36,10 @@ LOCAL_ONLY=(
   ".kiro/hooks/x.kiro.hook"
   ".kiro/specs/x/requirements.md"
   "kiro-crew-docs/work_plans/cloud-runs/r/x.md"
+  ".kiro/cloud-runs/r/primary/x/PIN.json"
+  ".kiro/cloud-runs/r/primary-prev/x/repo/COMMIT_SHA"
+  ".kiro/cloud-runs/r/primary-via/x/repo/COMMIT_SHA"
+  ".kiro/cloud-runs/r/primary-src/x"
 )
 
 # 公開対象: ignore されていたら NG
@@ -127,7 +131,8 @@ else
 fi
 
 echo "=== スナップショット由来のファイルが公開されうる位置に無いことを確認 ==="
-# 一次情報スナップショット（fetch-snapshot.sh の出力）は /tmp またはローカル管理領域にだけ置く
+# 一次情報スナップショット（fetch-snapshot.sh の出力）は /tmp、Kiro Web ではワークスペースの .kiro/cloud-runs/、
+# またはローカル管理領域にだけ置く
 snap=$(git ls-files -co --exclude-standard \
   | grep -E '(^|/)(COMMIT_SHA|PIN\.json|releases\.json|tree\.json|sitemap\.xml)$|(^|/)docs_md/' || true)
 if [ -n "$snap" ]; then

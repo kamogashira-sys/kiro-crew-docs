@@ -24,6 +24,12 @@
 # 環境変数:
 #   KCD_RELEASES_PER_PAGE  Releases API の1ページの件数（既定 100）。Link ヘッダの rel="next" がある間だけ次ページを取得する
 #   GITHUB_TOKEN           あれば api.github.com への要求に Authorization ヘッダを付ける（値は出力しない）
+#   KCD_GIT_ISOLATE        1 のとき、KiroCrew へのリモート git 操作（clone・ls-remote）だけを git のグローバル設定・
+#                          システム設定なしで実行する（HOME・XDG_CONFIG_HOME を作業用の空のディレクトリに、
+#                          GIT_CONFIG_NOSYSTEM=1、GIT_CONFIG_GLOBAL を外す）。git のグローバル設定が
+#                          https://github.com/ の URL を書き換える環境（Kiro Web のクラウドセッション）で使う。
+#                          既定は無効（ローカルの動作は変わらない）。未設定・空・0 は無効、それ以外の値は exit 1。
+#                          設定の値は出力しない。api.github.com への要求（curl）は対象外
 #
 # 取得内容:
 #   - GitHub: KiroCrew を --depth 1 で clone（docs/ とルート .md）。COMMIT_SHA・REF を記録
@@ -114,6 +120,19 @@ if [ -n "${GITHUB_TOKEN:-}" ]; then
   echo "（GITHUB_TOKEN が設定されているため api.github.com に認証ヘッダを付けます。値は表示しません）"
 fi
 
+GIT_ISOLATE=0
+case "${KCD_GIT_ISOLATE:-}" in
+  ""|0) ;;
+  1)
+    GIT_ISOLATE=1
+    echo "（KCD_GIT_ISOLATE=1 のため、KiroCrew へのリモート git 操作を git のグローバル設定・システム設定なしで実行します）"
+    ;;
+  *)
+    echo "❌ KCD_GIT_ISOLATE には 1 または 0 を指定してください（未設定は無効）" >&2
+    exit 1
+    ;;
+esac
+
 WORK=$(mktemp -d /tmp/kcd-fetch.XXXX)
 
 # 失敗時に片付ける保存先（この実行で作ったものだけ）。NEW_DIRS は実行前に存在しなかったディレクトリ
@@ -175,13 +194,33 @@ http_get() {
   fi
 }
 
+# remote_git <git の引数...>: KiroCrew へのリモート git 操作（clone・ls-remote）だけに使う。
+# KCD_GIT_ISOLATE=1 のときは、サブシェルの中で HOME・XDG_CONFIG_HOME を $WORK 配下の空のディレクトリにし、
+# GIT_CONFIG_NOSYSTEM=1 を付け、GIT_CONFIG_GLOBAL を外して git を実行する（HOME の変更は後続の処理に漏れない。
+# $WORK 配下なので trap cleanup で削除される）。無効のときは git をそのまま実行する
+remote_git() {
+  if [ "$GIT_ISOLATE" -ne 1 ]; then
+    git "$@"
+    return
+  fi
+  mkdir -p "$WORK/git-home/.config"
+  (
+    unset GIT_CONFIG_GLOBAL
+    export HOME="$WORK/git-home" XDG_CONFIG_HOME="$WORK/git-home/.config" GIT_CONFIG_NOSYSTEM=1
+    exec git "$@"
+  )
+}
+
 # clone_repo <ref> <snapdir>: --depth 1 で clone し docs/ とルート .md・LICENSE・NOTICE と COMMIT_SHA・REF を保存
 # 保存先の repo/ は clone に成功してから作り、COMMIT_SHA は最後に書く（途中の失敗で「取得済み」に見せない）
 clone_repo() {
   local ref="$1" dir="$2" tmp
   tmp=$(mktemp -d "$WORK/clone.XXXX")
-  if ! git -c advice.detachedHead=false clone -q --depth 1 --branch "$ref" "$GH_REPO_URL" "$tmp/r"; then
+  if ! remote_git -c advice.detachedHead=false clone -q --depth 1 --branch "$ref" "$GH_REPO_URL" "$tmp/r"; then
     echo "❌ clone に失敗しました（ref: $ref。存在しないタグ・ネットワーク不通の可能性）" >&2
+    if [ "$GIT_ISOLATE" -ne 1 ]; then
+      echo "   git のグローバル設定が https://github.com/ の URL を書き換える環境では KCD_GIT_ISOLATE=1 を指定してください" >&2
+    fi
     exit 1
   fi
   mkdir -p "$dir/repo"
@@ -288,7 +327,7 @@ http_get "${API}/git/trees/${REF}?recursive=1" "$SNAP/meta/tree.json" "${AUTH_HE
 http_get "${API}" "$SNAP/meta/repo_info.json" "${AUTH_HEADER[@]+"${AUTH_HEADER[@]}"}"
 
 # REF がタグなら tag object と ^{} の commit を記録し、releases/tags/<REF> を取得する
-git ls-remote --tags "$GH_REPO_URL" "refs/tags/${REF}" "refs/tags/${REF}^{}" > "$WORK/ls_remote.txt"
+remote_git ls-remote --tags "$GH_REPO_URL" "refs/tags/${REF}" "refs/tags/${REF}^{}" > "$WORK/ls_remote.txt"
 IS_TAG=0
 if [ -s "$WORK/ls_remote.txt" ]; then
   IS_TAG=1

@@ -25,7 +25,10 @@
         check-kiro-crew-consistency check-kiro-crew-notation check-kiro-crew-coverage \
         check-kiro-crew-changelog check-kiro-crew-scope check-kiro-crew-source-pin \
         check-kiro-crew-urls check-kiro-crew-urls-important check-kiro-crew-freshness \
-        fetch-kiro-crew-snapshot extract-kiro-crew-changelog extract-kiro-crew-doc-index
+        fetch-kiro-crew-snapshot extract-kiro-crew-changelog extract-kiro-crew-doc-index \
+        check-kiro-crew-cleanroom fetch-kiro-crew-primary check-kiro-crew-cloud \
+        check-kiro-crew-ledger-current check-kiro-crew-cloud-freshness check-kiro-crew-pr-scope \
+        check-kiro-crew-pr-body list-kiro-crew-open-items
 
 SCRIPTS := ./scripts/kiro-crew-docs
 
@@ -62,7 +65,22 @@ help:
 	@echo "個別に実行（★外部サイトに依存。all / CI（PR）には含めない）:"
 	@echo "  make check-kiro-crew-urls           # 公開文書の外部 URL 到達性"
 	@echo "  make check-kiro-crew-urls-important # 重要 URL のみ"
-	@echo "  make check-kiro-crew-freshness      # 更新検知（4系統）。OFFLINE=<dir> で検証可"
+	@echo "  make check-kiro-crew-freshness      # 更新検知（4系統）。OFFLINE=<dir> で検証可。FRESHNESS_ARGS で追加引数"
+	@echo "  make fetch-kiro-crew-primary VERSION=<版> [PREV=<前回版>]"
+	@echo "                                      # 一次情報を CLOUD_ROOT（既定 /tmp/kiro-crew-primary）へ取得（冪等）"
+	@echo "  make check-kiro-crew-cloud          # クラウド入口: スキップを合格にしない全検証（--strict）＋要約行"
+	@echo "  make check-kiro-crew-ledger-current # 公式ページ台帳の Page updated・sha256 列が PIN.json と一致するか"
+	@echo "  make check-kiro-crew-cloud-freshness"
+	@echo "                                      # 更新検知（--strict --release-only）。freshness-result: rc=<n> を出す"
+	@echo ""
+	@echo "クラウド・PR 用（ネットワーク不要）:"
+	@echo "  make check-kiro-crew-cleanroom TARGETS=\"...\" [ARGS=\"...\"]"
+	@echo "                                      # 公開されるファイルだけの複製（/tmp）で TARGETS を実行"
+	@echo "  make check-kiro-crew-pr-scope PROFILE=version-update|infra [BASE=origin/main] [HEAD_REV=<rev>]"
+	@echo "                                      # PR の変更範囲が許可パス・許可行に収まるか"
+	@echo "  make check-kiro-crew-pr-body PR_BODY=<file>|RUN_DIR=<dir> [CLOUD_ROOT=<dir>]"
+	@echo "                                      # 公開される PR 本文の公開前検査（PIN.json のあるスナップショット1件が必須）"
+	@echo "  make list-kiro-crew-open-items      # 公開ページの「食い違い」「未確認」「要検証」の全行と件数"
 	@echo ""
 	@echo "保守用:"
 	@echo "  make fetch-kiro-crew-snapshot        # 一次情報スナップショットの取得"
@@ -86,6 +104,13 @@ check-kiro-crew-quick: check-kiro-crew-links check-kiro-crew-structure
 
 check-kiro-crew-ignore:
 	@$(SCRIPTS)/check-ignore.sh
+
+# 公開されるファイルだけの複製（/tmp/kcd-cleanroom.XXXX）で TARGETS を実行する。
+# クラウドセッションの clone 直後と同じ条件（ローカル管理領域が無い）の再現。追加の変数は ARGS で渡す
+TARGETS ?=
+check-kiro-crew-cleanroom:
+	@if [ -z "$(TARGETS)" ]; then echo "❌ TARGETS を指定してください（例: TARGETS=\"check-kiro-crew-all\"）"; exit 1; fi
+	@$(SCRIPTS)/clean-room.sh $(TARGETS) $(ARGS)
 
 # ------------------------------------------------------------
 # 個別ターゲット（ネットワーク不要）
@@ -140,11 +165,12 @@ check-kiro-crew-urls-important:
 	@$(SCRIPTS)/check-urls.sh --important
 
 OFFLINE ?=
+FRESHNESS_ARGS ?=
 check-kiro-crew-freshness:
 	@if [ -n "$(OFFLINE)" ]; then \
-	    $(SCRIPTS)/check-freshness.py --offline "$(OFFLINE)"; \
+	    $(SCRIPTS)/check-freshness.py --offline "$(OFFLINE)" $(FRESHNESS_ARGS); \
 	else \
-	    $(SCRIPTS)/check-freshness.py; \
+	    $(SCRIPTS)/check-freshness.py $(FRESHNESS_ARGS); \
 	fi
 
 # ------------------------------------------------------------
@@ -161,3 +187,115 @@ extract-kiro-crew-changelog:
 
 extract-kiro-crew-doc-index:
 	@$(SCRIPTS)/extract-doc-index.py $(ARGS)
+
+# ------------------------------------------------------------
+# クラウド（Kiro Web）・PR 用（check-*-all には含めない）
+# ------------------------------------------------------------
+# 一次情報の置き場（リポジトリの追跡対象には書かない）。Kiro Web では run ごとの cloud_root を渡す
+VERSION ?=
+PREV ?=
+CLOUD_ROOT ?= /tmp/kiro-crew-primary
+CLOUD_PREV_ROOT ?= /tmp/kiro-crew-primary-prev
+CLOUD_VIA_ROOT ?= /tmp/kiro-crew-primary-via
+CLOUD_SNAP = $(shell ls -d $(CLOUD_ROOT)/*/ 2>/dev/null)
+
+# 冪等: $(CLOUD_ROOT)/*_$(VERSION)/PIN.json があれば target を取得しない。
+# 検査の順序: ① PREV 指定時の base 一致（ほかの取得・検査より先） ② 前回版・経由版の有無と commit 照合
+# ③ $(CLOUD_ROOT) 直下のスナップショットが1件であること
+fetch-kiro-crew-primary:
+	@if [ -z "$(VERSION)" ]; then echo "❌ VERSION を指定してください（例: VERSION=vX.Y.Z PREV=vA.B.C）"; exit 1; fi
+	@set -e; pin=$$(ls $(CLOUD_ROOT)/*_$(VERSION)/PIN.json 2>/dev/null | head -1); \
+	if [ -n "$$pin" ]; then \
+	    if [ -n "$(PREV)" ]; then \
+	        base=$$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("base") or "null")' "$$pin"); \
+	        if [ "$$base" != "$(PREV)" ]; then echo "base mismatch: PIN=$$base PREV=$(PREV)"; exit 1; fi; \
+	    fi; \
+	    echo "=== 取得済み（取得を省略）: $$pin ==="; cat "$$pin"; echo ""; \
+	else \
+	    date=$$(TZ=Asia/Tokyo date +%Y%m%d); \
+	    if [ -n "$(PREV)" ]; then \
+	        $(SCRIPTS)/fetch-snapshot.sh --out-root "$(CLOUD_ROOT)" --base "$(PREV)" --via-root "$(CLOUD_VIA_ROOT)" "$${date}_$(VERSION)" "$(VERSION)"; \
+	    else \
+	        $(SCRIPTS)/fetch-snapshot.sh --out-root "$(CLOUD_ROOT)" "$${date}_$(VERSION)" "$(VERSION)"; \
+	    fi; \
+	    pin=$$(ls $(CLOUD_ROOT)/*_$(VERSION)/PIN.json | head -1); \
+	fi; \
+	if [ -n "$(PREV)" ]; then \
+	    if [ -f "$(CLOUD_PREV_ROOT)/$(PREV)/repo/COMMIT_SHA" ]; then \
+	        echo "前回版 $(PREV): 取得済み（$(CLOUD_PREV_ROOT)/$(PREV)）"; \
+	    else \
+	        $(SCRIPTS)/fetch-snapshot.sh --repo-only --out-root "$(CLOUD_PREV_ROOT)" "$(PREV)" "$(PREV)"; \
+	    fi; \
+	fi; \
+	python3 -c 'import json,sys; [print(v["ref"]+"\t"+v["commit_sha"]) for v in json.load(open(sys.argv[1])).get("via", [])]' "$$pin" \
+	| while IFS="$$(printf '\t')" read -r vref vsha; do \
+	    if [ ! -f "$(CLOUD_VIA_ROOT)/$$vref/repo/COMMIT_SHA" ]; then \
+	        echo "経由版 $$vref: $(CLOUD_VIA_ROOT)/$$vref が無いため取り直します"; \
+	        $(SCRIPTS)/fetch-snapshot.sh --repo-only --out-root "$(CLOUD_VIA_ROOT)" "$$vref" "$$vref" || exit 1; \
+	    fi; \
+	    got=$$(cat "$(CLOUD_VIA_ROOT)/$$vref/repo/COMMIT_SHA"); \
+	    if [ "$$got" != "$$vsha" ]; then echo "via commit mismatch: $$vref PIN=$$vsha $(CLOUD_VIA_ROOT)=$$got"; exit 1; fi; \
+	    echo "経由版 $$vref: COMMIT_SHA が PIN.json の via と一致（$$got）"; \
+	done; \
+	n=$$(ls -d $(CLOUD_ROOT)/*/ 2>/dev/null | wc -l); \
+	if [ "$$n" -ne 1 ]; then echo "snapshot count mismatch: $$n under CLOUD_ROOT (expected 1)"; exit 1; fi; \
+	echo "✅ 一次情報: $(CLOUD_ROOT) 直下のスナップショット 1 件"
+
+# クラウド入口。スキップを合格にしない（--strict）。1つでも失敗したら非0。末尾に PR 本文へ転記する要約行を出す
+check-kiro-crew-cloud:
+	@snap="$(CLOUD_SNAP)"; set -- $$snap; \
+	if [ "$$#" -ne 1 ]; then echo "❌ $(CLOUD_ROOT) 直下のスナップショットが $$# 件です（1件である必要があります）。検査を行いませんでした"; \
+	    echo "   → make fetch-kiro-crew-primary VERSION=<版> PREV=<前回版> CLOUD_ROOT=$(CLOUD_ROOT)"; exit 1; fi; \
+	snap=$${1%/}; log=$$(mktemp -d /tmp/kcd-cloud.XXXX); fail=0; : > "$$log/rc.txt"; \
+	run() { name="$$1"; shift; echo ""; echo "######## $$name ########"; \
+	    "$$@" > "$$log/$$name.txt" 2>&1; rc=$$?; cat "$$log/$$name.txt"; \
+	    echo "######## $$name: exit $$rc"; echo "$$name: exit $$rc" >> "$$log/rc.txt"; \
+	    [ "$$rc" -eq 0 ] || fail=1; }; \
+	run 01-ignore $(MAKE) --no-print-directory check-kiro-crew-ignore; \
+	run 02-all $(MAKE) --no-print-directory check-kiro-crew-all SNAPSHOT_ROOT="$(CLOUD_ROOT)"; \
+	run 03-coverage-strict $(SCRIPTS)/check-coverage.py --strict --repo-dir "$$snap/repo"; \
+	run 04-counts-strict $(SCRIPTS)/check-counts.py --strict --docs-dir "$$snap/repo/docs" --meta-dir "$$snap/meta"; \
+	run 05-changelog-strict $(SCRIPTS)/check-changelog.py --strict --repo-dir "$$snap/repo"; \
+	run 06-notation-strict $(SCRIPTS)/check-notation.py --strict; \
+	run 07-measure-ssot $(SCRIPTS)/measure-ssot.py --snapshot "$$snap" --expect-constants; \
+	run 08-urls-important $(MAKE) --no-print-directory check-kiro-crew-urls-important; \
+	echo ""; echo "=== check-kiro-crew-cloud 要約（PR 本文⑤へ転記）==="; \
+	echo "一次情報: $$snap"; cat "$$log/rc.txt"; \
+	grep -h '^KCD-SUMMARY:' "$$log"/0*.txt | sed 's/^KCD-SUMMARY: /要約: /'; \
+	rm -rf "$$log"; \
+	if [ "$$fail" -ne 0 ]; then echo "❌ check-kiro-crew-cloud: 失敗あり"; exit 1; fi; \
+	echo "✅ check-kiro-crew-cloud: すべて exit 0"
+
+# 公式ページ台帳の Page updated・.md sha256 列が PIN.json と1件でも異なれば exit 1（版更新 PR でだけ使う）
+check-kiro-crew-ledger-current:
+	@snap="$(CLOUD_SNAP)"; set -- $$snap; \
+	if [ "$$#" -ne 1 ]; then echo "❌ $(CLOUD_ROOT) 直下のスナップショットが $$# 件です（1件である必要があります）。検査を行いませんでした"; exit 1; fi; \
+	$(SCRIPTS)/measure-ssot.py --snapshot "$${1%/}" --expect-ledger-current
+
+# make はレシピの非0をすべて exit 2 にするため、スクリプトの終了コードを freshness-result 行で出す
+check-kiro-crew-cloud-freshness:
+	@$(SCRIPTS)/check-freshness.py --strict --release-only; rc=$$?; \
+	echo "freshness-result: rc=$$rc"; exit $$rc
+
+BASE ?= origin/main
+HEAD_REV ?=
+PROFILE ?=
+check-kiro-crew-pr-scope:
+	@if [ -z "$(PROFILE)" ]; then echo "❌ PROFILE を指定してください（version-update または infra）"; exit 1; fi
+	@$(SCRIPTS)/check-pr-scope.py --base "$(BASE)" $(if $(HEAD_REV),--head "$(HEAD_REV)") --profile "$(PROFILE)"
+
+RUN_DIR ?=
+PR_BODY ?= $(RUN_DIR)/pr-body.md
+SNAPSHOT ?= $(shell ls -d $(CLOUD_ROOT)/*/ 2>/dev/null)
+check-kiro-crew-pr-body:
+	@set -- $(SNAPSHOT); \
+	if [ "$$#" -ne 1 ]; then echo "❌ SNAPSHOT が $$# 件です（CLOUD_ROOT=$(CLOUD_ROOT) 直下に1件である必要があります）。検査を行いませんでした"; exit 1; fi; \
+	if [ ! -f "$(PR_BODY)" ]; then echo "❌ PR 本文 $(PR_BODY) がありません。検査を行いませんでした"; exit 1; fi; \
+	if [ ! -f "$${1%/}/PIN.json" ]; then echo "❌ SNAPSHOT $${1%/} に PIN.json がありません（取得が完了していません）。検査を行いませんでした"; \
+	    echo "   → make fetch-kiro-crew-primary VERSION=<版> PREV=<前回版> CLOUD_ROOT=$(CLOUD_ROOT)"; exit 1; fi; \
+	$(SCRIPTS)/check-pr-body.sh "$(PR_BODY)" --snapshot "$${1%/}"
+
+# 公開ページの「食い違い」「未確認」「要検証」を全行列挙し、最終行に件数を出す。0件なら exit 1（検索の空振りを合格にしない）
+OPEN_ITEMS_PATHS ?= kiro-crew-docs/0[0-4]_*
+list-kiro-crew-open-items:
+	@out=$$(grep -rnE '食い違い|未確認|要検証' $(OPEN_ITEMS_PATHS)); printf '%s\n' "$$out"; n=$$(printf '%s\n' "$$out" | grep -c .); echo "open-items: $$n"; test "$$n" -ge 1

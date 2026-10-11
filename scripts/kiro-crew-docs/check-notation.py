@@ -3,6 +3,8 @@
 
 使用方法:
     ./scripts/kiro-crew-docs/check-notation.py
+    ./scripts/kiro-crew-docs/check-notation.py --strict
+        # (h) の許可リスト未登録を errors に入れる（クラウド入口 check-kiro-crew-cloud から呼ぶ。既定はオフ）
 
 規約 (a)〜(i):
     (a) 他製品のコマンド・固有機能の混入
@@ -36,6 +38,7 @@
 ⚠️ 設計方針: 規則の所有権を分ける。URLの書式はcheck-links.py、件数はcheck-counts.py、
 値の水平展開はcheck-consistency.pyが持つ。本スクリプトは表記だけを見る。
 """
+import argparse
 import glob
 import os
 import re
@@ -171,6 +174,10 @@ def code_line_flags(path):
 
 
 def main():
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--strict", action="store_true",
+                    help="(h) ALLOWED_CLI_COMMANDS 未登録（DENIED_CLI_COMMANDS にも無い）を errors に入れる")
+    args = ap.parse_args()
     os.chdir(repo_root())
     print("=== kiro-crew-docs 表記規約チェック ===")
     print("")
@@ -292,6 +299,14 @@ def main():
     for path, line, cmd in allowed_cli:
         print(f"      {path}:{line} `kirocrew {cmd}`（許可リストに未登録。05_meta/ledger-cli-commands.md で確認してください）")
     print("")
+    if args.strict:
+        for path, line, cmd in allowed_cli:
+            errors.append(
+                f"{path}:{line} (h) `kirocrew {cmd}` が ALLOWED_CLI_COMMANDS に未登録です"
+                "（--strict ではエラー。一次情報で実在を確認して許可リストに加えるか、記述を直してください）"
+            )
+        print(f"KCD-SUMMARY: (h) 未登録 {len(allowed_cli)}")
+        print("")
 
     if errors:
         print(f"❌ エラー {len(errors)} 件:")

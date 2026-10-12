@@ -1,7 +1,7 @@
 name: Release kiro-crew-docs
 
 # 本サイトの GitHub Release（タグ vX.Y.Z とリリース）の作成を Actions が行う。
-# 人の承認点は「リリースノートを含む PR のマージ」に一元化する（.github/WORKFLOW.md §8）。
+# 人の承認点は「リリースノートを含む PR のマージ」に一元化する（.github/UPDATE_GUIDE.md §7.3 ⑦・§13 W-16・W-17）。
 # エージェント（Kiro Web）と人はリリースノート .github/release-notes/vX.Y.Z.md を PR に含めるだけで、
 # タグの作成とリリースの公開は行わない。
 #
@@ -11,12 +11,18 @@ name: Release kiro-crew-docs
 #   - workflow_dispatch（入力 version。main でだけ実行できる）
 #
 # 誤作動の防止:
-#   - 最初に同名タグの有無を確認し、既にあればタグの作成とリリースの公開をスキップして ::notice:: を出し、
-#     exit 0 で終える（マージ後にノートの誤字を直す PR で再起動しても、作り直さず CI も赤くしない）
+#   - 最初に同名タグの有無を確認する。タグがあり同名の Release もあれば、タグの作成とリリースの公開をスキップして
+#     ::notice:: を出し、exit 0 で終える（マージ後にノートの誤字を直す PR で再起動しても、作り直さず CI も赤くしない）
+#   - タグがあり Release が無い場合は、タグを取り直してタグの commit（git rev-parse <タグ>^{commit}）とこの run の
+#     commit（github.sha）を比べる。一致すれば（タグの push の後に Release の作成だけが失敗した run の再実行）、
+#     タグを作り直さずに Release だけを作成する。一致しなければ過去のタグに Release を自動では作らず、::error:: を
+#     出して失敗させる（人が判断する）。Release の有無は gh release view で確かめ、"release not found" 以外の
+#     失敗は判定不能として失敗させる
 #   - push では、その push で追加・変更されたノートだけを対象にする（既存のノートを一括で対象にしない）。
+#     リネームで追加されたノートも対象にするため、差分は --no-renames で取る。
 #     差分の起点（github.event.before）が取れない push は対象を決めずに失敗させる
-#   - タグの無いノートが2件以上ある push は失敗させる（README の固定版と changelog の先頭の版は1つなので、
-#     4者一致を満たすノートは1件だけのため）
+#   - 対象のノート（タグの無いノートと、Release の作成だけを再試行するノート）が2件以上ある push は失敗させる
+#     （README の固定版と changelog の先頭の版は1つなので、4者一致を満たすノートは1件だけのため）
 #   - タグの作成前のゲート: make check-kiro-crew-ignore・make check-kiro-crew-all・
 #     make check-kiro-crew-release-note（4者一致）・上流 kirodotdev/KiroCrew の同名 Release が安定版
 #
@@ -71,6 +77,8 @@ jobs:
           INPUT_VERSION: ${{ inputs.version }}
           BEFORE: ${{ github.event.before }}
           AFTER: ${{ github.sha }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           version_re='^v[0-9]+\.[0-9]+\.[0-9]+$'
@@ -86,6 +94,27 @@ jobs:
             esac
           }
 
+          # 同名 Release の有無。released=ある、missing=無い（gh の "release not found"）。それ以外は判定不能として失敗
+          release_state() {
+            local err="$RUNNER_TEMP/release-view.err"
+            if gh release view "$1" --json tagName >/dev/null 2>"$err" </dev/null; then
+              echo released
+            elif grep -qx 'release not found' "$err"; then
+              echo missing
+            else
+              echo "::error::Release $1 の有無を確認できません（gh release view: $(head -1 "$err")）" >&2
+              return 1
+            fi
+          }
+
+          # タグが指す commit。タグを origin から取り直してから解決する
+          tag_commit() {
+            git fetch --quiet --no-tags origin "+refs/tags/$1:refs/tags/$1" </dev/null \
+              || { echo "::error::タグ $1 を取得できません" >&2; return 1; }
+            git rev-parse "refs/tags/$1^{commit}" \
+              || { echo "::error::タグ $1 の commit を解決できません" >&2; return 1; }
+          }
+
           : > "$RUNNER_TEMP/candidates.txt"
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             if ! [[ "$INPUT_VERSION" =~ $version_re ]]; then
@@ -99,7 +128,7 @@ jobs:
               echo "::error::push の差分の起点（github.event.before）を取得できないため、対象のノートを決めません"
               exit 1
             fi
-            git diff --name-only --diff-filter=AM "$BEFORE" "$AFTER" -- '.github/release-notes/v*.md' \
+            git diff --no-renames --name-only --diff-filter=AM "$BEFORE" "$AFTER" -- '.github/release-notes/v*.md' \
               > "$RUNNER_TEMP/candidates.txt"
           fi
           echo "候補のノート:"; sed 's/^/  /' "$RUNNER_TEMP/candidates.txt"
@@ -114,8 +143,17 @@ jobs:
             fi
             state=$(tag_state "$v")
             if [ "$state" = "exists" ]; then
-              echo "::notice::タグ $v は既に存在するため、タグの作成とリリースの公開をスキップします"
-              continue
+              rstate=$(release_state "$v")
+              if [ "$rstate" = "released" ]; then
+                echo "::notice::タグ $v と Release $v は既に存在するため、タグの作成とリリースの公開をスキップします"
+                continue
+              fi
+              tc=$(tag_commit "$v")
+              if [ "$tc" != "$AFTER" ]; then
+                echo "::error::タグ $v はありますが Release がありません。タグの commit（$tc）がこの run の commit（$AFTER）と異なるため、Release を自動では作りません。人が判断してください"
+                exit 1
+              fi
+              echo "::warning::タグ $v はこの run の commit を指していますが Release がありません。Release の作成だけを再試行します"
             fi
             if [ ! -f "$note" ]; then
               echo "::error::$note がありません"
@@ -131,7 +169,7 @@ jobs:
             exit 0
           fi
           if [ "${#pending[@]}" -gt 1 ]; then
-            echo "::error::タグの無いノートが ${#pending[@]} 件あります（1回に公開できるのは1版です）: ${pending[*]}"
+            echo "::error::対象のノート（タグの無いノートと Release の作成を再試行するノート）が ${#pending[@]} 件あります（1回に公開できるのは1版です）: ${pending[*]}"
             exit 1
           fi
           note="${pending[0]}"
@@ -193,24 +231,41 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           V: ${{ needs.gate.outputs.version }}
           NOTE: ${{ needs.gate.outputs.note }}
           SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          # ゲートの後に同名タグが作られていた場合も作り直さない
+          # 1行目（H1）をタイトル、2行目以降を本文にする
+          title=$(head -1 "$NOTE" | sed -E 's/^#[[:space:]]+//')
+          tail -n +2 "$NOTE" > "$RUNNER_TEMP/body.md"
+          # ゲートの後に同名タグが作られていた場合も、タグを作り直さない
           rc=0
           git ls-remote --exit-code --tags origin "refs/tags/${V}" >/dev/null || rc=$?
           if [ "$rc" -eq 0 ]; then
-            echo "::notice::タグ ${V} は既に存在するため、タグの作成とリリースの公開をスキップします"
+            if gh release view "$V" --json tagName >/dev/null 2>"$RUNNER_TEMP/release-view.err"; then
+              echo "::notice::タグ ${V} と Release ${V} は既に存在するため、タグの作成とリリースの公開をスキップします"
+              exit 0
+            fi
+            if ! grep -qx 'release not found' "$RUNNER_TEMP/release-view.err"; then
+              echo "::error::Release ${V} の有無を確認できません（gh release view: $(head -1 "$RUNNER_TEMP/release-view.err")）"
+              exit 1
+            fi
+            # タグを取り直し、タグの commit がこの run の commit と一致する場合だけ Release を作る（run の再実行による回復）
+            git fetch --quiet --no-tags origin "+refs/tags/${V}:refs/tags/${V}"
+            tag_commit=$(git rev-parse "refs/tags/${V}^{commit}")
+            if [ "$tag_commit" != "$SHA" ]; then
+              echo "::error::タグ ${V} はありますが Release がありません。タグの commit（${tag_commit}）がこの run の commit（${SHA}）と異なるため、Release を自動では作りません。人が判断してください"
+              exit 1
+            fi
+            gh release create "$V" --verify-tag --latest --title "$title" --notes-file "$RUNNER_TEMP/body.md"
+            echo "::notice::タグ ${V} はこの run の commit を指していて Release が無かったため、Release だけを作成しました（${title}）"
             exit 0
           elif [ "$rc" -ne 2 ]; then
             echo "::error::タグ ${V} の有無を確認できません（git ls-remote exit ${rc}）"
             exit 1
           fi
-          # 1行目（H1）をタイトル、2行目以降を本文にする
-          title=$(head -1 "$NOTE" | sed -E 's/^#[[:space:]]+//')
-          tail -n +2 "$NOTE" > "$RUNNER_TEMP/body.md"
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -a "$V" -m "$title" "$SHA"

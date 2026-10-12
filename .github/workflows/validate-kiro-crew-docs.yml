@@ -62,20 +62,45 @@ jobs:
       - name: 全チェック（ネットワーク不要）
         run: make check-kiro-crew-all
 
-      # PR で追加・変更されたリリースノート（.github/release-notes/v*.md）だけを対象に、
-      # 版の4者一致（ファイル名・H1・README の固定版・changelog 先頭）をマージ前に検査する。
-      # マージ後は Release ワークフロー（release-kiro-crew-docs.yml）のゲートでも同じ検査を行う。
-      - name: リリースノートの版の4者一致（PR で追加・変更されたノートのみ）
+      # PR で追加・変更されたリリースノート（.github/release-notes/v*.md）のうち、kiro-crew-docs に同名タグが
+      # まだ無いものだけを対象に、版の4者一致（ファイル名・H1・README の固定版・changelog 先頭）をマージ前に検査する。
+      # 同名タグのあるノート（公開済みの版のノート）は ::notice:: を出して検査しない。Release ワークフロー
+      # （release-kiro-crew-docs.yml）も同名タグのあるノートにはタグを作らないため、対象の決め方をそろえている。
+      # リネームで追加されたノートも対象にするため、差分は --no-renames で取る。
+      # マージ後は Release ワークフローのゲートでも同じ検査を行う。
+      - name: リリースノートの版の4者一致（PR で追加・変更され、同名タグが無いノートのみ）
         if: github.event_name == 'pull_request'
         shell: bash
         run: |
           set -euo pipefail
-          git diff --name-only --diff-filter=AM "origin/${GITHUB_BASE_REF}...HEAD" -- '.github/release-notes/v*.md' \
+          version_re='^v[0-9]+\.[0-9]+\.[0-9]+$'
+
+          # 同名タグの有無。0=ある、2=無い（git ls-remote --exit-code）。それ以外は判定不能として失敗
+          tag_state() {
+            local rc=0
+            git ls-remote --exit-code --tags origin "refs/tags/$1" >/dev/null || rc=$?
+            case "$rc" in
+              0) echo exists ;;
+              2) echo absent ;;
+              *) echo "::error::タグ $1 の有無を確認できません（git ls-remote exit $rc）" >&2; return 1 ;;
+            esac
+          }
+
+          git diff --no-renames --name-only --diff-filter=AM "origin/${GITHUB_BASE_REF}...HEAD" -- '.github/release-notes/v*.md' \
             > "$RUNNER_TEMP/release-notes.txt"
           n=$(grep -c . "$RUNNER_TEMP/release-notes.txt" || true)
           echo "対象ノート${n}件"
           while IFS= read -r note; do
             [ -n "$note" ] || continue
+            v=$(basename "$note" .md)
+            # ファイル名が vX.Y.Z.md でないノートは、タグを確認せずに4者一致の検査に回す（①で失敗させる）
+            if [[ "$v" =~ $version_re ]]; then
+              state=$(tag_state "$v")
+              if [ "$state" = "exists" ]; then
+                echo "::notice::タグ $v は既に存在するため、$note の4者一致の検査をスキップします（公開済みの版のノート）"
+                continue
+              fi
+            fi
             make check-kiro-crew-release-note NOTE="$note"
           done < "$RUNNER_TEMP/release-notes.txt"
 

@@ -45,9 +45,9 @@ LEDGER_DIR = os.environ.get("KCD_LEDGER_DIR") or "scripts/kiro-crew-docs/ledgers
 
 SSOT = {
     "S1": {"value": 49, "label": "公式crewページ数"},
-    "S2": {"value": 281, "label": "docs/配下ファイル数"},  # v0.7.2タグ実測（v0.6.0タグは230）
-    "S4": {"value": 13, "label": "安定版リリース数"},  # v0.7.2対応時点（2026-10-04）
-    "S5": {"value": 77, "label": "総リリース数"},  # 2026-10-04取得時点（プレリリース64）
+    "S2": {"value": 349, "label": "docs/配下ファイル数"},  # v0.9.0タグ実測（v0.7.2タグは281）
+    "S4": {"value": 15, "label": "安定版リリース数"},  # v0.9.0対応時点（2026-10-25）
+    "S5": {"value": 95, "label": "総リリース数"},  # 2026-10-25取得時点（プレリリース79。版タグでないReleaseが1件）
     "S11": {"value": 137, "label": "拒否コマンドルール件数"},
     "S12": {"value": 20, "label": "builtin App数"},
     "S13": {"value": 7, "label": "メッセージングチャネル数"},

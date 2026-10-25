@@ -8,6 +8,9 @@
 （参照: 2026-09-13 / commit `8575209` / 版 v0.6.0）
 **出典**（v0.7.0での変更: Remote crews・Fargate・System & storage の改訂）: CHANGELOG.md v0.7.0節、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/cloud.md>
 （参照: 2026-10-04 / commit `c67c506` / 版 v0.7.2）
+**出典**（v0.9.0での再検証: Remote crew sessions・Fargate・Crew log・Usage・スナップショット・Linuxのサービス管理）: CHANGELOG.md v0.8.0節・v0.9.0節、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/cloud.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/instances.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/remote-crew-on-fargate.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/remote-and-mobile.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md>
+（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+**出典**（v0.9.0）: <https://kiro.dev/docs/crew/features/multi-instance/>（Page updated 2026-10-20）・<https://kiro.dev/docs/crew/system/>（Page updated 2026-10-20）・<https://kiro.dev/docs/crew/features/snapshot/>（Page updated 2026-09-11）・<https://kiro.dev/docs/crew/running-24-7/>（Page updated 2026-08-04）
 
 ---
 
@@ -44,6 +47,20 @@ Linuxではインストール時にsudoを1回要求してユニットファイ�
 
 サービス化を避けたい場合、`tmux` はSSH切断には耐えますが**クラッシュ時の自動再起動・再起動時の自動起動はしません**。
 
+### Linuxのサービス管理（systemd の system／user の2スコープ）
+
+以下は v0.9.0 タグの `docs/system-specs/modules/cli.md` 239-244行・`docs/guides/install.md` 785-870行で確認した内容です。CHANGELOG/Release 本文は説明していません。
+
+- `kirocrew service status` は `system scope: …` に続けて `user scope: …` を表示し、**いずれかのスコープのユニットが UP**（`ActiveState` が `active` または `reloading`）のときだけ exit 0 です。`activating (auto-restart)` と `failed` は exit 1 です
+- `kirocrew stop`・`restart`・`logs`・`service uninstall` は、利用者自身の `systemctl --user` ユニットも扱い、実行したスコープを表示します。`restart` はユニットが短い確認窓のあいだ UP のままであることを確かめ、`activating (auto-restart)` などに落ちたら失敗として報告します
+- `service uninstall` は**自分が入れたユニット**（または `Environment="KIROCREW_SERVICE_MANAGED=1"` の行を持つユニット）だけを消し、利用者や配布元の同名ユニットには触れません。**`sudo` で実行してはいけません**（ユーザーのマネージャに届かず `not reachable from this shell` と報告されます）。`service install` は引き続き system unit を書きます
+- Linux ではエージェントの runtime がサービスアカウント自身のユーザーマネージャ下で動くため、**`sudo loginctl enable-linger <user>`** が必要です。無いと最後のログアウトで runtime が止まり、以降の spawn はメモリと fork 数の上限なしで起動します。`service install` は linger がオフのとき非致命の警告を出します
+- 別の Gateway が同じデータホームを使っているとき、ユニットは exit 78 で一度だけ `failed` になり再起動しません（`RestartPreventExitStatus=`）。この指定が無い古いユニットは `kirocrew service install` を再実行します
+- SELinux のホストでは、条件を満たす場合に system unit へ `SELinuxContext=` の行が入ります（条件は `install.md` 849-870行）
+
+**出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/cli.md>
+（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+
 ## Docker常駐
 
 常時稼働のサーバー（Slack/Discordボット、リモートダッシュボード）にはGHCRのマルチアーキイメージを使います。
@@ -69,7 +86,7 @@ docker exec kirocrew kirocrew token --ttl 2h
 
 VPS・クラウドVM・自宅の空きマシンなど、常時起動のLinuxリモートホストでCrewを動かせば、ラップトップがスリープしていてもSlack・Cron・Task Runnerが動き続けます。
 
-**ホスト要件**: モダンなLinuxディストリビューション（Ubuntu 22.04+・Debian 12+・Fedora・Amazon Linux 2023等）。`slack-mcp`にはNode 20+が必要。RAMは最低約10GB（MCPのコールドスタートやツール呼び出しでスパイクするため16GBが快適）。x86_64またはarm64。
+**ホスト要件**: モダンなLinuxディストリビューション（Ubuntu 22.04+・Debian 12+・Fedora・Amazon Linux 2023等）。`slack-mcp`にはNode 20+が必要。RAMは公式ページが「~10 GB minimum」と記述（MCPのコールドスタートやツール呼び出しでスパイクするため16GBが快適。下記の注記のとおりリポジトリ側は別の記述）。x86_64またはarm64。
 
 **⚠️ ダッシュボードのSSHトンネル**: ダッシュボードはリモートホストの`localhost:5476`にバインドされます。**このポートを公開してはいけません**。ローカルマシンへSSH経由でフォワードしてください。
 
@@ -79,7 +96,20 @@ ssh -L 5476:localhost:5476 user@your-host.example.com
 
 `~/.ssh/config`に`LocalForward`を設定すれば、`ssh your-host.example.com`実行時に自動でトンネルが張られます（macOS・Linux・Windows対応。Windows 10+はOpenSSHが標準搭載）。
 
-既存の状態（メモリ・設定・スキル・cron）を新しいリモートホストへ同期する場合は、リポジトリの`scripts/sync-to-remote.sh`が使えます。WALファイル（`memory.db-wal`・`memory.db-shm`）も同期が必要で、`.env`・`.local_secret`・`sel_hmac.key`はホスト固有のためコピーしてはいけません（初回起動時に再生成されます）。
+> ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**（RAMの下限）
+> - 公式 `running-24-7/` ページ（`docs_md/running-24-7.md` 115行。Page updated 2026-08-04）: 「~10 GB minimum」
+> - リポジトリ `docs/guides/remote-and-mobile.md` 29-35行（`99e6253`）: 「there is no single published floor」（メモリ消費は同時セッション・サブエージェント・MCPサーバの数で変わると説明）
+>
+> Node.js については、公式 `running-24-7/` ページ114行が `slack-mcp` 向けに「Node 20+」と記述し（Page updated 2026-08-04 から変更なし）、リポジトリの `remote-and-mobile.md` 27-28行はダッシュボードのバンドルのビルド向けに `>=22.12.0` と記述して、`kirocrew doctor` が 22.12.0 未満で失敗するとしています。
+
+既存の状態（メモリ・設定・スキル・cron）を新しいリモートホストへ同期する場合は、リポジトリの`scripts/sync-to-remote.sh`が使えます。公式ページは、WALファイル（`memory.db-wal`・`memory.db-shm`）も同期が必要で、`.env`・`.local_secret`・`sel_hmac.key`はホスト固有のためコピーしてはいけない（初回起動時に再生成される）と記述しています（155・157行）。
+
+スクリプト自体の仕様は、リポジトリの `remote-and-mobile.md` 149-200行（`99e6253`）が次のように記述しています。
+
+- 一方向（ローカルがリモートを上書き）です。ポートを省くとスクリプトの `DEFAULT_PORT`（現在 `7779`）を使うため、標準のGatewayポート `5476` を明示します
+- `sqlite3` があれば `memory.db` を原子的な `.backup` で取ります。無い場合は警告して DB と WAL／SHM をそのままコピーするため、ローカルのGatewayが書き込み中は安全性が下がります。公式ページ159行も「atomic SQLite backup」を扱うと記述しており、WAL ファイルの同期を求める155行の警告とは、スクリプトを使うか手で同期するかの違いがあります（両ページの関係は本サイトでは裁定しません）
+- `~/.kiro/agents/` はコピーされないので、カスタム agent 仕様は別に作り直します。旧形式の `lessons.jsonl` もコピーされないため、別に転送します
+- 設定は上書きしたあとに `dashboard.url` を修正するため、コピー前に旧形式のインライン資格情報が無いか確認します
 
 ## モバイルアクセス
 
@@ -95,48 +125,86 @@ ssh -L 5476:localhost:5476 user@your-host.example.com
 
 複数のCrewインスタンスを運用するための機能です（詳細は公式 `features/multi-instance/` を参照）。**注記**: 公式ページの「4つの一般的な運用パターン」（ローカルサービス化・Docker常駐・リモートホスト・モバイルアクセス）には含まれず、公式ページの別項目です。
 
-### Remote Instances（v0.6.0・Preview・既定オフ）
+### Remote crews（呼称はv0.9.0で「Remote Crew」に統一）
 
-**v0.6.0 で、接続済みの別インスタンス上でチャットを実行できるようになりました。** 1つの Kiro Crew Gateway（**hub**）が、SSH **または AWS SSM Session Manager** のトンネル経由で複数のリモート Kiro Crew インスタンス（開発ホスト・EC2・自宅サーバ）を管理・切り替えます。各リモートのダッシュボードは、切り替えストリップの下に iframe ペインとして埋め込まれます。トランスポートはインスタンス単位（`connection_method`）です。
+**v0.6.0 から、1つの Kiro Crew Gateway（hub）が、SSH または AWS SSM Session Manager のトンネル経由で複数のリモート Kiro Crew（開発ホスト・EC2・自宅サーバ）を管理・切り替えできます。** 各リモートのダッシュボードは、切り替えストリップの下に iframe ペインとして埋め込まれます。トランスポートはインスタンス単位（`connection_method`）です。v0.7.0 で AWS Fargate が3つ目の接続方式に加わりました（下記）。
 
-> **⚠️ 有効化には2つのスイッチが必要です（どちらも既定オフ）。**
+**呼称（v0.9.0 で一次情報間の食い違いは解消）**: v0.9.0 の公式ドキュメントとモジュール仕様 `instances.md` は、UI 名をどちらも **「Remote Crew」** と記述しています。公式 `configuration/` ページの Settings 表（28行）は「**Remote Crew**｜SSH, AWS SSM, and Fargate connections」、公式 `features/multi-instance/` ページは「Settings → Remote Crew」「Add remote crew」（15・23・96行）、`instances.md` 9-11行は Settings セクション・ヘッダの切り替えグループ（「Remote Crews」／「Switch crew」）・キーボードショートカットを「Remote Crew」と記述します。**v0.7.2 では、公式が「Remote crews」、`instances.md` が「Remote Instances」と表記が分かれていました**（v0.6.0 の公式ページは「Remote Instances」）。コードと設定は引き続き「instance」を使います（`/api/instances`・`instances.json`・`instances.enabled`・EC2の`instance_id`／`ssm_target`）。製品名の **Kiro Crew** や、エージェントの **crew**（独自のワークスペース／メモリを持つアシスタント。Crew Members ページ）とは**意図的に別物**です（`instances.md` 9-18行）。
+
+**出典**: <https://kiro.dev/docs/crew/features/multi-instance/>・<https://kiro.dev/docs/crew/configuration/>（いずれも Page updated 2026-10-20）
+**出典**（呼称）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/instances.md>
+（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+
+### v0.9.0での変更（Remote crew sessions）
+
+**Remote crew sessions（Preview・既定オフ）**
+
+> **⚠️ Preview 機能です。有効化の手順は次のとおりです。**
 >
-> 1. `config.json` の **`instances.enabled`** を設定する
-> 2. **Settings → Developer → Feature Previews → Chat on a crew** をオンにする
->
-> そのうえでサイドバーの新規チャットメニューの **New chat on crew** から相手を選びます。**トランスクリプトはローカルに残り、各ターンは相手のインスタンス上で実行されます。**
+> 1. `instances.enabled` を `true` にして Gateway を再起動する（Gateway は起動時にこの値を読みます）
+> 2. **Settings → Remote Crew** で crew を接続する
+> 3. **Settings → Developer → Feature Previews → Remote crew sessions** をオンにする
 
-別所で実行されるセッションには **server badge** と相手の名前が表示されます。インスタンスはアプリのロード時とタブのフォーカス時に自分で接続します（既定で有効）。
+- Sessions 一覧は **Local** を先頭に、接続済みの crew ごとの折りたたみグループになります。各グループの見出しに **Online**・**Reconnecting**・**Error**・**Offline** のバッジが付きます。折りたたんでも選択は変わりません。接続済みの crew が無いダッシュボードにはグループ見出しが出ません
+- crew のグループからセッションを開くと、**相手の transcript・実行状態・承認待ちを hub のプロキシ経由で読む窓**として開きます。送信・停止・承認・継続・再生成・巻き戻しは、相手の route を呼びます。**このマシンには、メモリ上のキャッシュ以外は保存されません**（CHANGELOG.md v0.9.0節 84-95行によれば、New chat on crew も相手側にセッションを作ります）
+- **両マシンで Kiro Crew の版が同じである必要があります**。一致しない場合、窓が双方の版を表示します
+- 自動接続の動作は **Settings → Remote Crew → Auto-connect crews** にあります
 
-> **呼称について（v0.7.2 で一次情報間の表記が分かれています）**: v0.7.2 の公式ドキュメントは UI 上の名称を **「Remote crews」** と表記しています（公式 `configuration/` ページの Settings panel 表「**Remote crews**｜SSH, AWS SSM, and Fargate connections」、公式 `features/multi-instance/` ページ「Settings → **Remote crews** → Auto-connect crews」「Open **Settings → Remote crews**, select **Add**」、CHANGELOG.md v0.7.0節 386-387行「under Settings → Remote crews」）。一方、モジュール仕様 `instances.md` 9-21行（`c67c506`）は引き続き **UI上の表示は「Remote Instances」**（*Settings → Remote Instances*、ヘッダの切り替えグループ、キーボードショートカット）と記述しています。v0.6.0 の公式 `features/multi-instance/` ページは「Settings → **Remote Instances** → Auto-connect crews」と記述していました。**どちらが現行のUI表示かは本サイトでは裁定しません。**
->
-> `instances.md` は、以前のUI文言が「Remote Crew」であり、コードと設定（`/api/instances`・`instances.json`・`InstancesPanel`・EC2の`instance_id`／`ssm_target`）に合わせて「instance」へ改めたと説明します。**変更されたのは表示文字列のみで、i18nキー名と内部識別子（`remoteCrewPanel` を含む）は変わっていない**ため、コードと仕様書の文中には「crew」が略称として残ります。製品名の **Kiro Crew** や、エージェントの **crew**（独自のワークスペース／メモリを持つアシスタント。「Crew Mode」）とは**意図的に別物**です。
+**旧 relay の廃止**: v0.8.0 までの **Chat on a crew** プレビューは、ローカルのチャットの各ターンを選んだ remote crew で実行し、transcript はこのマシンに残していました。**この turn relay は v0.9.0 で廃止されました**（公式ページは「Before 0.9」の機能として記述）。relay で動いたチャットは**読み取り専用**で開き、送信・再生成など新しいターンを起こす操作は「remote crew で動いたチャット」という通知とともに拒否されます。続きは Remote crew sessions で相手の crew のセッションを開いて行います。
 
-### v0.7.0での変更（Remote crews）
+**`instances.enabled` は起動時に読まれる**ため、変更後に Gateway を再起動します。v0.7.2 の公式ページは「This setting applies live in 0.7」と記述しながら Troubleshooting 表では「set it and restart」と書いており、同一ページ内で食い違っていましたが、v0.9.0 の公式ページは起動時に読まれる旨の記述と Troubleshooting 表が一致しています（`config.md` 2547行も `instances.enabled` を再起動が必要なキーに挙げます）。
 
-- **`instances.enabled` がライブで適用**: 公式 `features/multi-instance/` ページは「This setting applies live in 0.7」と記述し、手動の再起動なしにレジストリが作られ接続管理が始まるとしています（v0.6.0 の同ページは `kirocrew restart` を手順に含めていた）。
-  > ⚠️ 同じページの Troubleshooting 表は、`/instances` が「multi-instance management is off」と表示される場合の対処を「`instances.enabled` is false — set it and restart」と記述しています（同一ページ内の記述差。本サイトは裁定しません）
+出典: 公式 `features/multi-instance/` ページ（Page updated 2026-10-20）13-27・35行、CHANGELOG.md v0.9.0節 84-95行（`99e6253`）、`docs/system-specs/modules/config.md` 2547行
+（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+
+### v0.8.0での変更（EC2のサブネット指定・crewの連鎖）
+
+- **EC2 のサブネット指定**: `instances.enabled` が有効なとき、Settings → Remote Crew の EC2 起動フォームに任意の **Subnet ID** 欄があります。指定すると crew はそのサブネットと VPC に置かれ、Kiro Crew は起動前に NAT またはインターネットゲートウェイへの経路を確認し、無ければ欠けた経路を示して止まります。空のままにすると自動検出のままです。インターネットへの出口が必要です（公式 `features/multi-instance/` ページ55-57行、CHANGELOG.md v0.8.0節 431-434行）
+- **crew の連鎖**: リモートダッシュボードのペイン内で別の remote crew に接続すると、自分のダッシュボードの最上位タブとして採用されます（親 crew の下にインデント表示。親が落ちると使えなくなる）。**連鎖は2ホップまで**（自分 → SSH 接続の crew → 別の crew）で、親は SSH で到達している必要があり、**親1つにつき連鎖先は最大8**、親を削除すると連鎖先も削除されます（公式 同ページ142-146行、CHANGELOG.md v0.8.0節 435-439行）
+- **Fargate の `internal_only`**: 下記「Fargate」の節を参照してください（CHANGELOG.md v0.8.0節 440-445行）
+
+出典: 公式 `features/multi-instance/` ページ（Page updated 2026-10-20）、CHANGELOG.md v0.8.0節 429-445行（`99e6253`）
+（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+
+### v0.7.0での変更（Remote crews・Fargate）
+
 - **接続方式に AWS Fargate が加わりました**（SSH・AWS SSM に続く3つ目）。Crew を ECS タスクとして動かし、AWS SSM のフォワード経由でタスクの turn API に接続します。**インバウンドのネットワークルールは不要**で、公開リスナーも埋め込みのリモートダッシュボードもありません。接続するラップトップには AWS CLI と Session Manager plugin が必要です。設定は `cloud.json` の任意の **`fargate` ブロック**（クラスタ・サブネット・セキュリティグループ・**digestでピン留めしたイメージのみ**・secretのARN等）に書きます
-  - タスクの寿命は**既定6時間**で、`fargate.task_ttl_seconds` で変更できます
+  - タスクの寿命は**既定6時間**で、`fargate.task_ttl_seconds`（正の整数）で変更できます。上限は設けられていません（`cloud.md` 212-259行）
   - 同時に走るFargateタスクは**最大10**です
   > ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**（最大タスク数を設定できるか）
-  > - CHANGELOG.md v0.7.0節 388-390行: 「ten running at most, set by `fargate.task_ttl_seconds` and `fargate.max_running_tasks` in `cloud.json`」
-  > - 公式 `features/multi-instance/` ページ: 「this safety ceiling is fixed rather than a `cloud.json` setting」、`docs/system-specs/modules/cloud.md` 208-214行: 「`DEFAULT_MAX_RUNNING_TASKS` stays fixed … Raising the cap is a code change」
+  > - CHANGELOG.md v0.7.0節 1101-1102行（`99e6253`。v0.7.2 のタグでは 388-390行）: 「ten running at most, set by `fargate.task_ttl_seconds` and `fargate.max_running_tasks` in `cloud.json`」
+  > - 公式 `features/multi-instance/` ページ51行: 「this safety ceiling is fixed rather than a `cloud.json` setting」、`docs/system-specs/modules/cloud.md` 252-257行: 「`DEFAULT_MAX_RUNNING_TASKS` stays fixed … Raising the cap is a code change」
+  >
+  > v0.8.0・v0.9.0 の CHANGELOG 本文に、この記述への訂正はありません。
   >
   > ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**（ダッシュボードからの設定）
-  > - 公式 `features/multi-instance/` ページは Settings → Remote crews の Add で選べる方式として Fargate を挙げ、CHANGELOG.md v0.7.0節 386-387行も「connection method under Settings → Remote crews」と記述しています
-  > - `docs/system-specs/modules/cloud.md` 178-180行は「there is no wizard step and no dashboard renderer, so an operator writes it by hand」、`docs/guides/adding-a-remote-provisioner.md` 126行は「the lane is reachable through the API and absent from the Set-up selector」と記述しています
+  > - 公式 `features/multi-instance/` ページ96-102行は、Settings → Remote Crew の Add で選べる方式として Fargate（「The registered ECS task target created by the Cloud launch flow」）を挙げ、49行は「Configure the Fargate placement … in the optional `fargate` block of `cloud.json`; the Cloud surface shows the connection and task state」と記述しています
+  > - `docs/system-specs/modules/cloud.md` 198-200行は「there is no wizard step and no dashboard renderer, so an operator writes it by hand」、`docs/guides/remote-crew-on-fargate.md` は「The lane is **not** in the Set-up picker」と記述しています（launch した task は Instances に自動追加され、自動追加が失敗したときだけ Settings → Remote Crew で手動追加します）
 
-**出典**: <https://kiro.dev/docs/crew/features/multi-instance/>・<https://kiro.dev/docs/crew/configuration/>（Page updated 表記あり）
-**出典**（Remote Instances の呼称・Fargateの設定）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/instances.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/cloud.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/adding-a-remote-provisioner.md>
-（参照: 2026-10-04 / commit `c67c506` / 版 v0.7.2）
+#### Fargate の `internal_only`（v0.8.0・セキュリティ上の注意）
 
-**出典**（v0.6.0時点の記述）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/instances.md>
-（参照: 2026-09-13 / commit `8575209` / 版 v0.6.0）
+> **⚠️ セキュリティに直結する設定です。既定は `false`（安全側）で、製品は書き込まず、運用者が `cloud.json` を手で編集します。**
+
+- `cloud.json` の `fargate` ブロックは任意の **`internal_only`**（JSON 真偽値、既定 `false`）を持ちます。Fargate のタスクは user namespace サンドボックスを提供できないため、`internal_only` が無いと crew コンテナは起動を拒否します
+- `true` にすると「このレーンは自分自身の crew だけを動かし、その crew が読むものの危険を自分が負う」と宣言したことになり、コンテナはモデルの subprocess を**サンドボックス無し**で起動し、起動時に警告します
+- 受け入れる露出は、外部の人が入力したプロンプトに限りません。ツール出力・取得した Web ページ・コネクタのペイロード・リポジトリやチケットの本文など、注入を含みうるすべての内容がサンドボックス無しのワーカーに届き、ワーカーは crew の vault にあるモデル資格情報を読めます（`cloud.md` 345-380行、`remote-crew-on-fargate.md` の「Security note」節）
+- **マルチテナントや外部から到達できる crew には設定しません**（`remote-crew-on-fargate.md` が明記）
+- `cloud.json` は、エージェントのファイル編集ツールからの書き込みを拒否される保護対象です（`cloud.md` 410-414行）
+- ブロック内の真偽値フィールドが真偽値でない（例 `"false"` の文字列）と、**ブロック全体が無効**（Fargate の設定が無いのと同じ）になります。ブロックは呼び出しごとに読まれるため、編集は次の要求から有効で、ブロックを消すとレーンも消えます（`remote-crew-on-fargate.md`）
+
+#### Fargate のタスク寿命とデータホーム
+
+- `task_ttl_seconds` の期限は**2か所で強制**されます。`provision` が起動前にクラスタを掃き出すことに加え、起動したタスク自身が `SMC_TASK_TTL_SECONDS` を受け取り、期限を過ぎるとスーパーバイザが essential コンテナを停止します（正常終了のため、クラッシュループとしてコンソールに現れません）。タスク内の期限は、それを含むイメージでのみ有効です（イメージは digest で固定されているため、古い digest で起動したタスクは掃き出しのみで制限されます）（`cloud.md` 212-243行）
+- Fargate タスクのデータホームはタスク自身のディスク上にあり、**タスクが止まるとセッションと transcript は失われます**。永続ストアは設定できません（`remote-crew-on-fargate.md`）
+- Fargate レーンの `POST /api/cloud/launch` は、descriptor の `confirm_before_launch` と同じ値の `confirm_recipient` を要求し、欠落または不一致は `400 recipient_not_confirmed` です。launch したタスクは接続方式 `fargate` で Instances に自動追加されます
+
+**出典**: <https://kiro.dev/docs/crew/features/multi-instance/>・<https://kiro.dev/docs/crew/configuration/>（Page updated 2026-10-20）、CHANGELOG.md v0.7.0節 1101-1102行・v0.8.0節 440-445行（`99e6253`）
+**出典**（Fargate の設定・セキュリティモデル）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/cloud.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/remote-crew-on-fargate.md>
+（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
 
 ## System & storage（リソース監視とディスク回収）
 
-**v0.6.0 で公式ドキュメントに新設されたページの内容です（v0.7.2 で改訂）。** ダッシュボードの **System** 領域は、Crew がマシンに何をしているか・ホストがどれだけの作業を受け入れられるか・セッションがディスクをどれだけ消費しているかを示します。
+**v0.6.0 で公式ドキュメントに新設されたページの内容です（v0.7.2 で改訂、v0.8.0・v0.9.0 でも Crew log と Usage の節が変わっています。Page updated 2026-10-20）。** ダッシュボードの **System** 領域は、Crew がマシンに何をしているか・ホストがどれだけの作業を受け入れられるか・セッションがディスクをどれだけ消費しているかを示します。
 
 ### Tasks: 実行中の作業
 
@@ -160,14 +228,32 @@ Crew は同時実行中のエージェント全体に**1つの集約上限**を�
 
 集約上限は `config.json` の `resource_limits.max_total_memory_mb` と `resource_limits.max_total_processes` で設定します。
 
-### Crew log（任意・既定オフ）（v0.7.0）
+**Windows では、Job object が強制する `resource_limits` のキーは `max_processes` と `max_memory_mb` の2つだけです。** 集約上限の `max_total_memory_mb`・`max_total_processes` を含む残りのキー（`cpu_weight`・`max_cpu_percent`・`max_cpu_seconds`・`max_open_files`）は受理されますが Windows では働かず、設定しているものごとに Gateway が警告を1回ログします（`docs/guides/windows-install.md` 552-556行、`99e6253`。参照: 2026-10-25 / 版 v0.9.0。[02_windows.md](02_windows.md)参照）。
 
-`~/.kiro/crew/.env` に **`KIROCREW_CREW_LOG=1`** を設定して**Gatewayを再起動**すると、新しいセッションについて追記専用のイベント記録が残ります。Crew log パネルはそれを **Status**・**Usage**・**Timeline**・**Tools**・**Approvals** にまとめて表示し、読み取り専用の **`kirocrew-crew-log` MCPサーバ**で、許可されたエージェントが自分の作業単位や自分が起動したセッションを確認できます。
+### Crew log（既定オン）（v0.8.0〜）
 
-- セッションのwork ledgerも同じログを使い、コンテキスト圧縮をまたいで目標・フェーズ・次の手順・却下したアプローチ・artifactへのポインタを保持します。**フラグがオフのときは記録を拒否**し、監査されない別の保存先に逃がしません
-- **既定オフで、有効化にはGatewayの再起動が必要**です。**保存形式はまだpre-release**で、公式ページは生ファイルに対する連携を作らず、パネルとサポートされた読み取りツールを使うよう求めています
+**v0.8.0 から既定でオンです。** Crew はチャットごとに秘匿化したイベント記録を既定で残します。Crew log パネルはそれを **Status**・**Usage**・**Timeline**・**Tools**・**Approvals** にまとめて表示し、許可されたエージェントは Crew log のツールで、自分の作業単位や自分が起動したセッションを読めます。
 
-出典: CHANGELOG.md v0.7.0節 314-318行（`c67c506`）。終了済みのledgerを掃除するCLI（`kirocrew ledger-sweep`）は [04_reference/01_cli-commands.md](../04_reference/01_cli-commands.md) を参照してください。
+- セッションのwork ledgerも同じログを使い、コンテキスト圧縮をまたいで目標・フェーズ・次の手順・却下したアプローチ・artifactへのポインタを保持します。Conductor work board と Issue Radar の crew ledger も同じ記録を使います
+- **無効にするには、Gateway の起動前に環境変数 `KIROCREW_CREW_LOG=0` を設定します**（プロセス全体で記録が止まります）。未設定、空、または `1`・`true`・`yes`・`on` では有効のままです。`0`・`false`・`no`・`off` で無効になり、認識できない値も無効として扱われ、1回ログに出ます（`crew-log-emitter.md` 32-36行）
+- フラグがオフのあいだ、ledger の書き込みは**拒否**され、監査されない別の保存先には逃がされません
+- 会話を削除またはtrashへ移すと、その Crew log も一緒に消えます。Storage 画面は両方を合算します
+- **v0.7.2 までは既定オフで、`KIROCREW_CREW_LOG=1` の設定と再起動が必要でした**（v0.7.0・v0.7.2 の記述）
+
+v0.7.2 の公式 `system/` ページは「保存形式はまだ pre-release」と記述していました。この文は v0.9.0 の公式 `system/` ページと `crew-log-core.md` には見つからないため、本サイトは現状を書きません（未確認）。読み取り専用の **`kirocrew-crew-log` MCP サーバ**は、v0.9.0 のリポジトリの `docs/architecture/mcp.md` 1544行・`crew-log-projection.md` 518行に記載があります（v0.9.0 の公式 `system/` ページはこの名称を挙げず、「Crew log tools」と記述）。
+
+出典: 公式 `system/` ページ（Page updated 2026-10-20）27-33行、CHANGELOG.md v0.8.0節 330-336行（`99e6253`）、`docs/system-specs/modules/crew-log-emitter.md` 32-36行、`docs/system-specs/modules/crew-log-core.md` 160行、公式 `configuration/` ページ159行（`KIROCREW_CREW_LOG`「enabled when unset」）
+（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+終了済みのledgerを掃除するCLI（`kirocrew ledger-sweep`）は [04_reference/01_cli-commands.md](../04_reference/01_cli-commands.md) を参照してください。
+
+### Usage: クレジットと推定トークン（v0.9.0）
+
+- Settings → Overview の **Usage** カードから開く Usage タブに、**Estimated Tokens** カード（今月・先月の入力／出力／合計トークンとモデル要求数）と、Daily History の **Est. tokens** 列があります。Kiro CLI はクレジットを報告しますがトークン数を保存しないため、読めるセッションから推定します。入力は各要求で送った全コンテキスト（キャッシュの有無を問わない）、出力は返信の長さを4で割った値が目安で、tool 呼び出しと推論は含みません。このコンピュータに保存されたセッションだけが対象で、読めなかったセッションがあるとカードがそう表示して数値から除きます
+- 上部バーのクレジット表示から開く **Kiro Account** モーダルは、条件が揃うと、クレジットがリセットまで持つか、今サイクルのペースだと尽きる日を1行で示します。ペースは同じアカウントの他クライアントを含む今サイクルの総消費から出し、この Gateway の Daily History が14日以上あると曜日の傾向も使います。使用状況が読み込み中・リセット日が不明・プランを使い切った・ボーナスクレジットを消費中・サイクルの1日目が終わる前、のいずれかでは表示されません
+- サブエージェントの実行は経過時間の隣にクレジットを表示します（例 `2.40 credits · 1m 5s`）。プロバイダがクレジットを報告しないときは経過時間のみです。cron 実行の結果行は、チャットのターンと同じ usage footer（経過時間・クレジット・モデル）を持ちます
+
+出典: 公式 `system/` ページ（Page updated 2026-10-20）35-52行、CHANGELOG.md v0.9.0節 108-119行（`99e6253`）
+（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
 
 ### Storage: コストを見て容量を回収する
 
@@ -183,32 +269,47 @@ Crew は同時実行中のエージェント全体に**1つの集約上限**を�
 
 ## スナップショットと復元
 
-スナップショットには以下の6項目が含まれます（`features/snapshot/`より）。
+スナップショットには以下の**7項目**が含まれます（公式 `features/snapshot/` 23-33行。Page updated 2026-09-11）。
 
 | コンポーネント | 内容 |
 |---|---|
-| **Memory** | Episodic memory・semantic memory・FTSインデックス |
-| **Workspace** | Preferences・projects・history・knowledge library |
+| **Memory** | `memory.db`・`memory_index.db`・preferences・projects・history・knowledge library（`workspace/memory/` と `workspace/knowledge/`） |
+| **Workspace** | `workspace/` と `plan_memory/` の全体（選択時はメモリのサブツリーを含む） |
 | **Crons** | すべてのスケジュールジョブ |
 | **Config** | 設定・session map・hooks・project/workspaceパス |
 | **Skills** | カスタムスキル定義 |
 | **Notifications** | ダッシュボードの通知履歴 |
+| **Security** | **`telemetry_salt` のみ**。監査署名鍵 `sel_hmac.key` は**含まれず**、復元時に再生成されるため、監査ログの HMAC は書いたホストに結び付いたまま保たれます |
 
 ```bash
 kirocrew snapshot                     # 既定は ~/.kiro/crew/snapshots
+kirocrew snapshot --list              # 既存のスナップショットを一覧
+kirocrew snapshot --keep 7            # 直近7件を保持
 kirocrew restore snapshot.tar.gz      # replace/mergeを自動判定
 ```
 
-既定で08:00 UTCに実行される`kirocrew-daily-snapshot`という組み込みcronジョブが、直近7件のスナップショットを保持します。
+- **ローカルのスナップショットは自動では作られません。** 定期的に取りたい場合は `kirocrew snapshot --keep 7` を自分でスケジュールし、`kirocrew snapshot --list` で作成を確かめます。AWS Control は、設定後に独自の夜間オフホストバックアップを実行します（公式 同ページ62-64行）
+- `kirocrew snapshot --strict`: 書き出した bundle が要求したエントリを省いたとき exit 3 になります（既定は、不完全でも bundle を書いたなら 0）。bundle は残り、prune は保留されます。exit 1 は「使える bundle が作れなかった」の意味のままです（`modules/cli.md` 251・312-318行）
+- 復元は Gateway の停止中に行います（`kirocrew restore` は Gateway が待ち受け中だと実行を拒否し、`--force` はそのポートの待ち受けが別のインスタンスだと分かっているときにだけ使う）。descriptor に固定したトラバーサルができないプラットフォームでは、snapshot と restore は既定で拒否され、`--allow-unpinned-staging` で弱いパスベースのトラバーサルにオプトインできます（公式 同ページ37・49行）
 
-**⚠️ 重要な警告**: **スナップショットには機密データ（監査ログ整合性に使うセキュリティキー）が含まれます**。認証情報と同様に扱い、アクセス権限を制限したストレージに保存し、安全でないチャネルで共有しないでください。
+**⚠️ 重要な警告**: **スナップショットには `telemetry_salt` など機密を含む設定が入ります**。認証情報と同様に扱い、アクセス権限を制限したストレージに保存し、安全でないチャネルで共有しないでください（公式 同ページ66行）。
+
+> **以前の本サイトの記述の訂正（v0.7.2 以前からの誤り）**: 本節は以前、(1) 構成要素を**6項目**、(2) 「既定で08:00 UTCに実行される`kirocrew-daily-snapshot`という組み込みcronジョブが、直近7件のスナップショットを保持」、(3) 「スナップショットには機密データ（監査ログ整合性に使うセキュリティキー）が含まれる」と書いていました。いずれも**誤りでした**。(1) 構成要素は7項目で、追加は Security（`telemetry_salt` のみ）です。(2) `kirocrew-daily-snapshot` は v0.4.1 以前の公式ページには記載がありましたが、**v0.6.0 以降の公式ページ、v0.9.0 の仕様書、CHANGELOG のいずれにも記載がありません**。(3) 監査署名鍵 `sel_hmac.key` は含まれません。公式 `snapshot/` ページは v0.6.0 の時点で既にこの内容で（v0.7.2・v0.9.0 の `.md` は同一）、本サイトが追随していませんでした。
+
+**出典**: <https://kiro.dev/docs/crew/features/snapshot/>（Page updated 2026-09-11）
+**出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/cli.md>
+（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
 
 ## 未確認事項
 
 - マルチインスタンスの詳細な運用手順（公式ページの参照のみで、本サイトでは概要にとどめる）
-- Remote crews の現行UI表示名（公式ドキュメントは「Remote crews」、`instances.md` は「Remote Instances」）
-- Fargateの最大同時タスク数（10）を `cloud.json` で変更できるか（CHANGELOG と公式ページ・`cloud.md` で記述が異なる）
-- Fargate接続方式をダッシュボードから追加できるか（公式ページ・CHANGELOG と `cloud.md`・`adding-a-remote-provisioner.md` で記述が異なる）
+- Fargateの最大同時タスク数（10）を `cloud.json` で変更できるか（**継続**。CHANGELOG v0.7.0節と、公式ページ・`cloud.md` で記述が異なる）
+- Fargate接続方式をダッシュボードから追加できるか（**継続**。公式ページ・CHANGELOG と `cloud.md`・`remote-crew-on-fargate.md` で記述が異なる）
+- 常時稼働ホストのRAMの下限（公式 `running-24-7/` ページは「~10 GB minimum」、リポジトリの `remote-and-mobile.md` は「no single published floor」。**v0.9.0 の再検証で見つかった食い違い**。v0.7.2 の `remote-and-mobile.md` も同じ記述）
+- `scripts/sync-to-remote.sh` の仕様と、公式ページが求めるWALファイルの同期との関係（上記「リモートホスト」節の注記。裁定しない）
+- Crew log の保存形式が pre-release のままかどうか（v0.7.2 の公式ページの記述。v0.9.0 の公式 `system/` ページには見つからない）
+
+> 以前ここに記載していた「Remote crews の現行UI表示名」は、v0.9.0 で公式ドキュメントと `instances.md` がともに「Remote Crew」に統一されたため**解消**として外しました（上記「Remote crews」節参照）。「`instances.enabled` が live か要再起動か」の同一ページ内の記述差も、v0.9.0 の公式ページが起動時に読まれる旨に揃ったため解消しています。
 
 ## 関連リンク
 

@@ -3,14 +3,16 @@
 > **本ページは Kiro Crew（OSS）の仕様です。**
 
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/CHANGELOG.md>
-（参照: 2026-10-04 / commit `c67c506` / 版 v0.7.2）
+（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
 **出典**: <https://github.com/kirodotdev/KiroCrew/releases>
-（参照: 2026-10-04 / commit `c67c506` / 版 v0.7.2）
+（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
 
 ---
 
 ## 📑 このページの内容
 
+- [v0.9.0](#v090)
+- [v0.8.0](#v080)
 - [v0.7.2](#v072)
 - [v0.7.1](#v071)
 - [v0.7.0](#v070)
@@ -27,7 +29,112 @@
 
 ---
 
-> このページは **v0.1.2〜v0.7.2** をCHANGELOG.mdに版節があるものから要約しています。CHANGELOG.mdは開発者向けの詳細記述（PR番号付き・1項目10行超）のため、そのまま転記せず、利用者に影響する変更に絞っています。
+> このページは **v0.1.2〜v0.9.0** をCHANGELOG.mdに版節があるものから要約しています。CHANGELOG.mdは開発者向けの詳細記述（PR番号付き・1項目10行超）のため、そのまま転記せず、利用者に影響する変更に絞っています。
+
+### v0.9.0
+
+| 日付系統 | 値 |
+|---------|-----|
+| CHANGELOG.md | 2026-10-09 |
+| GitHub Release 公開日 | 2026-10-16 |
+
+**出典**: <https://github.com/kirodotdev/KiroCrew/releases/tag/v0.9.0>
+（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+
+> v0.9.0 の CHANGELOG.md・Release 本文には「**Before you upgrade**」節が**ありません**。本サイトは破壊的変更として分類せず、既定値が変わった項目を下に分けて示します。Release 本文は CHANGELOG.md の版節全文に PR 一覧（What's Changed）を付けたものです。
+
+#### 既定値・名称が変わったもの（一次情報で確認したもの）
+
+- **新規インストールの Response Verbosity が Answer only**（既存の設定は保存済みのレベルを維持）。**Ultra レベルは廃止**されました（CHANGELOG.md v0.9.0節 154-156行）
+  → 詳細は [01_features/03_chat.md](../01_features/03_chat.md)
+- **半透明パネルは opt-in**（Settings → Display → View → Translucent panels。既定は不透明のカード）
+  → 詳細は [01_features/03_chat.md](../01_features/03_chat.md)
+- **Agent Capabilities が Customize に改称**（CHANGELOG.md v0.9.0節 150-152行）。公式の一部ページは「Agent Capabilities」のままで、出典間で表記が異なります
+  → 詳細は [01_features/07_agents-skills-steering.md](../01_features/07_agents-skills-steering.md)
+- **`session.watchdog_rss_max_mb` の既定が 0（無効）に戻りました**（v0.7.0〜v0.8.0 は 1536）。CHANGELOG.md と Release 本文に説明はありません（`config.md` 634行・仕様書で確認）
+  → 詳細は [04_reference/02_configuration-keys.md](../04_reference/02_configuration-keys.md)
+
+#### 新機能・変更（利用者に影響するもの・抜粋）
+
+- **crewmate が一目で分かる** — Crewmates ページで開くと目標・完了・実行中・待機中・次の一手を示すカード、プロフィールカード（Permission・Model・Reasoning effort・Schedules・Sessions）、ヘッダーの切り替え
+  → 詳細は [01_features/02_sessions.md](../01_features/02_sessions.md) / [01_features/03_chat.md](../01_features/03_chat.md)
+- **crewmate ごとのダッシュボード（Preview）** — Settings → Developer → Feature Previews → Dynamic Dashboard をオンにすると、Dashboard タブに12種の出荷済みページから選べます。数値は crew log から読み、未計測の値は 0 ではなくダッシュで表示されます
+  → 詳細は [01_features/03_chat.md](../01_features/03_chat.md) / [01_features/12_artifacts.md](../01_features/12_artifacts.md)
+- **リモート crew を生きた窓として開く（Preview）** — Settings → Developer → Feature Previews → Remote crew sessions。相手の transcript・実行状態・承認待ちを窓として開き、このマシンには保存しません。旧 turn relay は廃止され、relay で動いたチャットは読み取り専用です
+  → 詳細は [03_deployment/03_running-24-7.md](../03_deployment/03_running-24-7.md) / [01_features/02_sessions.md](../01_features/02_sessions.md)
+- **コンポーザ** — コンテキストウィンドウの警告、Style Markdown While Typing（既定オフ・beta）、Files タブからのドラッグ、Cmd/Ctrl+Up で直前のメッセージを編集、`! <command>` でシェルコマンドをレビューして実行
+  → 詳細は [01_features/03_chat.md](../01_features/03_chat.md)
+- **メッセージ操作** — Quote、表の Widen、Side Chat の Add to main chat
+  → 詳細は [01_features/03_chat.md](../01_features/03_chat.md)
+- **サイドバー** — 状態別の非表示と Pause all filters、Clean up empty folders、Regenerate title、Mark sessions unread only when they need you
+  → 詳細は [01_features/02_sessions.md](../01_features/02_sessions.md)
+- **チャネル** — Slack でダッシュボードの新規セッションを bot との DM のスレッドに自動で結び付け（`slack.auto_link_sessions`・既定オフ）、Telegram の forum topic と `TELEGRAM_API_BASE_URL`、Telegram・Teams のターン中メッセージは steer またはキュー
+  → 詳細は [01_features/11_interfaces.md](../01_features/11_interfaces.md)
+- **Usage** — Kiro の推定トークン、クレジットがいつ尽きるかの見積り、サブエージェントと cron のクレジット表示
+  → 詳細は [03_deployment/03_running-24-7.md](../03_deployment/03_running-24-7.md)
+- **スケジュール・メモリ・CLI** — 失敗した実行を Ask the agent でチャットへ渡す、保存済みメモリの Restore、`kirocrew memory create-store`、`kirocrew cron add --managed-by`、`kirocrew cloud launch --ami/--extra-packages`、Import / Export に永続チャット履歴
+  → 詳細は [01_features/06_autonomy.md](../01_features/06_autonomy.md) / [01_features/04_memory-and-learning.md](../01_features/04_memory-and-learning.md) / [04_reference/01_cli-commands.md](../04_reference/01_cli-commands.md)
+- **デスクトップ・ターミナル・音声** — ターミナルのカーソル形状と Ctrl+`、画像のコピー、PowerPoint のスライド表示、音声入力の語彙
+  → 詳細は [01_features/03_chat.md](../01_features/03_chat.md)
+- **セキュリティ** — データホームのファイルは `0600`・ディレクトリは `0700`、組み込み App の書き込みルートは dashboard owner のみ、信頼できないチェックアウトの agent spec の hooks はターンループに届かない、ホスト側 git の git hooks は無効。あわせて、既知のギャップの8点目（Design Critique の capture browser の DNS rebinding）が `security-deep-dive.md` に追加されています（CHANGELOG.md に記述なし）
+  → 詳細は [01_features/09_security.md](../01_features/09_security.md) / [03_deployment/04_security-hardening.md](../03_deployment/04_security-hardening.md)
+
+### v0.8.0
+
+| 日付系統 | 値 |
+|---------|-----|
+| CHANGELOG.md | 2026-10-08 |
+| GitHub Release 公開日 | 2026-10-09 |
+
+**出典**: <https://github.com/kirodotdev/KiroCrew/releases/tag/v0.8.0>
+（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+
+> **日付の注記**: 上の CHANGELOG.md の日付は v0.9.0 タグのファイル（187行目）の値です。同じ `[0.8.0]` 節の日付は v0.8.0 タグのファイル（5行目）では 2026-09-27 で、節の本文は変わっていません。日付が変わった理由は一次情報に書かれていません。本サイトは裁定せず、両方を示します。
+>
+> v0.8.0 の CHANGELOG.md・Release 本文には「**Before you upgrade**」節が**ありません**。本サイトは破壊的変更として分類せず、既定値が変わった項目を下に分けて示します。
+
+#### 既定値が変わったもの（一次情報で確認したもの）
+
+- **crew log が既定で記録される**（`KIROCREW_CREW_LOG=0` で無効。v0.7.x は既定オフ）。会話を削除すると crew log も削除され、セッション ledger・conductor の作業ボード・Issue Radar の crew ledger が新規インストールで動きます
+  → 詳細は [01_features/02_sessions.md](../01_features/02_sessions.md) / [03_deployment/03_running-24-7.md](../03_deployment/03_running-24-7.md)
+- **所有者が書いた自動承認リストが保持される**（`mcp.honour_auto_approve`・既定 `true`・変更に再起動が必要）。リストのツールは承認カードと Crew のツールゲートを飛ばします
+  → 詳細は [01_features/09_security.md](../01_features/09_security.md) / [01_features/08_mcp-integration.md](../01_features/08_mcp-integration.md)
+- **サブエージェントの起動に要求する空きメモリが 4.5 GB から、起動後に 2 GB 残る場合へ**（`agent.spawn_min_memory_gb` の既定 2.0。`config.md` は旧既定を 4.0 と記述）
+  → 詳細は [01_features/06_autonomy.md](../01_features/06_autonomy.md)
+- **単一タスクの委任に理由を要求する拒否がなくなりました**（CHANGELOG.md v0.8.0節）。公式 Subagents ページは拒否すると記述したままで、出典間で食い違います
+  → 詳細は [01_features/06_autonomy.md](../01_features/06_autonomy.md)
+- **`agent.max_subagents` 0（自動）・`agent.subagent_auto_max` 32 に `config.md` が一致**（v0.7.2 の `config.md` は 3 と 16 で、`subagent.md` と食い違っていた）
+  → 詳細は [04_reference/02_configuration-keys.md](../04_reference/02_configuration-keys.md)
+
+#### 新機能・変更（利用者に影響するもの・抜粋）
+
+- **監視ループが必要なときだけ起こす** — wake judge（Quiet check-ins）、レビューやコメントでも起床、マージ・クローズで終了、`monitoring.max_runtime_secs`
+  → 詳細は [01_features/17_workflows.md](../01_features/17_workflows.md)
+- **デスクトップアプリが Kiro CLI を同梱**（macOS・Linux・Windows）。サインイン後すぐ動きます
+  → 詳細は [03_deployment/01_installation.md](../03_deployment/01_installation.md)
+- **認証情報の秘匿化が読める** — 除去された認証情報のカード、ブロックされたリンクの Open once／Allow for this host／Inspect、ファイル表示の秘匿化トグル（既定オン）
+  → 詳細は [01_features/09_security.md](../01_features/09_security.md)
+- **厳格なサンドボックス層** — `agent.sandbox` に `strict`。承認の再検査（approval floor）、設定ファイルの書き換え禁止
+  → 詳細は [01_features/09_security.md](../01_features/09_security.md) / [03_deployment/04_security-hardening.md](../03_deployment/04_security-hardening.md)
+- **チャットの設定と操作** — Message Font Size、ターンのミニマップ（スクラブ・位置選択）、Chat 設定を名前付きグループに整理
+  → 詳細は [01_features/03_chat.md](../01_features/03_chat.md)
+- **フォルダとタグ** — フォルダごとの追加 steering ディレクトリ、フォルダの並び順、conductor ビュー、タグごとの Agent permissions、`dashboard.title_refresh_every_turns`
+  → 詳細は [01_features/02_sessions.md](../01_features/02_sessions.md) / [01_features/07_agents-skills-steering.md](../01_features/07_agents-skills-steering.md)
+- **Agent templates タブと crewmate の表示名** — テンプレートの作成・複製・編集、Chat with this template／Enroll as crewmate
+  → 詳細は [01_features/07_agents-skills-steering.md](../01_features/07_agents-skills-steering.md)
+- **チームと Decisions (Jev)（Preview）** — Crew Members preview の teams、Quiet check-ins、Auto (Jev)
+  → 詳細は [01_features/03_chat.md](../01_features/03_chat.md) / [01_features/17_workflows.md](../01_features/17_workflows.md)
+- **メモリを切り替えられる** — `memory.persistence_enabled`・`memory.inject_memory`・`memory.inject_lessons`・`memory.inject_activity`
+  → 詳細は [01_features/04_memory-and-learning.md](../01_features/04_memory-and-learning.md)
+- **App・MCP** — MCP App からチャットへメッセージを送る、共有 MCP バックエンドの Stub レビュー（Developer Mode）、WeCom のファイル送信、Code Review Sage の Requests タブ、Tool Search（kiro-cli 2.27.0 以上）
+  （管理対象サーバに `kirocrew-debug` が加わっていますが、CHANGELOG.md に記述はありません。`architecture/mcp.md` と `docs/reference/debug/README.md` で確認した内容は、下記リンク先に記載しています）
+  → 詳細は [01_features/10_apps.md](../01_features/10_apps.md) / [01_features/08_mcp-integration.md](../01_features/08_mcp-integration.md) / [04_reference/04_mcp-tools.md](../04_reference/04_mcp-tools.md)
+- **DeepSeek Harness（Preview・Developer Mode）と hooks の作成** — Agent Backends の選択肢が8種に。Hooks ページで Kiro Agent の11トリガーのフックを書けます
+  → 詳細は [01_features/15_agent-backends.md](../01_features/15_agent-backends.md) / [01_features/07_agents-skills-steering.md](../01_features/07_agents-skills-steering.md)
+- **リモート crew** — EC2 のサブネット指定、crew の連鎖（2ホップまで）、Fargate レーンの `internal_only`（既定 `false`・サンドボックスなしで動く宣言）
+  → 詳細は [03_deployment/03_running-24-7.md](../03_deployment/03_running-24-7.md)
+- **コマンドライン** — `kirocrew cron add` が script・command・ワンショットを含むすべてのジョブを登録、`kirocrew doctor` がスキルのずれを報告、Browser パネルが追加ポート転送なしでトンネル越しに動作
+  → 詳細は [04_reference/01_cli-commands.md](../04_reference/01_cli-commands.md) / [01_features/13_computer-and-browser.md](../01_features/13_computer-and-browser.md)
 
 ### v0.7.2
 

@@ -45,7 +45,7 @@ LEDGER_DIR = os.environ.get("KCD_LEDGER_DIR") or "scripts/kiro-crew-docs/ledgers
 LEDGER_PAGES = os.path.join(LEDGER_DIR, "official-pages.md")
 LEDGER_MODULES = os.path.join(LEDGER_DIR, "modules.md")
 EXPECTED_OFFICIAL_PAGES = 49
-EXPECTED_MODULES = 104  # v0.7.2タグ実測（直下3/common7/modules94。.mdのみは101）。v0.6.0タグは88
+EXPECTED_MODULES = 107  # v0.9.0タグ実測（直下3/common8/modules96。.mdのみは104）。v0.7.2タグは104
 
 ROW_RE = re.compile(r'^\|\s*(\d+)\s*\|\s*`([^`]+)`\s*\|\s*(.+?)\s*\|', re.M)
 

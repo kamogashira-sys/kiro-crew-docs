@@ -9,11 +9,10 @@
     check-counts.py が「表の実体 vs 宣言件数」を見るのに対し、本スクリプトは
     「文書 A の値 vs 文書 B の値 vs SSoT 定数」を見る。
 
-Crew 固有の最重要検証: **両併記4件の対称性**（出典間で値が食い違うため裁定せず
+Crew 固有の最重要検証: **両併記3件の対称性**（出典間で値が食い違うため裁定せず
 両方を書く決まりにしたもの。片方のページだけ書いて他方に書き忘れると
 「裁定した」ように読めてしまう）:
     S3a  版の日付（CHANGELOG日付 vs Release公開日）
-    S15  Subagent上限（subagent.md=32 vs config.md=16）
     S22  サンドボックス呼称（公式docsのauto vs README/内部ティアのstandard）
     S24  コンテキストバジェット（公式memoryページ「~55K tokens」 vs リポジトリ 33,000文字。v0.7.0〜）
 
@@ -50,7 +49,7 @@ EXTRA_SCAN_GLOBS = (
     "Makefile",
 )
 
-# 両併記が必須の4件。それぞれ「両方の値が同一ページに存在するか」を検証する。
+# 両併記が必須の3件。それぞれ「両方の値が同一ページに存在するか」を検証する。
 DUAL_NOTATION = [
     {
         "id": "S3a", "label": "版の日付（CHANGELOG vs Release公開日）",
@@ -58,12 +57,8 @@ DUAL_NOTATION = [
         "pattern_b": re.compile(r"Release\s*公開日|公開日"),
         "target_glob": f"{DOC_ROOT}/02_update/01_changelog.md",
     },
-    {
-        "id": "S15", "label": "Subagent上限（32 vs 16）",
-        "pattern_a": re.compile(r"subagent_auto_max[^\n]{0,40}?`subagent\.md`\s*[:：]\s*32\b"),
-        "pattern_b": re.compile(r"subagent_auto_max[^\n]{0,40}?`config\.md`\s*[:：]\s*16\b"),
-        "target_glob": f"{DOC_ROOT}/04_reference/05_limits.md",
-    },
+    # S15（Subagent上限 32 vs 16）は v0.9.0 で `config.md` が `subagent.md` と一致し、食い違いが解消したため
+    # 両併記の検査対象から外した（UPDATE_GUIDE §18。解消済みの食い違いを併記し続けない）。
     {
         "id": "S22", "label": "サンドボックス呼称（auto vs standard）",
         "pattern_a": re.compile(r"`auto`"),
@@ -113,16 +108,16 @@ SSOT = [
      # 「特定の2ページ」を指す表現が実在し、1桁を許すと誤検知になる。公式ページの
      # 総数は2桁以上であるため、この制約で総数の指し先だけを拾える。
      "extra_patterns": [re.compile(r"公式\s*(\d{2,4})\s*ページ")]},
-    {"id": "S2", "label": "リポジトリdocs配下ファイル数", "value": "281",
+    {"id": "S2", "label": "リポジトリdocs配下ファイル数", "value": "349",
      "pattern": re.compile(r"(?:リポジトリ`docs/`配下ファイル数|`docs/`\s*配下は)\D{0,8}?\**\s*(\d{1,5})\s*\**")},
-    {"id": "S3", "label": "最新安定版", "value": "0.7.2",
+    {"id": "S3", "label": "最新安定版", "value": "0.9.0",
      "pattern": re.compile(r"最新安定版\D{0,8}?\**\s*v(\d+\.\d+\.\d+)\s*\**")},
-    {"id": "S4", "label": "安定版リリース数", "value": "13",
+    {"id": "S4", "label": "安定版リリース数", "value": "15",
      "pattern": re.compile(r"安定版リリース数\D{0,8}?\**\s*(\d{1,4})\s*\**")},
-    {"id": "S5", "label": "総リリース数", "value": "77",
+    {"id": "S5", "label": "総リリース数", "value": "95",
      "pattern": re.compile(r"総リリース数(?:（プレリリース含む）)?\D{0,8}?\**\s*(\d{1,4})\s*\**"),
      "extra_patterns": [re.compile(r"全\s*(\d{1,4})\s*Release")]},
-    {"id": "S6", "label": "CHANGELOG.mdの版節数", "value": "11",
+    {"id": "S6", "label": "CHANGELOG.mdの版節数", "value": "13",
      "pattern": re.compile(r"CHANGELOG\.mdの版節数\D{0,8}?\**\s*(\d{1,3})\s*\**")},
 ]
 

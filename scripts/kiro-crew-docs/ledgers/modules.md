@@ -1,8 +1,8 @@
-# `docs/system-specs/` 全104ファイル 扱う／扱わない台帳
+# `docs/system-specs/` 全107ファイル 扱う／扱わない台帳
 
-- **取得日**: 2026-10-04
-- **commit SHA**: `c67c506`（版 v0.7.2）
-- **数え方**: `find docs/system-specs -type f` の**全ファイル**（Markdown 101件＋`modules/examples/workflows/*.py` 3件＝**104件**。v0.6.0 は 85＋3＝88件）。`.md` のみを数えると85件になるため、件数を引用する際は数え方を明示すること
+- **取得日**: 2026-10-25
+- **commit SHA**: `99e6253`（版 v0.9.0）
+- **数え方**: `find docs/system-specs -type f` の**全ファイル**（Markdown 104件＋`modules/examples/workflows/*.py` 3件＝**107件**。v0.7.2 は 101＋3＝104件、v0.6.0 は 85＋3＝88件）。`.md` のみを数えると85件になるため、件数を引用する際は数え方を明示すること
 - **判定基準**: 冒頭500バイトに `removed` / `no longer exist` / `legacy` / `deprecated` の断りがあるものを「出典にしない（削除済み・移行専用）」の候補とし、**ファイル全体の文脈を人手で確認**して最終判定する（機械検出だけでは `acp-client.md`・`config.md` のように内部に部分的な legacy 言及があるだけのファイルを誤って除外するため）
 - **検証**: `check-coverage.py` の入力データ。合計欄が実測と一致し、判定漏れが0件であることを機械検証する
 
@@ -12,6 +12,8 @@
 >
 > **v0.7.2更新（2026-10-04・`c67c506`）**: 実測**104件**（直下3・common 7・modules 90・modules/examples/workflows 4）。v0.6.0 からの差分は**新規16件（すべて `modules/`）・消滅0件**（88＋16＝104）。新規16件の判定は「扱う」6件・「開発者向け・出典にしない」9件・「未割当・扱わない」1件（`monitor-architecture.md`）。新規16件の冒頭500バイトに `removed`／`no longer exist`／`legacy`／`deprecated` は0件。
 
+> **v0.9.0更新（2026-10-25・`99e6253`）**: 実測**107件**（直下3・common 8・modules 92・modules/examples/workflows 4）。v0.7.2 からの差分は**新規4件・消滅1件**（104＋4−1＝107）。新規4件は `common/take-away-changes.md`・`modules/dashboard-instances.md`・`modules/dashboard-templates.md`・`modules/runtime-ownership.md`、消滅1件は `modules/autopilot.md`（v0.8.0 タグには存在し、v0.9.0 タグには存在しない）。新規4件の判定は「開発者向け・出典にしない」2件・「未割当・扱わない」2件。`modules/monitor-architecture.md` は `01_features/17_workflows.md` が引用したため「未割当」から「扱う」へ変更した。
+
 ## 直下（3ファイル）
 
 | ファイル | 扱い | 担当ページ / 理由 |
@@ -20,7 +22,7 @@
 | `oss-fork-boundaries.md` | 開発者向け・出典にしない | 実装規約・開発者向けの手順 **【v0.6.0新規】** |
 | `post-launch-removals.md` | 移行専用・出典にしない | 「ローンチ後に削除予定のコード」の台帳。旧データホーム `~/.kirocrew` の記述を含むため誤記の危険がある。**唯一の例外**: 「旧パス `~/.kirocrew` は現行では使わない」の出典としてのみ `04_reference/03_directory-layout.md` で言及（S20） |
 
-## common（7ファイル）
+## common（8ファイル）
 
 | ファイル | 扱い | 担当ページ / 理由 |
 |---------|------|------------------|
@@ -31,8 +33,9 @@
 | `common/model-selection.md` | 開発者向け・出典にしない | 実装規約・開発者向けの手順 **【v0.6.0新規】** |
 | `common/platform-compat.md` | 開発者向け・出典にしない | 実装規約・開発者向けの手順 **【v0.6.0新規】** |
 | `common/testing-conventions.md` | 開発者向け・出典にしない | 出典にしない |
+| `common/take-away-changes.md` | 開発者向け・出典にしない | 何かを取り除く変更のレビュー規約（Crew 開発者向け） **【v0.9.0新規】** |
 
-## modules（90ファイル）
+## modules（92ファイル）
 
 | ファイル | 扱い | 担当ページ / 理由 |
 |---------|------|------------------|
@@ -44,7 +47,6 @@
 | `modules/app-notifications.md` | 扱う（機能解説の出典） | `10_apps.md`（App 通知の仕組みとして触れる） **【v0.6.0で `features/` から移動】** |
 | `modules/artifacts.md` | 扱う（機能解説の出典） | `12_artifacts.md` |
 | `modules/auto-improvement.md` | 扱う（builtin App の説明として） | `04_memory-and-learning.md`（Self-evolving） |
-| `modules/autopilot.md` | 扱う（機能解説の出典） | `03_chat.md`（Autopilot） |
 | `modules/aws-control.md` | 扱う（機能解説の出典） | AWS Control builtin App → `01_features/16_aws-control.md` **【v0.6.0新規】** |
 | `modules/babysit-pr-watch.md` | 扱う（機能解説の出典） | PR監視ループ → `01_features/17_workflows.md` **【v0.6.0で `features/` から移動】** |
 | `modules/browser.md` | 扱う（機能解説の出典） | `13_computer-and-browser.md`（ブラウザ自動化。MCPでないことを明記） |
@@ -64,6 +66,8 @@
 | `modules/crew-log-emitter.md` | 開発者向け・出典にしない | Crew log の書き込み側の内部実装 **【v0.7.x新規】** |
 | `modules/crew-log-projection.md` | 開発者向け・出典にしない | Crew log の表示用 fold の内部実装 **【v0.7.x新規】** |
 | `modules/crew-mode.md` | 扱う（機能解説の出典） | Crew Mode → `01_features/02_sessions.md` **【v0.6.0新規】** |
+| `modules/dashboard-instances.md` | 未割当・扱わない | crewmate ごとのダッシュボードインスタンス（Dynamic Dashboard プレビューの内部仕様）。`01_features/12_artifacts.md` は公式ページと `artifacts.md` を出典にしており本ファイルは未引用。**【v0.9.0新規】** |
+| `modules/dashboard-templates.md` | 未割当・扱わない | ダッシュボードページのテンプレート作成仕様（Dynamic Dashboard プレビューの内部仕様）。`01_features/12_artifacts.md` は本ファイルを未引用。**【v0.9.0新規】** |
 | `modules/dashboard-token-auth.md` | 扱う（機能解説の出典） | `04_reference/02_configuration-keys.md`（ダッシュボードのトークン認証） **【v0.6.0で `features/` から移動】** |
 | `modules/decisions.md` | 扱う（機能解説の出典） | Jev（Decisions・Preview）→ `01_features/03_chat.md` **【v0.7.x新規】** |
 | `modules/dev-fleet.md` | 扱う（builtin App の説明として） | `10_apps.md`（builtin App「Dev Fleet」の説明として） |
@@ -93,7 +97,7 @@
 | `modules/microsoft-graph-runtime.md` | 開発者向け・出典にしない | Microsoft Graph 系コネクタの共通ロジック **【v0.7.x新規】** |
 | `modules/mochi.md` | 扱う（builtin App の説明として） | `10_apps.md`（builtin App「Mochi」の説明として） |
 | `modules/model-fallback.md` | 扱う（機能解説の出典） | モデルのフォールバック → `01_features/02_sessions.md` **【v0.6.0で `features/` から移動】** |
-| `modules/monitor-architecture.md` | 未割当・扱わない | 監視ループの共通設計。`01_features/17_workflows.md` は公式ページと `babysit-pr-watch.md` 等を出典にしており本ファイルは未引用。次回更新で扱いを再判定 **【v0.7.x新規】** |
+| `modules/monitor-architecture.md` | 扱う（機能解説の出典） | 監視ループの共通設計 → `01_features/17_workflows.md`（conductor の既定パトロール・`monitoring.max_runtime_secs`）。v0.7.2 では未引用だった |
 | `modules/onboarding-import.md` | 扱う（機能解説の出典） | `14_migration-import.md` |
 | `modules/ops-mission-control.md` | 扱う（builtin App の説明として） | `10_apps.md`（builtin App「Ops Mission Control」の説明として） |
 | `modules/papyrus.md` | 扱う（builtin App の説明として） | `10_apps.md`（builtin App「Papyrus」の説明として） |
@@ -105,6 +109,7 @@
 | `modules/prompt-optimizer.md` | 扱う（機能解説の出典） | `03_chat.md`（Prompt Optimizer） **【v0.6.0で `features/` から移動】** |
 | `modules/providers.md` | 扱う（機能解説の出典） | `01_architecture.md`（`agent.provider` が `acp` 固定・削除済みプロバイダ） |
 | `modules/README.md` | 索引・出典にしない | `modules` の索引 |
+| `modules/runtime-ownership.md` | 開発者向け・出典にしない | エージェントランタイムのプロセス所有権の設計（lease と tenancy）。実装者向けの内部設計 **【v0.9.0新規】** |
 | `modules/security.md` | 扱う（機能解説の出典） | `09_security.md`・`03_deployment/04_security-hardening.md` |
 | `modules/sel.md` | 扱う（機能解説の出典） | `09_security.md`（SEL・HMACチェーン） |
 | `modules/session-control.md` | 扱う（機能解説の出典） | セッション制御（create/stop/send-to）。`agent.session_control` → `01_features/17_workflows.md` |
@@ -142,9 +147,9 @@
 | 扱う（機能解説の出典） | 62 |
 | 扱う（builtin App の説明として） | 10 |
 | 索引・出典にしない | 4 |
-| 開発者向け・出典にしない | 20 |
+| 開発者向け・出典にしない | 22 |
 | UI詳細・粒度超過で出典にしない | 2 |
 | サンプルコード・出典にしない | 3 |
 | 移行専用・出典にしない | 1 |
-| 未割当・扱わない | 2 |
-| **合計** | **104**（全ファイルに判定あり。判定漏れ0件） |
+| 未割当・扱わない | 3 |
+| **合計** | **107**（全ファイルに判定あり。判定漏れ0件） |

@@ -7,6 +7,9 @@
 （参照: 2026-08-29 / commit `bba3f195212992eaa07d83c082e1ec55e395c32b` / 版 v0.4.1）
 **出典**（v0.7.0での変更・Node.js要件とvenvパスの再測定・版ピン留めの下限）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md>
 （参照: 2026-10-04 / commit `c67c506` / 版 v0.7.2）
+**出典**（v0.9.0での再検証: 前提要件・導入経路・管理対象venvの更新・デスクトップ版の自動更新）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/windows-install.md>
+（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+**出典**（v0.9.0）: <https://kiro.dev/docs/crew/installation/>（Page updated 2026-10-20）
 
 ---
 
@@ -16,6 +19,8 @@
 - [デスクトップ版の配布物](#デスクトップ版の配布物)
 - [チャネル（stable/insider/nightly）](#チャネルstableinsidernightly)
 - [前提要件](#前提要件)
+- [v0.9.0での変更](#v090での変更)
+- [v0.8.0での変更](#v080での変更)
 - [v0.7.0での変更](#v070での変更)
 - [v0.6.0での変更](#v060での変更)
 - [v0.4.0での変更](#v040での変更)
@@ -28,10 +33,10 @@
 
 | 経路 | 同梱物 | 特徴 |
 |------|-------|------|
-| **デスクトップアプリ（Electron）** | Pythonバックエンド一式＋フロントエンド | ローカルGatewayを自動起動。ダウンロードしたチャネルで自動更新。SSHトンネル経由でリモートGatewayに接続可能 |
+| **デスクトップアプリ（Electron）** | Pythonバックエンド一式＋フロントエンド。**Kiro CLIも同梱**（v0.8.0〜。下記「[v0.8.0での変更](#v080での変更)」参照） | ローカルGatewayを自動起動。ダウンロードしたチャネルで自動更新。SSHトンネル経由でリモートGatewayに接続可能 |
 | **ワンライナー（署名済みwheel）** | – | `curl -fsSL https://download.crew.kiro.dev/cli.sh \| sh`。sha256検証済み。cloneもnpmもローカルビルドも不要 |
 | **Docker** | – | `linux/amd64`・`linux/arm64` の両方を全タグで提供 |
-| **ソースインストール** | 何も同梱しない | Windowsの唯一のサポート経路（[02_windows.md](02_windows.md)参照） |
+| **ソースインストール** | 何も同梱しない | Windowsでは署名済みデスクトップインストーラ（v0.4.0〜）と並ぶ導入経路（[02_windows.md](02_windows.md)参照）。`install.md` 10行は「Windows supports both the signed desktop installer and a native Python source install」と記述。**本サイトは以前「Windowsの唯一のサポート経路」と書いていましたが、これは誤りでした**（同ページのデスクトップ版の配布物表・v0.4.0節の記述と矛盾しており、v0.7.2 以前からの誤り） |
 
 ## デスクトップ版の配布物
 
@@ -41,7 +46,7 @@
 | **Linux x86_64** | `.AppImage`（独自のビルド・auto-update feed・SLSA provenance attestationを持つ） |
 | **Linux aarch64**（Graviton・Raspberry Pi・ARMラップトップ向け） | `.AppImage`（同上。x86_64とは**独立したレーン**） |
 | **Linux desktop packages** | `.deb` / `.rpm`。glibc 2.34以上が必要。古いhostはone-line CLI installを利用 |
-| **Windows** | **署名済みinstaller**をstable配布。in-app auto-updateに対応 |
+| **Windows** | **署名済みinstaller**をstable配布。in-app auto-updateに対応。v0.9.0 の `windows-install.md` 24-39行によれば、インストーラは nightly・insider・stable の**全チャネル**で公開される（Windowsビルドが失敗したreleaseはインストーラ無しで出る）。Authenticode署名済みだが、署名後も新しいファイルハッシュの初回ダウンロードではSmartScreenの警告が出ることがある。詳細は[02_windows.md](02_windows.md)参照 |
 
 `uname -m` で `x86_64` か `aarch64` かを確認できます。
 
@@ -63,20 +68,62 @@ curl -fsSL https://download.crew.kiro.dev/cli.sh | sh -s -- --version 0.6.0
 **`--version` でピン留めできる最小の版は `0.1.2` です。** `--version` は版ごとの署名済みマニフェストを解決し、マニフェストが無いとインストールは失敗します（fail closed）。`0.1.0`・`0.1.1` は公開されていますが署名済みマニフェストを持たないため、**インストーラではインストールできません**（バックフィルもされません）。ロールバック手順書が `0.1.0`・`0.1.1` を指定している場合は `0.1.2` 以降に変えるか、`--version` を外して現行の `stable` を使います（`docs/guides/install.md` 172-193行）。**本サイトは以前、例として `--version 0.1.0` を掲載していました**（v0.6.0 の `install.md` 133行の例に従っていた）。v0.7.2 の `install.md` 160行の例は `--version 0.6.0` です。
 
 > ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**
-> - 公式 `installation/` ページ（`docs_md/installation.md` 55-56行）は「Pin an exact version」の例として `--version 0.1.0` を掲載しています
-> - リポジトリの `docs/guides/install.md` 172-176行は「`0.1.0` and `0.1.1` … cannot be installed by the installer」と記述しています
+> - 公式 `installation/` ページ（`docs_md/installation.md` 62行。v0.9.0・Page updated 2026-10-20）は「Pin an exact version」の例として `--version 0.1.0` を掲載しています
+> - リポジトリの `docs/guides/install.md` 172-177行（`99e6253`）は「`0.1.0` and `0.1.1` … cannot be installed by the installer」と記述しています
 
 インストーラはwheelのダイジェストを署名済みマニフェストと照合し、不一致なら**インストールを拒否**します（チェックサムのみのフォールバックはありません）。`pipx`が使えればそれを使い、無ければ管理対象venv（`~/.kiro/crew-venv`。`KIROCREW_VENV`で変更可）を**データホームの外**に作成します（ホーム全体を操作する処理が動いているインタープリタを削除しないため）。選択したチャネルは `~/.kiro/crew/channel` に記録されます。
+
+**管理対象venvの更新（v0.9.0 の `install.md` 200-215行）**: `kirocrew update`・アプリ内の承認済み更新・Gatewayの自動更新は、新版ごとに隣へ `crew-venv-<version>`（依存込みで約350 MiB）を作り、`crew-venv-current` リンクを切り替えます。更新後に残すのは、現行の木・1つ前の木（復旧先）・実行中の `kirocrew` プロセスが使っている木で、それより古いものは削除されます。インストーラの直接実行は、固定の `crew-venv` をその場で作り直します。`~/.kiro/crew-venv` というパス自体の記述は変わっていません。
 
 ## 前提要件
 
 | 要件 | 用途 | 下限 |
 |------|------|------|
 | **Python** | バックエンド | **`>= 3.12`**（v0.6.0で3.10から引き上げ。`pyproject.toml` の `requires-python`） |
-| **Node.js + npm** | ダッシュボードのビルド | **`>= 22`**（Node 24 LTS推奨。ビルド時のみ必要。事前ビルド済みwheel/DMG/AppImage/`.deb`/`.rpm`の利用者はNode不要）。**本サイトは以前 `20 \|\| >= 22` と記載していましたが、これは v0.3.0〜v0.4.1 時点の `install.md` 40行の値で、v0.6.0 の `install.md` 40行は既に `>= 22` でした**（v0.7.2 も同じ。下記「[v0.3.0での変更](#v030での変更)」の注記参照） |
-| **`kiro-cli`** | LLM駆動 | 必須 |
+| **Node.js + npm** | ダッシュボードのビルド | リポジトリの `install.md` 40行は **`>= 22.12.0`**（`website/package.json` の `engines`。Node 24 LTS推奨。ビルド時のみ必要。事前ビルド済みwheel/DMG/AppImage/`.deb`/`.rpm`の利用者はNode不要）。**公式 `installation/` ページ（16・75行）は「Node.js 22+」のままで、書き分けが生じています**（下記の注記参照）。`kirocrew doctor` は `node` が 22.12.0 未満だと失敗（exit 1）として報告します（`modules/cli.md` 1194行）。**本サイトは以前 `20 \|\| >= 22` と記載していましたが、これは v0.3.0〜v0.4.1 時点の `install.md` 40行の値で、v0.6.0 の `install.md` 40行は既に `>= 22` でした**（下記「[v0.3.0での変更](#v030での変更)」の注記参照） |
+| **Kiro CLI（`kiro-cli`）** | LLM駆動 | デスクトップアプリ（macOS・Linux・Windows）は動作確認済みのKiro CLIを**同梱**します（v0.8.0〜。公式 `installation/` ページ17・21-25行）。wheel・ソース・Docker・リモートGatewayでは、Gatewayホストへの導入が必要です。Crewは、絶対パスの `KIROCREW_KIRO_BIN` が指定されていればそれを最優先で選び、無い場合にデスクトップアプリは同梱版をシステム／`PATH` 上のものより先に使います。`kirocrew doctor` は選ばれたバイナリとサインイン状態を報告します |
 
-出典（Node.js要件）: `docs/guides/install.md` 40-45行（`c67c506`）、公式 `installation/` ページ（`docs_md/installation.md` 16・69行「Node.js 22+」）。
+> ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**（Node.jsの下限）
+> - リポジトリ `docs/guides/install.md` 40行・`docs/guides/windows-install.md` 191行・`docs/system-specs/modules/cli.md` 1194行（`99e6253`）: `22.12.0`（`cli.md` は `MIN_NODE_VERSION` ＝ 22.12.0 を `doctor` が検査すると記述）
+> - 公式 `installation/` ページ（`docs_md/installation.md` 16・75行。Page updated 2026-10-20）: 「Node.js 22+」
+>
+> v0.7.2 の `install.md` 40行は `>= 22` で公式と一致していました（v0.8.0 の `install.md` にも `22.12.0` の記載はありません）。
+
+> ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**（デスクトップアプリがKiro CLIを同梱するか）
+> - 公式 `installation/` ページ（17・21-25行）・CHANGELOG.md v0.8.0節 214-218・666-668行（`99e6253`）・`install.md` 573-577行: デスクトップアプリはKiro CLIを同梱する
+> - リポジトリ `README.md` 51-52行: 「`kiro-cli`, which you install and sign in to separately」。`windows-install.md` 80行: Windowsインストーラの Finish ページが「the default Kiro agent needs Kiro CLI」と案内する（`windows-install.md` 189行の前提表は、ソースインストールの文脈で `kiro-cli` を「install and sign in separately」と記述）
+> - 公式 `installation/` ページ内にも、157行の Info 注記（デスクトップアプリが「guides kiro-cli installation and sign-in from the app itself」）と、17・21-25行の同梱の記述があります
+
+出典（Node.js要件）: `docs/guides/install.md` 40行・`docs/guides/windows-install.md` 191行・`docs/system-specs/modules/cli.md` 1194行、公式 `installation/` ページ（`docs_md/installation.md` 16・75行）。
+（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0。公式ページは Page updated 2026-10-20）
+出典（Kiro CLIの同梱）: 公式 `installation/` ページ（`docs_md/installation.md` 17・21-25行）、CHANGELOG.md v0.8.0節 214-218・666-668行（`99e6253`）、`docs/guides/install.md` 573-577行、`README.md` 51-52行。
+（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+
+## v0.9.0での変更
+
+v0.9.0 に「Before you upgrade」節はありません。以下のうち、CHANGELOG.md v0.9.0節が説明するのは最初の項目だけです。それ以外は **v0.9.0 タグの `docs/guides/install.md`・`windows-install.md` で確認した内容で、CHANGELOG/Release 本文は説明していません**（v0.8.0 タグの `install.md` には、`22.12.0`・`crew-venv-current`・「Install app updates automatically」・`KIROCREW_INSTALL_PLAIN` の記載が無いことを確認済み）。
+
+- **インストーラの進捗表示**: 端末ではwheelのダウンロードにcurlの進捗バーが出て、遅い手順（venv作成・pip）は1行のライブ進捗を描きます。**`KIROCREW_INSTALL_PLAIN=1`** で止められ、パイプやログへの出力はこの状態になります（ダウンロードは無音、遅い手順は30秒ごとに `still running`、各手順の終わりに `done` を1行出す）。CHANGELOG.md v0.9.0節 168-172行は「The installer shows live progress, a Windows installer exit 17 names its cause」と記述しています
+- **Node.jsの下限が `22.12.0` と書かれた**: リポジトリ側の記述です（公式 `installation/` ページは「22+」のまま）。上記「[前提要件](#前提要件)」の食い違い注記を参照してください
+- **管理対象venvの更新方式**: 新版ごとに `crew-venv-<version>` を作って `crew-venv-current` を切り替えます（上記「[4つの導入経路](#4つの導入経路)」節末尾の説明。`install.md` 200-215行）
+- **`KIROCREW_ALLOW_SOURCE_BUILDS=1` の説明が変わりました**: 下記「[v0.7.0での変更](#v070での変更)」の該当項目を参照してください（`install.md` 259-268行）
+- **デスクトップ版の自動更新**（`install.md` 470-485行）: 既定では新しいreleaseをバックグラウンドでダウンロードし、アプリの終了時に導入します（ウィンドウを閉じるとトレイに隠れるだけです）。About ページの **Install app updates automatically** をオフにすると、更新ごとに確認してからダウンロードします。DMGや読み取り専用ボリュームからの起動、macOSのtranslocatedコピー、書き込めないディレクトリのAppImage、不明なパッケージ形式、`EXTERNALLY-MANAGED`、非パッケージビルドではupdaterが無効で、About がその旨を表示します。ローカルビルドのアプリはstableチャネルより先の版として刻印され、新しいreleaseが出るまで更新されません。AppImageは `PATH` に `kirocrew` ランチャを置きません
+- **Windows**: デスクトップ版のインストーラの現状は [02_windows.md](02_windows.md) を参照してください
+
+**出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/docker.md>
+（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+出典: CHANGELOG.md v0.9.0節 168-172行（`99e6253`）
+
+## v0.8.0での変更
+
+v0.8.0 に「Before you upgrade」節はありません。
+
+- **デスクトップアプリがKiro CLIを同梱**: macOS・Linux・Windowsの新規インストールは、サインインだけでエージェントが動きます。セットアップ画面は、同梱版の絶対パス付きサインインコマンドを表示します（CHANGELOG.md v0.8.0節 214-218行）。同梱版は kiro-cli 2.27.1 です（同 666-668行）
+- **Kiro CLIの選択順**（v0.9.0 時点の公式ページ・`install.md` の記述）: 絶対パスの `KIROCREW_KIRO_BIN` が最優先、次にデスクトップアプリの同梱版、その次にシステム／`PATH` 上のものです（公式 `installation/` ページ21-25行、`install.md` 573-577行）。wheel・ソース・Docker・リモートGatewayでは、従来どおりGatewayホストにKiro CLIが必要です
+- **wheel の extras の記載**（`install.md` 428-437行・594行、`docker.md` 3-8行）: `voice-aws`（`boto3`＋`amazon-transcribe`）、`voice`（`voice-aws`＋`pywhispercpp`）、`whatsapp`（`neonize`）、`feishu`（`lark-oapi`）。`kirocrew setup --whatsapp` はWhatsAppの任意依存とペアリング状態を確認してから有効化します。Dockerの標準イメージはMicrosoft Teams・Feishu・WhatsAppの依存を含まず、iMessageはmacOS専用でイメージでは使えません。**本内容は v0.8.0 タグの仕様書で確認したもの（v0.7.2 の `install.md` には `voice-aws`・`neonize`・`lark-oapi`・`--whatsapp` の記載が無い）で、CHANGELOG/Release 本文は extras 一覧としては説明していません**
+
+出典: CHANGELOG.md v0.8.0節 214-218・666-668行（`99e6253`）、公式 `installation/` ページ（Page updated 2026-10-20）、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md>
+（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
 
 ## v0.7.0での変更
 
@@ -100,13 +147,16 @@ v0.7.x に「Before you upgrade」節はありません。以下は機能追加�
 
 - 依存パッケージは**事前ビルドwheelのみ**（`pip --only-binary=:all:`）から入れるため、ホストにCコンパイラや `-dev` ヘッダは不要です
 - ホストで動くwheelをどのリリースも公開していない場合（glibcが古い・アーキテクチャ向けwheelが無い）は、ビルド開始前に**プラットフォームとパッケージ名を示して中止**します
-- ツールチェーンとヘッダがあるホストでは **`KIROCREW_ALLOW_SOURCE_BUILDS=1`** でソースビルドに戻せます。**この指定は記憶されません**。更新エンジンはGatewayが動く環境からこの変数を読むため、`kirocrew service install` で常駐させている場合はサービスユニット側にも設定が必要です
+- ツールチェーンとヘッダがあるホストでは **`KIROCREW_ALLOW_SOURCE_BUILDS=1`** でソースビルドに戻せます。**この指定は記憶されません**
 
 出典: CHANGELOG.md v0.7.0節 461-464行（`c67c506`）、`docs/guides/install.md` 232-248行（`c67c506`）。
 
+> **v0.9.0 での記述の変更**: v0.7.2 の `install.md`（232-248行）は、更新エンジンがGatewayの動く環境からこの変数を読むため、`kirocrew service install` で常駐させている場合はサービスユニット側にも設定が必要と記述していました。v0.9.0 の `install.md` 259-268行は逆で、更新中に依存パッケージをコンパイルするには、ツールチェーンが `PATH` にあるシェルから `KIROCREW_ALLOW_SOURCE_BUILDS=1 kirocrew update` を実行します（そのコマンドはシェル自身の環境でビルドします）。Gatewayの自動更新と承認済み更新のビルド手順は、信頼されたシステム `PATH` だけで動きます。
+> （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+
 > ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**
-> - CHANGELOG.md v0.7.0節 463-464行は「the Linux AppImage starts on distributions without the older FUSE library」と記述しています
-> - `docs/guides/install.md` 133行・444行（`c67c506`）は AppImage について「needs FUSE present」と記述しています
+> - CHANGELOG.md v0.7.0節 1176行（`99e6253`。v0.7.2 のタグでは 463-464行）は「the Linux AppImage starts on distributions without the older FUSE library」と記述しています
+> - `docs/guides/install.md` 136行・508行（`99e6253`。v0.7.2 のタグでは 133行・444行）は AppImage について「needs FUSE present」と記述しています
 
 ### 版のピン留めは `0.1.2` 以降
 
@@ -142,7 +192,7 @@ curl -fsSL https://download.crew.kiro.dev/cli.sh | sh
 
 ## v0.4.0での変更
 
-Windowsは署名済みinstallerとin-app auto-updateをstableチャネルで提供し、Linux desktopは`.deb`/`.rpm`を提供します。これはv0.4.0 CHANGELOGの記述であり、旧版の「Windows desktop未配布」は現行状況としては用いません。
+Windowsは署名済みinstallerとin-app auto-updateをstableチャネルで提供し、Linux desktopは`.deb`/`.rpm`を提供します。これはv0.4.0 CHANGELOGの記述であり、旧版の「Windows desktop未配布」は現行状況としては用いません。v0.9.0 の `windows-install.md` 24-39行は、インストーラが stable だけでなく nightly・insider を含む全チャネルで公開されると記述しています（[02_windows.md](02_windows.md)参照）。
 
 ## v0.3.0での変更
 
@@ -169,6 +219,8 @@ Windowsは署名済みinstallerとin-app auto-updateをstableチャネルで提�
 > | インストーラ実体（`install.sh` 48行 `NODE_MIN_MAJOR=22`・`constants.py` 33行 `MIN_NODE_MAJOR = 22`） | 22 | 未再測定 | 未再測定 |
 >
 > 公式ページと `install.md` は **v0.6.0 の時点で既に22に揃っていました**。本サイトの表と注記が追随していませんでした。インストーラ実体（`install.sh`・`constants.py`）は、本サイトの v0.6.0・v0.7.2 のリポジトリスナップショットにソースコードが含まれないため再測定していません。
+>
+> **v0.9.0 で、この一致は再び崩れました。** v0.9.0 の `install.md` 40行は `>= 22.12.0`、公式 `installation/` ページ（16・75行）は「22+」のままです（上記「[前提要件](#前提要件)」の食い違い注記を参照）。v0.9.0 のインストーラ実体は未再測定です。
 
 ### デスクトップ版のプラットフォームに関するCHANGELOGの記載
 
@@ -196,11 +248,13 @@ CHANGELOGは以下2件を新機能として挙げています。**ただし上�
 
 ## 未確認事項
 
-- インストーラ実体のNode.js下限（`install.sh` の `NODE_MIN_MAJOR`・`constants.py` の `MIN_NODE_MAJOR`）の v0.7.2 での値（本サイトのスナップショットにソースコードが含まれないため未再測定。v0.3.0 時点は22）
-- AppImage の FUSE 要件（CHANGELOG と `install.md` の記述差。上記「[v0.7.0での変更](#v070での変更)」参照）
+- インストーラ実体のNode.js下限（`install.sh` の `NODE_MIN_MAJOR`・`constants.py` の `MIN_NODE_MAJOR`）の v0.9.0 での値（`src/` の解析は行っていないため未再測定。v0.3.0 時点は22。ドキュメント側では `install.md` 40行・`cli.md` 1194行が `22.12.0`、公式 `installation/` ページが「22+」で食い違っています）
+- AppImage の FUSE 要件（CHANGELOG と `install.md` の記述差。**継続**。上記「[v0.7.0での変更](#v070での変更)」参照）
+- デスクトップアプリがKiro CLIを同梱するか（公式ページ・CHANGELOGと、`README.md`・`windows-install.md` 80行の記述差。**v0.9.0 で見つかった新規の食い違い**。上記「[前提要件](#前提要件)」参照）
+- 公式 `installation/` ページの `--version 0.1.0` の例と `install.md` の「`0.1.0` はインストーラで入れられない」記述の差（**継続**。上記「[チャネル](#チャネルstableinsidernightly)」参照）
 
 > 以前ここに記載していた2件は**解消**したため外しました。
-> - **Node.jsの下限**: 公式`installation/`ページ・`install.md` 40行とも「22」で一致（v0.6.0 で既に一致。上記「[v0.3.0での変更](#v030での変更)」の注記参照）
+> - **Node.jsの下限**: 公式`installation/`ページ・`install.md` 40行とも「22」で一致していました（v0.6.0〜v0.7.2。上記「[v0.3.0での変更](#v030での変更)」の注記参照）。**v0.9.0 で `install.md` 側が `22.12.0` に変わり、再び書き分けが生じています**（上の未確認事項）
 > - **managed venvのパス**: 公式`installation/`ページ（`docs_md/installation.md` 59行）・公式`troubleshooting/`ページ（`docs_md/troubleshooting.md` 23行）・`install.md` 196-198行のすべてが `~/.kiro/crew-venv` で一致（v0.6.0 で既に一致。`~/.kiro/crew/venv` は v0.3.0 時点の公式ページの記述）
 
 ## 関連リンク

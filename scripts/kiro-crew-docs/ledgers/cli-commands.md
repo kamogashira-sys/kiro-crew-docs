@@ -26,6 +26,9 @@
 > | 版 | `modules/cli.md` の表に載るサブコマンド数 |
 > |---|---|
 > | v0.7.2（`c67c506`） | **40件** |
+> | v0.9.0（`99e6253`） | **41件** |
+>
+> **v0.9.0再測定（2026-10-25・`99e6253`）**: 同じ抽出方法で **41件**（新規1件: `desktop`（`kirocrew desktop metrics/tunnel`。`modules/cli.md` 435行）。消滅0件・改名0件）。語は同じで行が変わったものは `cloud`（`tunnel`／`login`／`logout`／`iam-boundary` が表に載った）・`pod`（`prune`、`--no-token`）・`snapshot`（`--strict`）・`memory`（`create-store`）・`cron`（`add` の全オプション、`--managed-by`）。`kirocrew cloud launch --ami／--extra-packages` は `cli.md` ではなく公式 cli-reference と `cloud.md` にある。`check-notation.py` の `ALLOWED_CLI_COMMANDS` に `desktop` を追加した。
 >
 > **⚠️ 表に無いが実在するもの（裁定しない）**: `kirocrew file-delivery approve` は `modules/cli.md` の表・README・公式 cli-reference のいずれにも無く、CHANGELOG v0.7.0節 445-448行・`docs/feature-map/README.md`・公式 `security/` ページで確認できる。`kirocrew secrets import` は引き続き表に無い（`modules/cli.md` の「Secrets Command」節 662-681行には記載）。公式 cli-reference ページの `kirocrew` サブコマンドは26語（`app`〜`update`）。`check-notation.py` の `ALLOWED_CLI_COMMANDS` に `ledger-sweep`・`file-delivery` を追加した。表にある `agent`／`consolidate`／`sandbox` は公開文書で未使用のため許可リスト未登録のまま。
 

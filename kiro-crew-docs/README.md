@@ -1,4 +1,4 @@
-# 猫でもわかるKiro Crew
+# 猫でもわかるKiro Crew アップデート情報
 
 Kiro Crew（OSS: [kirodotdev/KiroCrew](https://github.com/kirodotdev/KiroCrew)）の**主要機能を日本語で解説する**非公式ドキュメントサイトです。
 

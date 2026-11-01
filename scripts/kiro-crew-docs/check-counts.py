@@ -65,6 +65,9 @@ SECTIONS = {
 }
 TOTAL_PAGES = 39  # サイト本体README含む合計
 
+# Kiro Crew の版は vX.Y.Z 形式のタグだけ（ffmpeg-decoder-* などの配布用リリースは含めない）
+VERSION_TAG_RE = re.compile(r"v\d+\.\d+\.\d+")
+
 DECLARED_RE = re.compile(r"README\s*含む\s*\*{0,2}(\d+)\s*ページ\*{0,2}")
 
 
@@ -208,10 +211,10 @@ def check_against_snapshot(docs_dir, meta_dir, errors, notes, strict=False):
             cutoff = pin.get("release_published_at") if pin else None
             if cutoff:
                 # 取得時点より前に固定した版の時点に揃える（target の公開時刻以前に公開された安定版だけを数える）
-                stable = sum(1 for r in data if not r.get("prerelease") and r["published_at"] <= cutoff)
+                stable = sum(1 for r in data if not r.get("prerelease") and r["published_at"] <= cutoff and VERSION_TAG_RE.fullmatch(r["tag_name"]))
                 notes.append(f"PIN.json あり: Releases を published_at <= {cutoff}（{pin.get('ref')} の公開時刻）に絞って照合")
             else:
-                stable = sum(1 for r in data if not r.get("prerelease"))
+                stable = sum(1 for r in data if not r.get("prerelease") and VERSION_TAG_RE.fullmatch(r["tag_name"]))
             total = len(data)
             if stable != SSOT["S4"]["value"]:
                 errors.append(

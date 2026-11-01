@@ -61,6 +61,7 @@ make check-kiro-crew-all
 - [kiro-web-docs](https://github.com/kamogashira-sys/kiro-web-docs) — 猫でもわかるKiro Web
 - [kiro-ide-docs](https://github.com/kamogashira-sys/kiro-ide-docs) — 猫でもわかるKiro IDE
 - [q-cli-docs](https://github.com/kamogashira-sys/q-cli-docs) — 猫でもわかるKiro CLI
+- [kiro-all-docs](https://github.com/kamogashira-sys/kiro-all-docs) — 猫でもわかるKiro 入門（IDE・CLI・Web・Mobile・Crew まとめ）
 
 ## 免責事項
 

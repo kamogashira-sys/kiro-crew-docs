@@ -32,6 +32,19 @@
 >
 > **⚠️ 表に無いが実在するもの（裁定しない）**: `kirocrew file-delivery approve` は `modules/cli.md` の表・README・公式 cli-reference のいずれにも無く、CHANGELOG v0.7.0節 445-448行・`docs/feature-map/README.md`・公式 `security/` ページで確認できる。`kirocrew secrets import` は引き続き表に無い（`modules/cli.md` の「Secrets Command」節 662-681行には記載）。公式 cli-reference ページの `kirocrew` サブコマンドは26語（`app`〜`update`）。`check-notation.py` の `ALLOWED_CLI_COMMANDS` に `ledger-sweep`・`file-delivery` を追加した。表にある `agent`／`consolidate`／`sandbox` は公開文書で未使用のため許可リスト未登録のまま。
 
+> **v0.11.1再測定（2026-11-01・`fe6f5be`）**: 同じ抽出方法（`modules/cli.md` の「## Commands」節の表で、セルが `` `kirocrew <語> `` で始まるもの。`--version` は語に含めない）で **42件**（新規1件: `kas`。消滅0件・改名0件）。
+>
+> | 版 | `modules/cli.md` の表に載るサブコマンド数 |
+> |---|---|
+> | v0.9.0（`99e6253`） | **41件** |
+> | v0.11.1（`fe6f5be`） | **42件** |
+>
+> **新規1件: `kas`**（`kirocrew kas install/status/remove`。`modules/cli.md` 384行）。3系統の突合: ①公式 `interfaces/cli-reference/`（Page updated 2026-10-20・sha256 変更なし）に**無し**、②README に**無し**、④`modules/cli.md` の表に**あり**。CHANGELOG は v0.11.1節 45-46行で `--no-kas` として言及しますが、コマンド名 `kas` は v0.10.0節・v0.11.0節に出現しません。`check-notation.py` の `ALLOWED_CLI_COMMANDS` に `kas` を追加しました。
+>
+> **語は同じで行が変わったもの**: `chat`（`--agent <name>`）／`cron`（`add`・`update` に `--auto-pause-after N`）／`app`（`install/enable/disable/uninstall` が起動中 Gateway へ即反映）／`stop`・`restart`（デスクトップアプリ管理の Gateway を拒否）／`cloud`（`iam-boundary` が EC2 と Fargate の crew バウンダリへ）／`snapshot`・`restore`（`--max-archive-gib`）／`agent`（`update --display-name`）／`config`（`set` の `Unknown key`）／`memory`（`forget <key>`）。`spawn run` の `--model`／`--agent`／`--crew` と `agent create/update --model` は CHANGELOG v0.11.0節 133-137行に記述があり、`cli.md` の表の `spawn` 行（344行）には載っていません。
+>
+> **⚠ 表に無いが仕様書の別節に出る語（裁定しない・許可リストには追加していません）**: `gateway-pid`（`cli.md` 1741行「Gateway PID Command」節。デスクトップアプリ用の読み取り専用プローブで JSON を1行出力。v0.9.0 には無い）／`bench`・`perf`（`cli.md` 19・31行が登録元モジュールを挙げ、利用は `knowledge.md` 105行・`memory-skills-hooks.md` 3676行に出る）／`mcp-dashboard`・`mcp-work`・`mcp-crew-log`・`mcp-debug`・`mcp-panel`・`mcp-guide`（内部の MCP stdio サーバ。`cli.md` 141-143行）。`file-delivery approve`（「Owner-verified secret sends」の表。`cli.md` 1721行）と `secrets import`（「Secrets Command」節。`cli.md` 963行）は、従来どおり「## Commands」節の表に無い。README の `kirocrew` 語は v0.9.0 と同じ（`config`・`doctor`・`gateway`・`logs`・`service`・`setup`・`telemetry`）。公式 cli-reference は変更なし（`kas`・`memory forget`・`chat --agent`・`snapshot --max-archive-gib` は載っていません）。
+
 ## 系統①: 公式 cli-reference の H2/H3 構造（確定）
 
 | H2 グループ | コマンド |

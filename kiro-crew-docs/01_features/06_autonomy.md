@@ -24,6 +24,10 @@
 （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
 **出典**（`agent.subagent_timeout_secs` がダッシュボードから設定できない点の再確認）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/resource-protection.md>
 （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+**出典**（v0.10.0〜v0.11.1での変更）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/{subagent,config,learn-cron-dashboard,cli,taskrunner,heartbeat,adaptive-concurrency}.md>・<https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/resource-protection.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+**出典**（v0.10.0〜v0.11.1での変更）: <https://github.com/kirodotdev/KiroCrew/blob/main/CHANGELOG.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
 
 ---
 
@@ -78,7 +82,8 @@ README が整理する、Crew がユーザーの入力なしで動く5つの起�
 | `--model <name>` | 実行に使うモデル（`modules/cli.md` 226行。公式 cron ページの表にはない） |
 | `--[no-]persistent-session` | 実行をまたいで1つのセッションを再利用するか。既定は Persistent（[下記](#persistentfresh-セッションの既定)） |
 | `--[no-]minimal-context` | 注入コンテキストを省く（[v0.7.0での変更](#v070での変更cronスケジュールジョブ)の Minimal context） |
-| `--hide-in-chat` | `modules/cli.md` 226行に記載。公式 cron ページの表にはなく、挙動の説明は両方の出典に見つかっていない |
+| `--hide-in-chat` | `modules/cli.md` 226行に記載。公式 cron ページの表にはありません。仕様書 `learn-cron-dashboard.md` に説明があり、agent cron が実行開始時に作る、リンク済みのダッシュボードのチャット枠（`cron-{job_id}`）の作成を抑止します。結果は Slack／ダッシュボード通知に届き、実行履歴は History タブで見られます。`silent` とは別の項目です（[v0.11.1での変更](#v0111での変更cronスケジュールジョブ)） |
+| `--auto-pause-after <N>` | 連続して失敗したら自動停止するまでの回数。`0` は停止しない（v0.11.0。`cron update` にもある。[v0.11.1での変更](#v0111での変更cronスケジュールジョブ)） |
 | `--silent` | ジョブが明示的に通知を送らない限り何も配信しない（公式 cron ページ） |
 | `--strict-schedule` | 実行時刻のジッタを無効にする（公式 cron ページ） |
 | `--managed-by <key>` | ツールがジョブを所有するためのキー（[v0.9.0での変更](#v090での変更cronスケジュールジョブ)） |
@@ -86,6 +91,40 @@ README が整理する、Crew がユーザーの入力なしで動く5つの起�
 推論を伴わないCronのScript／Commandは**ACPを経由しません**。
 
 出典: <https://kiro.dev/docs/crew/features/cron/>（Page updated 2026-10-20）、`modules/cli.md` 226行（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）。
+
+### v0.11.1での変更（Cron・スケジュールジョブ）
+
+本節は v0.10.0・v0.11.0・v0.11.1 の変更です。CHANGELOG の日付は v0.10.0=2026-10-15、v0.11.0=2026-10-24、v0.11.1=2026-10-31 です。Mate は v0.10.0 以前と公式ページでは crewmate と呼ばれていました（CHANGELOG v0.11.0節 74-75行）。
+
+**`--hide-in-chat` の挙動（v0.9.0 の本文の誤りの訂正）**
+
+v0.9.0 までの本文は「挙動の説明が出典に見つからない」と書いていましたが、**誤りでした**。仕様書に説明があります。その節は v0.9.0 のリポジトリにもありました（v0.9.0 の `learn-cron-dashboard.md` 635-637行）。
+
+- `hide_in_chat: true` は、persistent セッションの agent cron が最初の実行の開始時に作る、リンク済みのダッシュボードのチャット枠（`cron-{job_id}`）の作成を抑止します。結果は引き続き Slack／ダッシュボード通知に届き、実行履歴は History タブ（`CronHistoryStore`）で見られます。既定は `false` です
+- `silent`（プッシュ通知の抑止）とは別の項目で、`script`／`command` の cron は枠を作らないため効果がありません
+- 仕様書は CLI の `--hide-in-chat` が `cron_add` の `hide_in_chat` と同じ引数に対応すると明記してはいません。`cli.md` 343行は `--hide-in-chat` を列挙し、すべてのフィールドを1回の `CronService.add_job` に渡すと記述し、`learn-cron-dashboard.md` 656行は `add_job` の引数に `hide_in_chat` があると記述します。CLI のフラグの説明文そのものは仕様書にありません
+- 公式 cron ページ（Page updated 2026-10-20）に `--hide-in-chat` の記述はありません
+
+出典: `learn-cron-dashboard.md` 826-828行・5247行、`cli.md` 343行（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）。
+
+**時間と失敗の制限（v0.11.0）**
+
+- Schedule のジョブフォームで、ジョブごとの**実行時間の上限**（`timeout_secs`）と、**自動停止までの失敗回数**（auto-pause limit。`0` は停止しない）を設定できます。ボードには失敗バックオフ中のジョブが表示されます（CHANGELOG v0.11.0節 128-132行）
+- 実行時間の上限は、フォームでは1〜1440分の整数で、値を変更したときだけ `timeout_secs` が送られます。API は範囲外や型違いの値を `400 invalid_timeout_secs` で拒否します。`timeout_secs` の範囲は 1〜86400 秒で、未設定または範囲外の保存値は 1800 秒で動きます（`learn-cron-dashboard.md` 818-824行）
+- 自動停止の既定は連続 5 回の失敗で、`0` は停止しません（同 1227行）
+- **失敗バックオフ**: 自動停止がオフ、または上限が既定より大きいジョブは、連続して 5 回目の失敗から次回実行が遅れます。待ち時間は 300 秒から始まり、失敗ごとに倍になって最大 3600 秒です。`GET /api/crons` は `consecutive_failures` と `failure_backoff_until` を返し、Next run の欄に「Delayed until HH:MM · N failures in a row」と表示されます（同 463行）
+- CLI は `cron add` と `cron update` に `--auto-pause-after N` を持ちます。`0` は自動停止しません。失敗が続く間は実行のたびに 5 分待ち、失敗ごとに倍になり、最大 1 時間です（`cli.md` 343行、CHANGELOG v0.11.0節 133-137行）
+
+出典: `learn-cron-dashboard.md` 463行・818-824行・1227行、`cli.md` 343行（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）。CHANGELOG.md v0.11.0節 128-137行（`fe6f5be`）。
+
+**ほかの変更（CHANGELOG の記述）**
+
+- **`strict_schedule`（v0.11.0）**: `app.json` の cron は `strict_schedule` を指定して、分の頭に開始できます（CHANGELOG v0.11.0節 128-132行、`learn-cron-dashboard.md` 691行）
+- **Runs as（v0.11.0）**: ジョブフォームの Runs as スイッチで Custom agent か Mate を選べます。Mate のジョブは「Mate」として一覧され、Mate での絞り込みがあります（CHANGELOG v0.11.0節 128-132行）。仕様書に Runs as スイッチと絞り込みの記述は見つかっていません（Mate のスケジュールの `member_id` の記述はあります。`learn-cron-dashboard.md` 353-363行）
+- **スケジュールの修正（v0.10.0・v0.11.0・v0.11.1）**: 保存に失敗した cron の変更はロールバックされ、期限に達した実行はアラートを上げます（CHANGELOG v0.11.0節 208-210行）。失敗・タイムアウト・キャンセルした one-shot は消えずに保持（park）され、夏時間で飛ぶ時刻の one-shot は1回だけ実行され、各 agent cron の実行は先に Kiro のサインインを確認します（同 v0.10.0節 391-393行）。スケジュールの時刻ラベルは夏時間の切り替えでも壁時計の時を保ちます（同 v0.11.1節 32-34行）
+- **`kirocrew spawn run`（v0.11.0）**: `--model`・`--agent`・`--crew` を取り、タスクに短いラベルを付けられます。agent の作成・更新コマンドも `--model` を取ります（CHANGELOG v0.11.0節 133-137行）。`cli.md` 344行の説明にはこれらがなく、CHANGELOG の記述だけです
+
+出典: CHANGELOG.md v0.10.0節・v0.11.0節・v0.11.1節（`fe6f5be`）。
 
 ### v0.9.0での変更（Cron・スケジュールジョブ）
 
@@ -153,9 +192,9 @@ README が整理する、Crew がユーザーの入力なしで動く5つの起�
 
 出典: CHANGELOG.md v0.3.0節（`21584ea`）。
 
-> **Cron自体の最小間隔（v0.3.0で確認、v0.9.0で再確認）**: `docs/system-specs/modules/learn-cron-dashboard.md` の「## Cron Service (`cron.py`)」節（236行、v0.9.0、`99e6253`）が、3種のスケジュール方式を「`every` (interval, **min 60s**), `at` (one-shot timestamp), `cron` (5-field expression)」と定義しています（379行。v0.7.2 では 173行（`c67c506`）、v0.3.0（`21584ea`）時点では59行）。あわせて、他エージェントからインポートしたスケジュールにも「整数秒かつ60秒以上」の検証ルールがあります（同ファイル1204行。v0.7.2 では 910-911行、`21584ea` 時点では299行）。
+> **Cron自体の最小間隔（v0.3.0で確認、v0.9.0・v0.11.1で再確認）**: `docs/system-specs/modules/learn-cron-dashboard.md` の「## Cron Service (`cron.py`)」節（236行、v0.9.0、`99e6253`）が、3種のスケジュール方式を「`every` (interval, **min 60s**), `at` (one-shot timestamp), `cron` (5-field expression)」と定義しています（379行。v0.7.2 では 173行（`c67c506`）、v0.3.0（`21584ea`）時点では59行）。あわせて、他エージェントからインポートしたスケジュールにも「整数秒かつ60秒以上」の検証ルールがあります（同ファイル1204行。v0.7.2 では 910-911行、`21584ea` 時点では299行）。
 >
-> `kirocrew cron add --every` の下限そのものを明記した記述は、`modules/cli.md` 226行と公式 cron ページ（Page updated 2026-10-20）には見つかっていません。`--every` による新規作成に上記の 60秒が適用されるかの扱いは、[04_reference/05_limits.md](../04_reference/05_limits.md) の記述と整っておらず、本サイトでは確認できていません（未確認）。
+> `kirocrew cron add --every` の下限そのものを明記した記述は、`modules/cli.md` 226行と公式 cron ページ（Page updated 2026-10-20）には見つかっていません。Cron Service の最小60秒は仕様書にあり（v0.11.1 でも 455行・1437行、`fe6f5be`）、`cron add --every` 自体にこの下限が適用されるかは一次情報に記述がありません（未確認）。
 
 ## Heartbeat（分類外・実在する第6の仕組み）
 
@@ -168,6 +207,18 @@ README の起動モード5分類には無いが、`modules/heartbeat.md` に実�
 - 例外が発生したタスクは自動的に保持（再試行）
 - 15tickごとにFTSインデックスを再構築（既定間隔で約15分ごと）
 - 無人ターンのため、1タスクあたり1800秒（30分）のタイムアウトがCronの `_JOB_TIMEOUT_SECS` と同じ形で適用される
+
+### v0.11.1での変更（Heartbeat）
+
+本節の内容は v0.11.1 の仕様書で確認したもので、**CHANGELOG に説明は見つかっていません**。既定間隔 60 秒・15 tick・`HEARTBEAT_KEEP`・1800 秒のタイムアウトは変わっていません（`modules/heartbeat.md` 5・64行ほか）。
+
+- **ツール承認は名前一致から同一性（identity）一致になった**: Heartbeat は無人のため、人が押す承認ボタンがありません。許可リストは、v0.9.0 ではツール名の完全一致（`HEARTBEAT_SAFE_TOOLS`）でした。v0.11.1 では、アダプタの `_meta` から来た信頼できる識別（`tool_name` と `mcp_server_name` の組）が必須（`event.mcp_identity_trusted`）で、`tool_name` が空でないことも求められます。許可の対象は、ホストの読み取り専用の組み込みツール（`fs_read`・`glob`・`grep`・`web_fetch`・`web_search`）、`kirocrew-core` の副作用のない読み取りツール、読み取り専用と分類されて `git` を含まないシェルコマンド、エディションが固定した `@server/tool` の識別です。書き込みツール（`send_message`・`file_send`・`cron_add`・`fs_write`）は拒否されます（`modules/heartbeat.md` 126-140行）
+- **信頼できる識別を持たないバックエンドは、Heartbeat でツール承認を受けません**: 仕様書は claude-agent-acp と opencode を例に挙げ、これらはテキストだけのポーラーとして動くと記述します。拒否は SEL に `reason=no_trusted_identity` で記録されます（同上）
+- ユーザーの `auto_approve_tools` は Heartbeat では無視され、許可リストが唯一の承認の根拠です。`auto_deny_tools` は維持されます。この点は v0.9.0 の仕様書にもありました（v0.9.0 の `modules/heartbeat.md` 126-130行）
+
+出典: `modules/heartbeat.md`（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）。
+
+> **Mate の Heartbeat check-in（v0.11.0）**: CHANGELOG v0.11.0節 76-77行は、Goals タブの opt-in の Heartbeat check-in が Mate を 30・60・120・240 分ごとに起こすと記述します。`HEARTBEAT.md` を読む本節の Heartbeat と同じ仕組みかどうかは、仕様書（`modules/heartbeat.md` に Mate の記述なし）から判定できていません（未確認）。
 
 ### v0.9.0での変更（Heartbeat）
 
@@ -188,6 +239,19 @@ README の起動モード5分類には無いが、`modules/heartbeat.md` に実�
 主な機能: 複数タスクの同時実行・対話的なツール承認・ステップごとのセッション分離（全メモリ注入込み）・git連携のステップコミット／リバート・実差分による独立レビュー・循環検出・再起動をまたぐディスク永続化・活動監視ベースの停滞検出・リソース枯渇を防ぐバッチ並列実行。
 
 内部は `taskrunner.py`（オーケストレータ）＋4つのヘルパーモジュール（`task_models.py`／`task_planner.py`／`task_executor.py`／`task_reporter.py`）に分割されています。
+
+### v0.11.1での変更（Task Runner のテスト検証）
+
+本節の内容は v0.11.1 の仕様書で確認したもので、v0.9.0 の仕様書にはありません。**CHANGELOG に説明は見つかっていません（仕様書の差分のみ）。**
+
+- 各ステップは、実行の結果とは別に検証の結果 `Task.verification` を持ちます。値は `passed`（設定したコマンドが終了コード 0 で終わった。検証済みとされる唯一の値）・`failed`（非 0 で終わった。テスト 0 件の収集やタイムアウトを含む）・`skipped`（`--no-test` でテストが切られている、またはコマンドが起動できない）・`not_configured`（`taskrunner.test_command` が空）・空文字（まだ結果なし）です（`modules/taskrunner.md` 835-893行）
+- コマンドは `config.json` の **`taskrunner.test_command`** からだけ取ります。argv のリストで、シェルを通さずに実行します。プロジェクトからの推測はしません。サンドボックス内のエージェントは `config.json` を書けません。不正なリスト（空文字列の要素を含むものを含む）は空として読み込まれます。`taskrunner.require_verification` とともに `restart=True` です（`modules/taskrunner.md` 835-893行、`modules/config.md` 3024-3025行）
+- 判定は終了コードだけです。テストを1件も実行せずに終了コード 0 で終わるランナー（すべてスキップした pytest など）は `passed` になります。仕様書は、テスト 0 件で失敗するコマンドを選ぶよう記述します。`failed` は既存の再試行（`MAX_RETRIES`）の経路に入ります
+- **`taskrunner.require_verification`**（既定 `false`）: オンにすると、`passed` だけがステップを通します。検証が動かなかったステップはその試行で失敗し、再試行されません。コマンドが空、または `--no-test` のときは、最初のステップの前に run 自体を失敗させます。オンにする前に通ったステップは、再開しても再検証されません。オフ（既定）では、`skipped` と `not_configured` のステップも従来どおり通り、結果が報告されます
+- 公式 Task Runner ページ（Page updated 2026-09-25）は `--no-test` に触れますが、この2つのキーには触れていません
+
+出典: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/taskrunner.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
 
 ### v0.8.0での変更（並列ステップ数）
 
@@ -263,13 +327,28 @@ run の投影は `~/.kiro/crew/tasks/` 配下に、共有のスケジューリ�
 
 - **1サブエージェントあたりのハードタイムアウト: 10800秒（3時間）**。設定キーは `agent.subagent_timeout_secs`（`subagent.py` の `_TIMEOUT_SECS` がフォールバック）。ロード時に `60`〜`86400` へクランプされ、`0` は既定を使います（`modules/config.md` 2656行・3094行、`modules/subagent.md` 123行、`99e6253`）。**v0.5.0以前は1800秒（30分）の固定値**でした
   - ⚠️ **このキーはダッシュボードから設定できません**。`resource-protection.md` 490-493行（v0.9.0、`99e6253`。v0.7.2 では 424-427行）は「config PUT の allowlist はターン予算と並行数の上限しか含まないため、subagent の期限を上げるには CLI か `config.json` の編集が必要」と述べています。v0.9.0 の CHANGELOG は Subagent Settings が Settings → Agent Harness に移ったと記述しますが（CHANGELOG v0.9.0節 150-153行）、移動後の画面にこのキーの項目があるかは確認できていません（未確認）
-  - タイムアウト時のエラー文は `Timed out after 180 minutes`（`subagent.md` 1922行、`99e6253`）。`start_reaper()` が60秒間隔で期限超過のサブエージェントを強制終了します（同2133行）
+  - タイムアウト時のエラー文は `Timed out after {N} minutes` で、N は**その run が実行開始時に捕捉した期限**（分）です。既定の 10800 秒なら 180 になります。**v0.9.0 の本文は固定文言の `Timed out after 180 minutes` と書いていました**（v0.9.0 の `subagent.md` 1922行は固定の 180 分）。v0.11.1 では、各 run が期限を `SubagentInfo.timeout_secs` に捕捉し、`asyncio.wait_for` と reaper の両方がその値を強制します。設定の再読込は次の run から適用されます（`subagent.md` 198行・2306行、`config.md` 2977行、`fe6f5be`）。`start_reaper()` が60秒間隔で期限超過のサブエージェントを強制終了します（v0.9.0 の `subagent.md` 2133行、`99e6253`）
 - 外側のキャップ: セマフォ待機＋注入の最大合計秒数 1200秒（20分。`_ON_DONE_TIMEOUT`）
 - 内側のキャップ: `stream_and_collect` 1回あたり900秒（15分。`INJECTION_TIMEOUT`）
 - 1サブエージェントあたりのツール呼び出し予算: **既定1000**（`_TURN_LIMIT`。`agent.subagent_max_turns` で変更可能、ロード時に `[1, 1000]` へクランプされるため既定値が上限と同じです）。**v0.6.0以前は既定100**でした（`config.md` 407行「`agent.subagent_max_turns` (100 -> 1000, #12203)」）。公式 Subagents ページも「up to 1000 tool calls」と記述します
   - 出典: `config.md` 2655行・`subagent.md` 124行・`resource-protection.md` 18行（`99e6253`）
 - 下限3（自動上限の下限、固定上限の下限）。**サブエージェントからさらにサブエージェントを起動できるかは確認できていません**（未確認）。`modules/subagent.md` 126行は `_SYSTEM_PREFIX` を「Injected before task text to prevent spawn recursion」と記述する一方、同 573-581行・2864行と `modules/config.md` 2672行（`agent.child_reserve`）は、ネストした起動（nested task）を前提にした記述を持ちます。両者の関係は精査できていません
 - 空きメモリの admission gate（`agent.spawn_min_memory_gb`）は、Linux では cgroup の余裕量、macOS と Windows ではネイティブのメモリ読み取りを使います。**ホストのメモリも有限の cgroup 上限も読み取れないときに限って fails open**（チェックをスキップして起動を許可）します（`subagent.md` 238-242行、`99e6253`）。**v0.6.0 では `/proc/meminfo` を読むため Linux のみ有効で、非Linuxでは fails open** でした（v0.6.0 `subagent.md` 52-55行、`8575209`）。本内容は v0.7.0 以降のタグの仕様書で確認したもので、CHANGELOG には記載が見つかっていません。**`agent.spawn_min_memory_gb` の既定は `2.0`（GiB）** です（[v0.8.0での変更](#v080での変更subagentメモリ委任)）
+
+### v0.11.1での変更（Subagent）
+
+本節は v0.10.0 以降の変更です。**CHANGELOG に説明があるのは、タスクごとのバックエンド指定だけです。それ以外の項目は仕様書の差分にだけあり、CHANGELOG・Release 本文に説明は見つかっていません。** 公式 Subagents ページ（Page updated 2026-09-30）に変更はありません。
+
+- **タスクごとのバックエンド指定（v0.10.0）**: `spawn_run` はタスクごとにバックエンドを取れます（CHANGELOG v0.10.0節 266-267行）。仕様書の `backend` 引数は、ガバナンス規則と同じ綴り（`kiro`・`claude`・`codex` など）で指定し、一括起動全体に効きます。`tasks[]` の項目ごとに上書きもできます。未知のバックエンド、選べないもの、未インストールのもの、Gateway の再起動待ちのものは、起動前に 400（`unknown_backend`・`backend_not_installed`（`install_command` つき）・`backend_restart_required`）で拒否されます。指定すると親のランタイムを共有せず、ウォームプールも使いません。`spawn_continue` は、会話がそのハーネスにあるため、ライブの記録か `state.json` から指定を引き継ぎます（`modules/subagent.md` 3660行）。バックエンドの種類は [15_agent-backends.md](15_agent-backends.md#v0111での変更) を参照してください
+- **macOS の空きメモリの床の読み取りが厳しくなった**: macOS では、起動前の床が、緩い合計値ではなく `free + purgeable + min(inactive, external)` のページ数から読んだ値と比べられます。負荷の高い Mac では、同じ `agent.spawn_min_memory_gb` でも起動の保留が増えます。床だけが変わり、自動上限の床無効時の算出・TaskRunner の値・メモリの姿勢（`resource_status`）は従来の合計値を読みます（`modules/subagent.md` 330-342行）。macOS のカーネルのメモリ圧迫ホールドは、v0.8.0 の項に書いたとおりです
+- **リモートセッションの子**: 親がリモートのセッション環境にいるとき、子もその環境を継承し、必ず専用プロセスで動きます（共有ランタイムは使えません）。リモートの子の起動は、メモリの床 `spawn_min_memory_gb` を課さず、起動時の予約だけを負い、コストは `<bucket>@remote` に記録されます（`modules/subagent.md` 107-114行・470-478行）
+- **学習済みの起動コストの期限**: 最新の読み取りが 7 日（`SETTLED_SAMPLE_MAX_AGE_SECS`）より古いと数えません。reaper は読み取りを 1 時間ごとに再読込します（`modules/subagent.md` 438行・535-541行）
+- **メモリ保留の待機時計**: 待機は、保留が始まった時刻と、同じレーン（親セッション）が最後に root を起動した時刻の遅いほうから数えます。`agent.subagent_queue_max_wait_secs`（既定 1800 秒）は、同じレーンが進んでいない時間に対する上限として働きます。上限を超えると従来どおり終了します（`modules/subagent.md` 742-769行）
+- **`agent.lane_weights`**: レーンごとの重みの上書きで、キーは root セッションキーまたは `system` です。未記載のレーンの重みは 1、各値は `[1, 64]` にクランプされます。重みは選ばれる割合と、メモリを待つ間の専用 Subagent の実行数の割合を決め、ハードな上限ではありません（`modules/config.md` 2993行）
+- **適応的並行の「制限がかかっている」表示**: 実行上限が起動時の値を下回っている間、チャットのヘッダーに1つのチップが出て、上限とキューの件数を示します。`GET /api/spawn/adaptive` は `throttle` を返します。制限が解除されると、gateway のログに `adaptive concurrency restored: …` が1行出ます。`fixed` モードと適応的並行を無効にした場合は `{"cut": false}` です（`modules/adaptive-concurrency.md` 429行・462-480行）
+- **再確認**: `agent.subagent_timeout_secs` がダッシュボードの config PUT の許可リストにない点（CLI か `config.json` の編集が必要）は、v0.11.1 の `resource-protection.md` 521-526行でも同じです。CHANGELOG v0.9.0節 150-153行が記述する Subagent Settings の移動先 Settings → Agent Harness に、このキーの項目があるかは確認できていません（未確認）
+
+出典: `modules/subagent.md`・`modules/config.md`・`modules/adaptive-concurrency.md`、`docs/architecture/resource-protection.md`（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）、CHANGELOG.md v0.10.0節 266-267行（`fe6f5be`）。
 
 ### v0.9.0での変更（Subagent）
 
@@ -359,20 +438,20 @@ v0.7.2 の仕様書（`taskq.md` 9-10行・`subagent.md` 308-311行、`c67c506`�
 
 ## 未確認事項
 
-- v0.9.0 のリポジトリで Autopilot（plan／approve／stage loop）がどう扱われるか（v0.9.0 の仕様書は「retired chat Autopilot」と呼ぶだけで、CHANGELOG の v0.8.0・v0.9.0 節に告知が見つかっていない。公式 docs はセッション単位のツール自動承認トグルとして記述している。[起動モード5分類](#起動モード5分類)の注記を参照）
+- v0.9.0 のリポジトリで Autopilot（plan／approve／stage loop）がどう扱われるか（v0.9.0 の仕様書は「retired chat Autopilot」と呼ぶだけで、CHANGELOG の v0.8.0・v0.9.0 節に告知が見つかっていない。v0.11.1 の仕様書にも `modules/autopilot.md` はなく、CHANGELOG v0.10.0〜v0.11.1 節にも告知は見つかっていない。公式 docs はセッション単位のツール自動承認トグルとして記述している。[起動モード5分類](#起動モード5分類)の注記を参照）
 - `orchestrator.max_plan_duration_seconds` が v0.9.0 で有効かどうか（公式 Configuration ページ（Page updated 2026-10-20）は設定表に記載しているが、v0.9.0 の仕様書に記述が見つかっていない。[v0.6.0での変更](#v060での変更無人-auto-run-plan-の時間上限)の注記を参照）と、`orchestrator.stage_timeout_seconds`（記述する出典は削除された `autopilot.md` のみ）
-- `spawn_min_memory_gb` の旧既定の食い違い（`modules/config.md` 623行は `4.0`、CHANGELOG v0.8.0節 673-675行は 4.5 GB の空きを要求していたと記述。両ファイルは違いを説明していない）
-- サブエージェントからさらにサブエージェントを起動できるか（上記 [Subagents](#subagents) の「下限3」の項を参照。`modules/subagent.md` の `_SYSTEM_PREFIX` の記述とネストした起動を前提にした記述の関係を精査できていない）
+- `spawn_min_memory_gb` の旧既定の食い違い（`modules/config.md` 623行は `4.0`、CHANGELOG v0.8.0節 673-675行は 4.5 GB の空きを要求していたと記述。両ファイルは違いを説明していない。v0.11.1 でも `modules/config.md` 709行が `4.0` から `2.0` への変更を、CHANGELOG v0.8.0節 1075行が 4.5 GB を記述し、違いの説明は見つかっていない）
+- サブエージェントからさらにサブエージェントを起動できるか（上記 [Subagents](#subagents) の「下限3」の項を参照。`modules/subagent.md` の `_SYSTEM_PREFIX` の記述とネストした起動を前提にした記述の関係を精査できていない。v0.11.1 でも 211行の `_SYSTEM_PREFIX` と、3445-3454行・`modules/config.md` 2994行（`agent.child_reserve`）の記述が併存し、関係の説明は見つかっていない）
 - 公式 Task Runner ページの並列バッチ（`_MAX_PARALLEL_TASKS`）と `taskrunner.max_parallel_steps` の関係、および `_MAX_CONCURRENT_TASKS` と同時実行 run 数の関係（[v0.8.0での変更（並列ステップ数）](#v080での変更並列ステップ数)参照）
 - Cron のタイムゾーン既定（公式 cron ページとリポジトリの `learn-cron-dashboard.md` の食い違いは継続。[タイムゾーンの既定](#タイムゾーンの既定)参照）
 - メモリ逼迫時の spawn が拒否か延期か（公式 Subagents ページとリポジトリの仕様書の食い違いは継続。[v0.7.0での変更（Subagent）](#v070での変更subagent永続タスクキュー適応的並行)の表を参照）
 - 1タスクの委任の拒否（Delegation gate）が実行時にあるか（公式 Subagents ページとリポジトリ・CHANGELOG の食い違い。[v0.8.0での変更（Subagent・メモリ・委任）](#v080での変更subagentメモリ委任)の表を参照）
 - 自動サイジングの根拠（公式 Subagents ページは「ホストのメモリと CPU から決める」、`modules/subagent.md` 144-163行は「ホストメモリから算出しない」）
-- `--hide-in-chat` の挙動（`modules/cli.md` 226行に記載があるが、挙動の説明が公式 cron ページ・仕様書のいずれにも見つかっていない）
 - `--every` の下限 60 秒が `kirocrew cron add` にも適用されるか（上記「Cron自体の最小間隔」の注記を参照）
 
 > **解消済み**:
 >
+> - `--hide-in-chat` の挙動: 仕様書 `learn-cron-dashboard.md` 826-828行（`fe6f5be`。v0.9.0 の 635-637行にも同じ節があった）に説明があり、v0.9.0 までの本文の「見つからない」は誤りでした（上記「[v0.11.1での変更（Cron・スケジュールジョブ）](#v0111での変更cronスケジュールジョブ)」参照）
 > - 「Cron自体（`--every`）の最小間隔」: `21584ea`の`learn-cron-dashboard.md` 59行で**60秒**と確認できたため未確認事項から除きました（上記「Scheduled: Cron」節参照）。v0.7.2（`c67c506`）・v0.9.0（`99e6253`、379行）でも同じ記述です
 > - `agent.max_subagents`（`0`）・`agent.subagent_auto_max`（`32`）の既定値の食い違い（S15）: v0.9.0 の `modules/config.md` と `modules/subagent.md` が一致しました（v0.8.0 タグで既に一致）
 > - `agent.spawn_min_memory_gb` の既定値: `2.0`（GiB）です（`modules/subagent.md` 114行、`modules/config.md` 623行、`99e6253`）

@@ -1,8 +1,8 @@
 # `docs/system-specs/` 全107ファイル 扱う／扱わない台帳
 
-- **取得日**: 2026-10-25
-- **commit SHA**: `99e6253`（版 v0.9.0）
-- **数え方**: `find docs/system-specs -type f` の**全ファイル**（Markdown 104件＋`modules/examples/workflows/*.py` 3件＝**107件**。v0.7.2 は 101＋3＝104件、v0.6.0 は 85＋3＝88件）。`.md` のみを数えると85件になるため、件数を引用する際は数え方を明示すること
+- **取得日**: 2026-11-01
+- **commit SHA**: `fe6f5be`（版 v0.11.1）
+- **数え方**: `find docs/system-specs -type f` の**全ファイル**（Markdown 104件＋`modules/examples/workflows/*.py` 3件＝**107件**。v0.9.0・v0.11.1 とも同数。v0.7.2 は 101＋3＝104件、v0.6.0 は 85＋3＝88件）。`.md` のみを数えると85件になるため、件数を引用する際は数え方を明示すること
 - **判定基準**: 冒頭500バイトに `removed` / `no longer exist` / `legacy` / `deprecated` の断りがあるものを「出典にしない（削除済み・移行専用）」の候補とし、**ファイル全体の文脈を人手で確認**して最終判定する（機械検出だけでは `acp-client.md`・`config.md` のように内部に部分的な legacy 言及があるだけのファイルを誤って除外するため）
 - **検証**: `check-coverage.py` の入力データ。合計欄が実測と一致し、判定漏れが0件であることを機械検証する
 
@@ -13,6 +13,8 @@
 > **v0.7.2更新（2026-10-04・`c67c506`）**: 実測**104件**（直下3・common 7・modules 90・modules/examples/workflows 4）。v0.6.0 からの差分は**新規16件（すべて `modules/`）・消滅0件**（88＋16＝104）。新規16件の判定は「扱う」6件・「開発者向け・出典にしない」9件・「未割当・扱わない」1件（`monitor-architecture.md`）。新規16件の冒頭500バイトに `removed`／`no longer exist`／`legacy`／`deprecated` は0件。
 
 > **v0.9.0更新（2026-10-25・`99e6253`）**: 実測**107件**（直下3・common 8・modules 92・modules/examples/workflows 4）。v0.7.2 からの差分は**新規4件・消滅1件**（104＋4−1＝107）。新規4件は `common/take-away-changes.md`・`modules/dashboard-instances.md`・`modules/dashboard-templates.md`・`modules/runtime-ownership.md`、消滅1件は `modules/autopilot.md`（v0.8.0 タグには存在し、v0.9.0 タグには存在しない）。新規4件の判定は「開発者向け・出典にしない」2件・「未割当・扱わない」2件。`modules/monitor-architecture.md` は `01_features/17_workflows.md` が引用したため「未割当」から「扱う」へ変更した。
+
+> **v0.11.1再確認（2026-11-01・`fe6f5be`）**: 実測**107件**（直下3・common 8・modules 92・modules/examples/workflows 4）。v0.9.0（`99e6253`）とファイルの集合が**同一**です（**追加0件・削除0件**）。内容が変わったファイルは93件（`cmp` で比較）で、扱い区分の判定は変更していません。合計107を維持します。
 
 ## 直下（3ファイル）
 

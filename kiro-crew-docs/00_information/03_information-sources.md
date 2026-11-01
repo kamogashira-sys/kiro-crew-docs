@@ -3,7 +3,7 @@
 > **本ページは Kiro Crew（OSS）の仕様です。**
 
 **出典**: <https://github.com/kirodotdev/KiroCrew>（一次情報ヒエラルキーの設計根拠）
-（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
 
 ---
 
@@ -31,16 +31,19 @@
 | 7 | AWS Japan社員のZenn記事（3本） | 日本語の解釈・検証済み手順 |
 | 8 | 実機確認 | 1〜7で確定しない挙動 |
 
+> **ページ冒頭の参照スタンプの訂正**: 本ページの冒頭の参照スタンプは「2026-08-22 / commit `21584ea` / 版 v0.3.0」のまま、本文が v0.9.0 の実測値を含むようになっていました（前の版から残っていた不整合です）。本文の各記述は、それぞれの行に書いた参照スタンプが正です。冒頭のスタンプは v0.11.1 対応時点の再確認（下表の RFC・`docs/decisions/`・`[Unreleased]`・プレリリースの各行）に合わせて更新しました。
+
 ## 出典にしないもの
 
 | 対象 | 理由 |
 |------|------|
-| `docs/request-for-change/`（**Markdown 94件**。v0.9.0） | 設計提案と決定の記録で、現行コードの記述ではない。`docs/request-for-change/README.md` は RFC を「提案であり決定の記録。コードが今何をしているかの記述ではない」と位置づけている。一覧表には status が `implemented`・`accepted` の行もあるが、本サイトはいずれも出典にしない。**本サイトは以前「20件」と記載していました**（v0.4.1時点の実測でも28件で、既にドリフトしていました）。<br>**数え方を明記します**（版によって構造が変わるため）: v0.9.0 は再帰で `.md` **94件**（トップレベル89件＋サブディレクトリ5件［`plans/` 3件・`assets/` 2件］）、うち `rfc-*.md` は**87件**（トップレベルの89件には `rfc-*.md` 以外の `README.md` と `version-compliance-framework.md` を含む）。ほかに画像・HTML 14件（PNG 13件・HTML 1件、すべて `assets/`）。v0.8.0 は再帰で `.md` 65件、うち `rfc-*.md` は60件。v0.7.2 は再帰で `.md` **56件**（トップレベル53件＋サブディレクトリ3件。ほかに画像1件）、うち `rfc-*.md` は**51件**。v0.6.0 は再帰で `.md` **46件**（トップレベル43件＋`plans/` サブディレクトリ3件）、うち `rfc-*.md` は**41件**。v0.4.1 は再帰・トップレベルとも**28件**（サブディレクトリなし）、うち `rfc-*.md` は26件<br>（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0。v0.8.0 は commit `4d205da`） |
-| `docs/decisions/`（7ファイル。v0.9.0） | v0.9.0 の仕様で存在を確認したディレクトリ。チームの人が下したプロダクト・設計上の決定の不変の記録で、`README.md` 1件＋決定記録6件（`docs/decisions/README.md`）。**出典にするかどうかは人の判断事項**であり、手順書の「出典にしないもの」にも載っていないため、今回の版更新では出典にしていません。内容は [00_information/01_repository-structure.md](01_repository-structure.md) の表を参照 |
+| `docs/request-for-change/`（**Markdown 142件**。v0.11.1） | 設計提案と決定の記録で、現行コードの記述ではない。`docs/request-for-change/README.md` は RFC を「提案であり決定の記録。コードが今何をしているかの記述ではない」と位置づけている。一覧表には status が `implemented`・`accepted` の行もあるが、本サイトはいずれも出典にしない。**本サイトは以前「20件」と記載していました**（v0.4.1時点の実測でも28件で、既にドリフトしていました）。<br>**数え方を明記します**（版によって構造が変わるため）: v0.11.1 は再帰で `.md` **142件**（トップレベル136件＋サブディレクトリ6件［`plans/` 4件・`assets/` 2件］）、うち `rfc-*.md` は**134件**（トップレベルの136件には `rfc-*.md` 以外の `README.md` と `version-compliance-framework.md` を含む）。ほかに画像・HTML 19件（PNG 18件・HTML 1件、すべて `assets/`）。v0.9.0 は再帰で `.md` 94件（トップレベル89件＋サブディレクトリ5件［`plans/` 3件・`assets/` 2件］）、うち `rfc-*.md` は87件、ほかに画像・HTML 14件（PNG 13件・HTML 1件）。v0.8.0 は再帰で `.md` 65件、うち `rfc-*.md` は60件。v0.7.2 は再帰で `.md` **56件**（トップレベル53件＋サブディレクトリ3件。ほかに画像1件）、うち `rfc-*.md` は**51件**。v0.6.0 は再帰で `.md` **46件**（トップレベル43件＋`plans/` サブディレクトリ3件）、うち `rfc-*.md` は**41件**。v0.4.1 は再帰・トップレベルとも**28件**（サブディレクトリなし）、うち `rfc-*.md` は26件<br>（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1。v0.9.0 は commit `99e6253`、v0.8.0 は commit `4d205da`） |
+| `docs/decisions/`（30ファイル。v0.11.1） | v0.11.1 の仕様で存在を確認したディレクトリ。チームの人が下したプロダクト・設計上の決定の不変の記録で、`README.md` 1件＋決定記録29件（`docs/decisions/README.md`。v0.9.0 は7ファイル［`README.md` 1件＋決定記録6件］）。**出典にするかどうかは人の判断事項**であり、手順書の「出典にしないもの」にも載っていないため、今回の版更新でも出典にしていません。内容は [00_information/01_repository-structure.md](01_repository-structure.md) の表を参照（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1） |
 | `docs/ci/`・`docs/build/` | Crew開発者向け。**ただしリリース手順・changelog運用の一次情報としては参照します**（`docs/build/release.md`・`docs/build/changelog.md`。[02_update/02_release-policy.md](../02_update/02_release-policy.md)参照） |
 | 削除済み・移行専用の仕様書 | 既に存在しない機能の記録（例: `docs/system-specs/post-launch-removals.md`）。**⚠️ `claude-code-provider.md` は対象外です**: v0.6.0 では `modules/claude-code-provider.md`（「Claude Code provider — a selectable ACP harness」）＝**現行機能の仕様書**に変わりました（[01_features/15_agent-backends.md](../01_features/15_agent-backends.md)参照） |
-| `## [Unreleased]`（CHANGELOG冒頭） | 未リリース。**⚠️ 固定参照時点（版 v0.9.0）では、この節は存在しません**（実測0件。v0.8.0・v0.7.2・v0.6.0 も0件）。`docs/build/changelog.md` 23行は「There is no `## [Unreleased]` section, and the gate refuses one.」と明記し、gateの実体は `scripts/check_changelog_history.py` です。**節が復活した場合に備えて除外方針は維持します**（[02_update/02_release-policy.md](../02_update/02_release-policy.md)参照）（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0） |
-| プレリリース（`-insider.N`・`-rc.N`） | 安定版のみを版番号として扱う。**v0.9.0 までの版の系統では、`-insider.N` が66件で主系統、`-rc.N` は v0.2.0系8件のみ**（計74件。2026-10-25 取得時点）。取得時点の GitHub Releases 全95件のうちプレリリースは79件で、差の5件（`-insider.N` 4件・`-rc.N` 1件）は **v0.9.0 より新しい版のプレリリース**（取得時点の GitHub Releases では、同じ新しい base version の `-rc.N` 1件と `-insider.N` 4件）のため、本サイトは扱いません（本サイトは以前 `-rc.N` のみを挙げていました。[02_update/02_release-policy.md](../02_update/02_release-policy.md)参照）（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0） |
+| `## [Unreleased]`（CHANGELOG冒頭） | 未リリース。**⚠️ 固定参照時点（版 v0.11.1）では、この節は存在しません**（実測0件。v0.11.0・v0.10.0・v0.9.0・v0.8.0・v0.7.2・v0.6.0 も0件）。`docs/build/changelog.md` 23行（v0.11.1）は「There is no `## [Unreleased]` section, and the gate refuses one.」と明記し、gateの実体は `scripts/check_changelog_history.py` です。**節が復活した場合に備えて除外方針は維持します**（[02_update/02_release-policy.md](../02_update/02_release-policy.md)参照）（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1） |
+| プレリリース（`-insider.N`・`-rc.N`） | 安定版のみを版番号として扱う。GitHub Releases（2026-11-01 取得）は全106件で、プレリリースは87件（`-insider.N` 70件・`-rc.N` 17件）。**`-rc.N` は v0.2.0系の8件のみではありません**: v0.10.0系（1件）・v0.11.0系（5件）・v0.11.1系（3件）にもあります（本サイトは以前「`-rc.N` は v0.2.0系のみ」と記載していました。v0.9.0 までの版の系統に限れば `-insider.N` 66件・`-rc.N` 8件［計74件］は変わりません）。87件はいずれも、安定版が公開済みの版の系統です（v0.11.1 より新しい版のプレリリースは0件）。内訳と欠番は [02_update/02_release-policy.md](../02_update/02_release-policy.md)参照（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1） |
+| 版番号ではない Release（`ffmpeg-decoder-7.1.1-r1`） | `vX.Y.Z` 形式ではないため、版としては数えない。全106件には含まれ、安定版18件には含めない（`prerelease` は false。2026-10-23 公開）（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1） |
 | `kiro.dev/llms.txt` | crewの言及が0件（URL網羅には使えない） |
 
 ## Zenn記事の位置づけ

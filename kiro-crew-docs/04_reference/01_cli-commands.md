@@ -14,12 +14,16 @@
 **出典**（v0.9.0での再検証: コマンド一覧の突合・`cloud`の13サブコマンド・`cron add`・`memory create-store`・`snapshot --strict`・`desktop`・`token`の応答待ち）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/cli.md>
 （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
 **出典**（v0.9.0）: <https://kiro.dev/docs/crew/interfaces/cli-reference/>（Page updated 2026-10-20）
+**出典**（v0.11.1での再検証: コマンド一覧の突合・`kas`・`stop`/`restart`・`memory forget`・`chat --agent`・`cron`・`snapshot`・`config set`・`app`・`cloud iam-boundary`・`--version`）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/cli.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+**出典**（v0.11.1）: <https://kiro.dev/docs/crew/interfaces/cli-reference/>（Page updated 2026-10-20）
 
 ---
 
 ## 📑 このページの内容
 
 - [コマンド一覧](#コマンド一覧)
+- [v0.11.1での変更](#v0111での変更)
 - [v0.9.0での変更](#v090での変更)
 - [v0.8.0での変更](#v080での変更)
 - [v0.7.0での変更](#v070での変更)
@@ -34,20 +38,20 @@
 
 ## コマンド一覧
 
-`docs/system-specs/modules/cli.md`「## Commands」節の実測（一部説明を要約）。行番号は v0.9.0（`99e6253`）のものです。v0.7.2 の再測定からの差分は、下の「[v0.9.0での変更](#v090での変更)」にまとめています。
+`docs/system-specs/modules/cli.md`「## Commands」節の実測（一部説明を要約）。**v0.11.1（`fe6f5be`）で内容を変えた行は v0.11.1 の行番号、それ以外の行の行番号は v0.9.0（`99e6253`）のものです。** v0.9.0 からの差分は、下の「[v0.11.1での変更](#v0111での変更)」と「[v0.9.0での変更](#v090での変更)」にまとめています。
 
 | コマンド | 説明 |
 |---------|------|
-| `kirocrew chat [-m "msg"] [--model X]` | チャット。対話モード／単発メッセージ／モデル上書き |
+| `kirocrew chat [-m "msg"] [--model X] [--agent NAME]` | チャット。対話モード／単発メッセージ／モデル上書き。**`--agent <name>`**（v0.10.0〜）: `config.agents` のキーは crew member として解決され、それ以外の名前は kiro agent としてそのまま kiro-cli に渡される。対話の権限プロンプトは `[a]` 1回許可・`[d]` 拒否（既定）・`[o]` エージェントへ返信しながら拒否（v0.11.0〜）。バックエンドがターンを終わらせなかった場合（stop reason が `timeout` または `stale_recover`）は、通知を出して exit 1（`modules/cli.md` 331・1039・1167-1169行、`fe6f5be`） |
 | `kirocrew gateway [--slack-only] [--no-crons]` | Gateway起動（ダッシュボード＋メッセージングチャネル） |
 | `kirocrew setup [--agent-only] [--slack]` | エージェント設定インストール・プロジェクトディレクトリ保存・認証情報設定 |
-| `kirocrew doctor` | kiro-cliの導入・設定の妥当性検証 |
+| `kirocrew doctor` | kiro-cliの導入・設定の妥当性検証。v0.11.1 の `modules/cli.md` 1419-1449行「Doctor Checks」は24項目で、項番 23（ACP runtimes、Linux のみ、助言）・24（Ledgers、助言）が加わっている。項目の一覧は [03_deployment/05_troubleshooting.md](../03_deployment/05_troubleshooting.md) を参照 |
 | **`kirocrew ledger-sweep`**（v0.7.0） | 終了済みに見えるsessionとconductor-workのledgerを一覧表示（種別・保存先ディレクトリ・ledgerキー・フェーズ／項目数・経過時間・該当理由）。**dry-runで、何も削除しない** |
 | **`kirocrew ledger-sweep --purge [--older-than-days N] [--purge-unreadable]`**（v0.7.0） | dry-runが列挙したledgerを削除する。**取り消し不可・明示実行のみで、自動では動かない**（Gatewayのフック・履歴削除経路・MCPツールのいずれからも到達しない）。各削除は保存先のロック下で再判定され、ledgerが再び使われ始めていれば拒否される。**既定のアイドル期間は30日**（有限の非負数のみ。`nan`・`inf`は拒否）。読めない記録は`--purge-unreadable`を付けない限り残す |
-| `kirocrew cron add/list/remove` | Cronジョブ管理。`add` は、エージェントのprompt／`--script FILE.py:FUNC`（`<config_dir>/crons/` に既にあるPython関数。CLIは登録するだけでコピーしない）／`--command SHELL` のいずれかを、`--every`／`--cron`／1回限りの `--at` のちょうど1つで登録する（v0.8.0）。`--timezone` は `--cron`・`--at` に効き、`--every` とは併用不可（既定は設定のグローバルタイムゾーン、無ければ UTC）。ほかに `--timeout-secs`（1〜86400、既定1800）、`--model`、`--[no-]persistent-session`、`--[no-]minimal-context`、`--hide-in-chat`。拒否は stderr に出て非0で終わる（argparse のフラグ組み合わせは2、検証・セキュリティ・ストアの拒否は1）。**`--managed-by KEY`**（v0.9.0）: 外部インストーラの provenance キー（ASCII `[A-Za-z0-9][A-Za-z0-9._:/@+-]{0,199}`）をジョブに記録する。キーはストア全体で一意で、同じキーでの2回目の `add` は拒否される。再インストールは `cron remove --managed-by KEY` のあと `add`（新しい id が付く）。`remove` は id か `--managed-by` のどちらか一方（`modules/cli.md` 226行、公式 `cli-reference` ページ） |
+| `kirocrew cron add/list/remove` | Cronジョブ管理。`add` は、エージェントのprompt／`--script FILE.py:FUNC`（`<config_dir>/crons/` に既にあるPython関数。CLIは登録するだけでコピーしない）／`--command SHELL` のいずれかを、`--every`／`--cron`／1回限りの `--at` のちょうど1つで登録する（v0.8.0）。`--timezone` は `--cron`・`--at` に効き、`--every` とは併用不可（既定は設定のグローバルタイムゾーン、無ければ UTC）。ほかに `--timeout-secs`（1〜86400、既定1800）、**`--auto-pause-after N`**（連続失敗で自動停止する回数。`0` は自動停止しない。`0` のまま失敗を続けるジョブは、次の実行の前に 5 分待ち、失敗ごとに待ち時間を倍にして最大 1 時間待つ。`cron update` にもある。v0.11.0〜。`modules/cli.md` 343行、`fe6f5be`）、`--model`、`--[no-]persistent-session`、`--[no-]minimal-context`、`--hide-in-chat`。拒否は stderr に出て非0で終わる（argparse のフラグ組み合わせは2、検証・セキュリティ・ストアの拒否は1）。**`--managed-by KEY`**（v0.9.0）: 外部インストーラの provenance キー（ASCII `[A-Za-z0-9][A-Za-z0-9._:/@+-]{0,199}`）をジョブに記録する。キーはストア全体で一意で、同じキーでの2回目の `add` は拒否される。再インストールは `cron remove --managed-by KEY` のあと `add`（新しい id が付く）。`remove` は id か `--managed-by` のどちらか一方（`modules/cli.md` 226行、公式 `cli-reference` ページ） |
 | **`kirocrew cron pause/resume/trigger <id>`** | 一時停止／再開／即時実行。`pause`・`resume` は未知の id で exit 1（`Job not found`）、`trigger` は実行中のGatewayへの要求が失敗または拒否されたとき exit 1（`modules/cli.md` 436行） |
-| `kirocrew spawn run/list` | サブエージェント管理。`list` は、未開始の accepted spawn（🕒と待ち理由）と再開待ちも表示する（`modules/cli.md` 227行） |
-| `kirocrew app install/list/enable/disable/uninstall[--purge-data]/dev` | App Kit管理 |
+| `kirocrew spawn run/list` | サブエージェント管理。`list` は、未開始の accepted spawn（🕒と待ち理由）と再開待ちも表示する（`modules/cli.md` 227行）。`spawn run` は **`--model`・`--agent`・`--crew`** を取る（v0.11.0〜。CHANGELOG.md v0.11.0節 133-134行。`modules/cli.md` の表の `spawn` 行（344行）には載っていない） |
+| `kirocrew app install/list/enable/disable/uninstall[--purge-data]/dev` | App Kit管理。**`install`・`enable`・`disable`・`uninstall` は、起動中の Gateway へ owner-only のダッシュボードソケット経由で送られ、変更が即座に反映される。Gateway に届かない場合はファイルだけを編集し、次の Gateway 起動で反映される**（`modules/cli.md` 345行、`fe6f5be`。`app import --install` は引き続きファイルだけを扱い、変換した App をオフ・未登録のまま残す） |
 | **`kirocrew app import <package-dir> [--out DIR] [--name NAME] [--install]`**（v0.7.0） | 他のエージェントハーネス向けのプラグインパッケージをAppディレクトリに変換し、対応先の無い要素をすべて報告する。**読み取りとコピーのみで、パッケージ内のものは何も実行しない** |
 | `kirocrew learn add/list/remove` | 学習した修正の管理 |
 | `kirocrew run TASK.md` | 仕様ファイルから自律タスクを実行 |
@@ -56,20 +60,22 @@
 | `kirocrew manifest` | ユーザーエイリアス自動入力済みのSlackマニフェスト生成 |
 | `kirocrew update` | 最新版へ更新（git fetch→上流コミットをピン留め→**この venv が `requires-python` を満たさないリビジョンは拒否**（v0.7.0）→ピン留めしたコミットへhard reset＋再ビルド。分岐したチェックアウトは拒否され、`--force`でローカルコミットを破棄）。**wheel インストール（gitチェックアウト無し）は導入形態で分岐**する（v0.9.0 の仕様書）: 管理対象 venv は自前のエンジンで更新し、pipx はインストーラを再実行する（Windows 非対応）。利用者が管理する素の `pip install` 環境は exit 1 で拒否し、その場の upgrade コマンドと Gateway 再起動コマンドを示す（署名付きの upgrade コマンドを示せないときはその旨を示す）。更新後、実行中のGatewayが自分のポートを所有し local secret を持つ場合に限り `POST /api/update/revalidate` で更新バッジの再確認を依頼する（失敗しても exit code は変わらない）（`modules/cli.md` 1222-1294行） |
 | `kirocrew status` | 実行中Gatewayの統計を表示 |
-| `kirocrew stop [--port N]` | Gateway停止（サービス認識。稼働中ならsystemd/launchdサービスを停止）。`--port` を渡すとサービスの短絡を迂回する。**`--port PORT --expect-pid PID`**（v0.9.0 の仕様書）は、呼び出し側（デスクトップアプリの固まったGateway再起動）がGatewayを特定済みのときの絞った停止で、`os.pidfd_open` と `signal.pidfd_send_signal` が無いホスト（macOS・Windows）では signal を送らず exit 1（`modules/cli.md` 1404-1420行） |
-| `kirocrew restart [--port N]` | Gateway再起動。detached fork の経路は、`/api/ready` が応答し run marker の pid が前のGatewayと異なるまで待ってから成功を表示する（v0.9.0 の仕様書）。置き換えが即死したら終了ステータスを示して exit 1、期限（既定60秒）内に ready にならなければ exit 1。期限は環境変数 `KIROCREW_RESTART_READY_TIMEOUT` で指定でき、15〜180秒に丸められる（`modules/cli.md` 1606-1626行） |
-| `kirocrew service install/uninstall/status` | システムレベルのサービス化（systemd/launchd）。Linux の `status` は system／user の両スコープを表示し、いずれかが UP のときだけ exit 0。`uninstall` は自分が入れたユニットだけを消す（`sudo` で実行しない）（`modules/cli.md` 239-244行。詳細は [03_deployment/03_running-24-7.md](../03_deployment/03_running-24-7.md)） |
+| `kirocrew stop [--port N]` | Gateway停止（サービス認識。稼働中ならsystemd/launchdサービスを停止）。`--port` を渡すとサービスの短絡を迂回する。**`--port PORT --expect-pid PID`**（v0.9.0 の仕様書）は、呼び出し側（デスクトップアプリの固まったGateway再起動）がGatewayを特定済みのときの絞った停止で、`os.pidfd_open` と `signal.pidfd_send_signal` が無いホスト（macOS・Windows）では signal を送らず exit 1（`modules/cli.md` 1404-1420行）。**v0.11.1 から、デスクトップアプリが管理する Gateway は何も送信せず exit 1 で拒否する**（`reason=desktop_app_supervised`。`--port N` は、この `KIROCREW_HOME` の Gateway が N で待ち受けているときだけ適用。`--expect-pid` を付けたアプリ自身の停止は拒否しない。`modules/cli.md` 356・1786-1792行、`fe6f5be`） |
+| `kirocrew restart [--port N]` | Gateway再起動。detached fork の経路は、`/api/ready` が応答し run marker の pid が前のGatewayと異なるまで待ってから成功を表示する（v0.9.0 の仕様書）。置き換えが即死したら終了ステータスを示して exit 1、期限（既定60秒）内に ready にならなければ exit 1。期限は環境変数 `KIROCREW_RESTART_READY_TIMEOUT` で指定でき、15〜180秒に丸められる（`modules/cli.md` 1606-1626行）。**v0.11.1 から、デスクトップアプリが管理する Gateway は拒否する**（`stop` と同じ。アプリ内の Settings → About → Restart gateway かアプリの終了を案内する。`modules/cli.md` 357・1951-1956行）。置き換えた Gateway がすぐ終了した場合、ポートがなお HTTP に応答していれば `Nothing is serving port` ではなく「exited at once … Port P still answers HTTP」を出し、`gateway.lock` の保持者を名指しする（`backend-dist` から動いていればデスクトップアプリと呼ぶ。終了コードと監査は同じ。同 1995-2004行）。macOS では `launchctl kickstart -k` を使い、`unload`+`load` は使わない（同 1942-1950行） |
+| `kirocrew service install/uninstall/status` | システムレベルのサービス化（systemd/launchd）。Linux の `status` は system／user の両スコープを表示し、いずれかが UP のときだけ exit 0。`uninstall` は自分が入れたユニットだけを消す（`sudo` で実行しない）（`modules/cli.md` 239-244行）。**macOS は system-level ではなくユーザー単位の LaunchAgent で、ログインしたときに起動し、ブート時には起動しない**（`install.md` 805-808行、`fe6f5be`）。`modules/cli.md` 358行は「auto-starts on boot」とだけ書いており、記述が分かれる。詳細は [03_deployment/03_running-24-7.md](../03_deployment/03_running-24-7.md) |
 | `kirocrew logs [-f]` | ログ表示（追従可） |
-| `kirocrew cloud launch/list/status/connect/tunnel/login/logout/stop/start/destroy/iam-policy/iam-boundary/doctor` | 自分のAWSアカウント内のEC2インスタンスのプロビジョニング・接続・管理（サブコマンドは13件。**v0.9.0 では `modules/cli.md` 246行・公式 `cli-reference` ページ「Cloud」節（Page updated 2026-10-20）・`modules/cloud.md` 13行のいずれも13件すべてを列挙しています**。v0.7.2 の `modules/cli.md` は`tunnel`・`login`・`logout`・`iam-boundary`を含まない9コマンドのみを列挙していました。13件の列挙は v0.8.0 タグの `modules/cli.md` 243行で既に揃っており、その差は v0.8.0 で解消しています）。**本サイトは以前 `logout` を載せていませんでしたが、v0.6.0 の `cloud.md` の一覧にも既に含まれていました**。`launch` のフラグは下記「[クラウド・Pod](#クラウドpod見落としやすいコマンド群)」参照 |
+| `kirocrew cloud launch/list/status/connect/tunnel/login/logout/stop/start/destroy/iam-policy/iam-boundary/doctor` | 自分のAWSアカウント内のEC2インスタンスのプロビジョニング・接続・管理（サブコマンドは13件。**v0.9.0 では `modules/cli.md` 246行・公式 `cli-reference` ページ「Cloud」節（Page updated 2026-10-20）・`modules/cloud.md` 13行のいずれも13件すべてを列挙しています**。v0.7.2 の `modules/cli.md` は`tunnel`・`login`・`logout`・`iam-boundary`を含まない9コマンドのみを列挙していました。13件の列挙は v0.8.0 タグの `modules/cli.md` 243行で既に揃っており、その差は v0.8.0 で解消しています）。**本サイトは以前 `logout` を載せていませんでしたが、v0.6.0 の `cloud.md` の一覧にも既に含まれていました**。`launch` のフラグは下記「[クラウド・Pod](#クラウドpod見落としやすいコマンド群)」参照。**`iam-boundary`**（v0.10.0〜）は、immutable な EC2 と Fargate の crew 権限バウンダリを事前作成する一回限りの管理者操作（`modules/cli.md` 363行、`fe6f5be`） |
 | `kirocrew security events [-n N]` | 最近のSEL監査イベント表示 |
 | `kirocrew security verify` | SEL HMACチェーンの整合性検証 |
 | `kirocrew secrets import [--apply]` | データホームの `.env` にある平文の認証情報を暗号化secrets vaultへ移す。**既定はdry-run**、`--apply`で保存し `.env` の該当行を `secret://KEY` 参照に書き換える。移すのは vault 対応の Jira 認証キー（`JIRA_API_TOKEN`・ホスト別 `JIRA_TOKEN_<HEX>`）のみ。`--file`オプションは無く、データホームの`.env`だけを読む。**`modules/cli.md` の「## Commands」表には無く、同ファイルの別節「## Secrets Command」（761-775行）・`docs/guides/secrets-env.md` 94-98行・`docs/system-specs/modules/security.md` 656行に記載**（v0.9.0。v0.6.0 の `secrets-env.md` にも既に記載あり。v0.9.0 の表にも無いままです）。vault の保存・一覧・削除はダッシュボードの **Settings → Secrets**（CLIは移行のみ。保存値を読み戻すコマンドは意図的に無い） |
 | **`kirocrew file-delivery approve`**（v0.7.0） | 認証情報らしい内容を検出して`file_send`が配送を拒否したファイルについて、ダッシュボード所有者が **Settings → Security** で承認を準備したあと、**Gatewayホスト上で直接実行**して1回限りの承認を完了する。エージェント自身はこの手順を完了できず、Computer Use有効時は拒否される。**`modules/cli.md` には記載がなく、公式 `security/` ページ「Approve a flagged file delivery」節（`docs_md/security.md` 198-205行。Page updated 2026-10-12）・`docs/feature-map/README.md` 327-345行・CHANGELOG.md v0.7.0節 1157-1160行（`99e6253`。v0.7.2 のタグでは 445-448行）に記載**（v0.9.0 の `modules/cli.md` の表にも無いままです）。ネイティブWindowsでは承認は拒否される（[03_deployment/02_windows.md](../03_deployment/02_windows.md)参照） |
-| `kirocrew snapshot [--keep N] [--list] [--strict]` | 全状態のスナップショット作成（既定7件保持）。**`--strict`**（v0.9.0 の仕様書）: 書き出した bundle が要求したエントリを省いたとき exit 3（既定は、不完全でも bundle を書いたなら exit 0）。bundle は残り prune は保留される。exit 1 は「使える bundle が作れなかった」の意味のまま（`modules/cli.md` 251・312-318行）。`--allow-unpinned-staging` は、ディレクトリを descriptor で固定できないプラットフォームでパス名ベースのステージングを許可する（同 258-259行。`restore` にもある） |
-| `kirocrew restore <file> [--mode replace\|merge] [--components X,Y] [--dry-run]` | スナップショット復元 |
-| `kirocrew config get [key]` / `set <key> <val>` / `edit` | 設定操作 |
+| `kirocrew snapshot [--keep N] [--list] [--strict]` | 全状態のスナップショット作成（既定7件保持）。**`--strict`**（v0.9.0 の仕様書）: 書き出した bundle が要求したエントリを省いたとき exit 3（既定は、不完全でも bundle を書いたなら exit 0）。bundle は残り prune は保留される。exit 1 は「使える bundle が作れなかった」の意味のまま（`modules/cli.md` 251・312-318行）。`--allow-unpinned-staging` は、ディレクトリを descriptor で固定できないプラットフォームでパス名ベースのステージングを許可する（同 258-259行。`restore` にもある）。**`--max-archive-gib N`**（v0.11.0〜）: bundle の展開後サイズの上限を N GiB（1〜1024、既定4）にする。指定しなくても、ステージ後の内容が上限を超える選択は、tarball を書く前に最大エントリと `--components`・このフラグを示して拒否される（`modules/cli.md` 377行、`fe6f5be`） |
+| `kirocrew restore <file> [--mode replace\|merge] [--components X,Y] [--dry-run] [--max-archive-gib N]` | スナップショット復元。`--max-archive-gib N`（v0.11.0〜）は、`--max-archive-gib M` で書いた bundle を N >= M で復元する。bundle が N GiB を超える、または展開先の空き容量を超えると宣言する場合は、展開の前に拒否される（`modules/cli.md` 378行、`fe6f5be`） |
+| `kirocrew config get [key]` / `set <key> <val>` / `edit` | 設定操作。**`set` は、読み込んだ設定にもスキーマにも無いキーを `Unknown key` で拒否して exit 1（`--local` でも）**（v0.11.0〜。`modules/cli.md` 587行、`fe6f5be`） |
 | `kirocrew config defaults [--adopt \| --keep <key>]` | 保存済みの値のうち、置き換えられた旧既定値のままのものを一覧表示する。`--adopt`で現在の既定値を採用、`--keep`で保存値を意図的なものとして記録する（公式`cli-reference`「`kirocrew config defaults`」節。v0.6.0の公式ページにも記載あり。`modules/cli.md`の表には記載なし） |
 | `kirocrew memory list/search/stats/audit` / `export/import/migrate` | ベクトルメモリの検査・移行。`export`・`import` は `--store <name>`（既定は既定ストア）を取る。`--include-markdown` は既定ストア専用（`modules/cli.md` 418-420行）。公式 `cli-reference` ページが挙げる `memory` の動詞は `list`・`search`・`show`・`stats`・`audit`・`export`・`migrate`・`backup`・`backups`・`restore`・`carve`・`retired`・`import` |
+| **`kirocrew memory forget <key>`**（v0.10.0〜） | 既定ストアのセマンティックキーを1件削除する。値を表示してキーの再入力を求め、実行中の Gateway へ owner-only ソケット経由で `DELETE /api/memory/semantic/{key}` を送る。Gateway に届かなければ何も削除しない。表示した値が変わっていれば残す。`--superseded-by <key>` で勝者を記録できる（そのキーが有効でない、または自分自身のときは拒否）。キーが無ければ exit 1。エージェントのセッションのシェルからと、対話端末が無い場合は拒否される。Windows ではダッシュボードソケットが無いため使えず、ダッシュボードの Memory ページを使う（`modules/cli.md` 595行、CHANGELOG.md v0.10.0節 332行） |
+| **`kirocrew kas install/status/remove`**（v0.10.0〜） | Kiro Crew 自身の KAS エンジン（`<データホーム>/engines/kas/<version>/`: sha256 でピン留めした `@kiro/agent` と Node ランタイム）を入れる・確認する・消す。`install` はこの版がピン留めする版を入れ、ピンと一致しないマニフェストを拒否する。`--version`・`--unpinned`（別の版。テスト用）・`--url`（https のベース。既定は `agent.kas_bundle_url`）・`--from DIR`（オフライン用のローカルのマニフェスト）・`--force` を取る。データホームに同じ版があれば取得せず成功する。`status` はピンと、動いている版と、ディスク上の全ての版を表示し、`remove --version V` は1つの版を消す。サンドボックスの外で動かす運用者向けのコマンド（`engines` は書き込めるのがそこだけ）。**`cli.sh` と `install.sh` は、Kiro Crew を入れたあとに `kirocrew kas install` を既定で実行し（v0.11.1〜）、失敗しても警告とこのコマンドを出すだけで、`--no-kas` で省ける。どちらも `agent.kas_bundle` はオンにしない**（`modules/cli.md` 384行、CHANGELOG.md v0.11.1節 45-47行、`fe6f5be`）。詳細は [03_deployment/01_installation.md](../03_deployment/01_installation.md) |
 | **`kirocrew memory create-store <name>`**（v0.9.0） | `config.json` の `memory_stores` に宣言した名前付きV1ストアのディレクトリを作る。宣言したストアは使用時には作られないため、ディレクトリを消したストアは、このコマンドを実行するまで欠けたままになる。既定ストア・宣言されていない名前・crewmateのストア（crewmate と一緒に作られる）は拒否される（stderr に1行、exit 1）。既にディレクトリがあれば何も変えない（`modules/cli.md` 423行、公式 `cli-reference` ページ） |
 | **`kirocrew memory backup/backups/restore`**（v0.7.0） | Global・宣言済みの名前付きV1・所有中のV2ストアのホットコピーを取る（`--keep <n>`）／ストアのコピーを新しい順に一覧（`--store`）／復元をステージする（`--store`・`--from <file>`。既定はそのストアの最新）。**V1・V2とも復元はGateway再起動時に有効化**される |
 | **`kirocrew memory retired`**（v0.7.0） | セマンティックな書き込みで置き換えられたエピソードを一覧し、1件を復元する（`--restore <id>`・`--limit`）。既定ストアのみ |
@@ -88,7 +94,7 @@
 | `kirocrew computer call <tool> [k=v ...]` | Computer Useツールを1件実行（デバッグ・再現用） |
 | **`kirocrew desktop metrics/tunnel`**（v0.9.0 の仕様書） | デスクトップアプリ向けの補助コマンド。`metrics` はアプリが記録したプロセスごとの CPU・メモリを表示する（`--json`、`--top`）。`tunnel` は（`--host`・`--local-port`・`--remote-port` を指定して）アプリが remote crew へ張る SSH フォワードをクライアント専用モードで維持する。アプリが起動し、拒否されたホストやポートで exit 2、SIGTERM・SIGINT・stdin の EOF で exit 0。Windows では提供されない（`modules/cli.md` 435行、`instances.md` の tunnel_keeper の節） |
 | `kirocrew mcp-cron` / `mcp-core` / `mcp-computer` | kiro-cliが起動する内部MCPサーバ（`mcp-computer`は`argparse.SUPPRESS`で隠される） |
-| `kirocrew --version` | 版表示 |
+| `kirocrew --version` | 版表示。ソースチェックアウト（`<repo>/src/kiro_crew` 内で解決され、`BUILD_VERSION` の刻印が無い場合）では `(source checkout, not a release build)` が付く（v0.11.0〜。`modules/cli.md` 620行、`fe6f5be`） |
 | `kirocrew eval [--all] [--scenario <name>]` | マルチセッション評価ハーネス実行（`kirocrew gateway --test-mode`を別シェルで起動している必要あり）。公式`cli-reference`ページの記載。`modules/cli.md` 263行は `kirocrew eval [scenarios…] [--all] [--judge]`（引数なしは約30秒のsmoke test）と記載 |
 | `kirocrew telemetry status/disable/enable` | 匿名テレメトリの送信内容の確認・無効化・有効化（`modules/cli.md` 266行。リポジトリREADMEにも記載） |
 | **`kirocrew tailnet status/up/down`** | ダッシュボードをTailscaleネットワークに公開してそのoriginを信頼する／公開をやめる（`modules/cli.md` 265行）。`up`の詳細は`docs/guides/remote-and-mobile.md` 286・290・294行（`tailscale serve`を実行、443でHTTPS、印字されるURLはセッションを含まない）と`docs/system-specs/modules/governance.md` 1310行（`capabilities.tailnet_origin`）（いずれも`21584ea`時点の行番号） |
@@ -96,6 +102,33 @@
 > **注記（v0.7.2 で訂正）**: 本ページは以前、`eval`・`telemetry`・`tailnet` は主出典 `modules/cli.md`「## Commands」節に記載が無いと注記していました。これは `21584ea`（v0.3.0）時点の `modules/cli.md` に基づく記述で、**v0.6.0 の `modules/cli.md`（191・193・194行）には既に3つとも記載されていました**（v0.7.2 では 259・261・262行、v0.9.0 では 263・265・266行）。本サイトの注記が追随していませんでした。`modules/cli.md` を主出典としても、他の一次情報だけに存在するコマンドを見落とさないよう、複数系統を横断確認する方針は変わりません（`config defaults`・`pod prune`・`file-delivery`・`secrets import` は `modules/cli.md` の表に無く、公式ページや別節・ガイドで確認しています）。
 >
 > `modules/cli.md` の表には、本サイトの表記規約上のCLIサブコマンド許可リストに未登録のコマンド群も記載されています（エージェント定義・履歴統合・AppArmorプロファイル管理など）。本ページはこれらを掲載していません。
+
+## v0.11.1での変更
+
+v0.10.0・v0.11.0・v0.11.1 に「Before you upgrade」節はありません。`modules/cli.md` の「## Commands」節の表で、セルが `kirocrew <語>` で始まるサブコマンド語は、v0.9.0 の 41 語から v0.11.1 で 42 語になりました（新規は **`kas`** のみ。消えた語・改名された語はありません）。語は同じで行の内容が変わったものが多くあります。版は、v0.10.0 と v0.11.0 のタグの `modules/cli.md` との比較で絞りました。
+
+**CHANGELOG が説明する項目**
+
+- **`kirocrew kas install`**: ワンライナーと `install.sh` が既定で実行し、`--no-kas` で省ける（v0.11.1。CHANGELOG.md v0.11.1節 45-47行）。コマンド自体は v0.10.0 のタグの `modules/cli.md` 268行から確認できます
+- **`kirocrew stop`・`restart` がデスクトップアプリ管理の Gateway を拒否する**、`restart` が他の Gateway がポートを使っていることを伝える（v0.11.1。同 46-48行）
+- **`kirocrew memory forget`**（v0.10.0。CHANGELOG.md v0.10.0節 332行）
+- **`kirocrew spawn run` の `--model`・`--agent`・`--crew`**、**`kirocrew cron add`／`update` の `--auto-pause-after`**、チャットの権限プロンプトが入力した返信を受け付ける（v0.11.0。CHANGELOG.md v0.11.0節 133-137行）。エージェント定義の作成・更新コマンドの `--model` も同じ節に記載がありますが、本ページはエージェント定義のコマンドを掲載していません（上の注記）
+
+**CHANGELOG が説明せず、`modules/cli.md` の差分で確認した項目**
+
+- `kirocrew chat --agent <name>`（v0.10.0。331行）、`kirocrew chat` が stop reason `timeout`／`stale_recover` で exit 1（1167-1169行）
+- `kirocrew snapshot`／`restore` の `--max-archive-gib`（v0.11.0。377-378行）
+- `kirocrew config set` の `Unknown key`（v0.11.0。587行）
+- `kirocrew app install／enable／disable／uninstall` の即時反映（345行）
+- `kirocrew cloud iam-boundary` の説明が EC2 と Fargate の crew 権限バウンダリへ（v0.10.0。363行）
+- `kirocrew --version` のソースチェックアウト注記（v0.11.0。620行）
+- `kirocrew doctor` の項番 23（v0.10.0）・24（v0.11.0）（1448-1449行）
+
+上の行番号は v0.11.1（`fe6f5be`）の `modules/cli.md` のものです。各コマンドの内容は、上の「[コマンド一覧](#コマンド一覧)」の表の該当行にあります。
+
+**出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/cli.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+出典: CHANGELOG.md v0.10.0節 332行・v0.11.0節 133-137行・v0.11.1節 45-48行（`fe6f5be`）
 
 ## v0.9.0での変更
 
@@ -151,11 +184,13 @@ CHANGELOGはv0.3.0の破壊的変更として「**`kirocrew logout` now revokes 
 
 **v0.9.0 でも継続しています**: CHANGELOG.md v0.3.0節（v0.9.0 のタグでは 2255-2256行）は同じ記述で、`modules/cli.md` 235行（`99e6253`）は「Revoke all active dashboard sessions, refresh chains included」と記述しています（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）。
 
+**v0.11.1 でも継続しています**: `modules/cli.md` 352行（`fe6f5be`）は「refresh chains included」を含む同じ記述で、CHANGELOG.md の v0.3.0節（v0.11.1 のタグでは 2657行）も同じ記述です（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）。
+
 ## クラウド・Pod（見落としやすいコマンド群）
 
 `kirocrew cloud` は、**v0.7.2 の公式 `cli-reference` ページには独立した見出しがありませんでした**が、リポジトリのモジュール仕様には完全なサブコマンド一覧が明記されており、**実在するコマンドです**。**v0.9.0 の公式 `cli-reference` ページには「Cloud」節が新設され**、13サブコマンドを列挙し、`launch` のフラグを説明しています（Page updated 2026-10-20）。`kirocrew pod` は **v0.7.2 の公式 `cli-reference` ページに「Isolated pods」節が新設**されています（v0.6.0 の同ページには無し）。
 
-- **`kirocrew cloud`**: 自分のAWSアカウントにKiroCrewのEC2インスタンスをプロビジョニングして管理する、人間向けのインストーラ／コントロールプレーン。`launch`は6段階のウィザード。`tunnel`はSSMポートフォワードでダッシュボードを開く、`login`はSSM経由で`kiro-cli`のデバイスコード／ソーシャルサインインを実行、`iam-boundary`はimmutableなインスタンス権限バウンダリを事前作成するワンタイムの管理者操作（`modules/cloud.md:13-16`）
+- **`kirocrew cloud`**: 自分のAWSアカウントにKiroCrewのEC2インスタンスをプロビジョニングして管理する、人間向けのインストーラ／コントロールプレーン。`launch`は6段階のウィザード。`tunnel`はSSMポートフォワードでダッシュボードを開く、`login`はSSM経由で`kiro-cli`のデバイスコード／ソーシャルサインインを実行、`iam-boundary`はimmutableなEC2とFargateのcrew権限バウンダリを事前作成するワンタイムの管理者操作（`modules/cli.md` 363行、`fe6f5be`。**v0.9.0 までの記述は「immutableなインスタンス権限バウンダリ」で、Fargate を含んでいませんでした**。`modules/cloud.md:13-16`（`99e6253`））
 - **`kirocrew cloud launch` のフラグ**（公式 `cli-reference` ページ「Cloud」節、`modules/cloud.md` 171-181行）:
   - `--size <tier>`: インスタンスのサイズ階層（既定は balanced、または対話ピッカー）
   - `--subnet <SUBNET_ID>`: ネットワーク自動検出の代わりに、その正確なサブネットへ起動する。インターネットへの出口が必要
@@ -181,7 +216,7 @@ CHANGELOGはv0.3.0の破壊的変更として「**`kirocrew logout` now revokes 
 ## 未確認事項
 
 - `kirocrew --help` による実機での突合（未実施）
-- `kirocrew logout` の変更時期（上記「[`kirocrew logout` の変更に関する食い違い](#kirocrew-logout-の変更に関する食い違い裁定しない)」。**継続**。裁定しない）
+- `kirocrew logout` の変更時期（上記「[`kirocrew logout` の変更に関する食い違い](#kirocrew-logout-の変更に関する食い違い裁定しない)」。**v0.11.1 でも継続**。裁定しない）
 
 > 以前ここに記載していた「`eval`・`telemetry`が`modules/cli.md`から脱落している理由」は、v0.6.0 以降の `modules/cli.md` に両方とも記載されていることを確認したため外しました（上記「コマンド一覧」の注記参照）。
 

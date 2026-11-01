@@ -11,6 +11,9 @@
 **出典**（v0.9.0での再検証: Remote crew sessions・Fargate・Crew log・Usage・スナップショット・Linuxのサービス管理）: CHANGELOG.md v0.8.0節・v0.9.0節、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/cloud.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/instances.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/remote-crew-on-fargate.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/remote-and-mobile.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md>
 （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
 **出典**（v0.9.0）: <https://kiro.dev/docs/crew/features/multi-instance/>（Page updated 2026-10-20）・<https://kiro.dev/docs/crew/system/>（Page updated 2026-10-20）・<https://kiro.dev/docs/crew/features/snapshot/>（Page updated 2026-09-11）・<https://kiro.dev/docs/crew/running-24-7/>（Page updated 2026-08-04）
+**出典**（v0.11.1での再検証: macOS のサービス・`stop`/`restart`・MicroVM レーン・Usage タブ・リバースプロキシ・Tailscale・Docker）: CHANGELOG.md v0.10.0節・v0.11.0節・v0.11.1節、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/macos-troubleshooting.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/remote-and-mobile.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/remote-crew-on-microvm.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/docker.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/cli.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/cloud.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+**出典**（v0.11.1）: <https://kiro.dev/docs/crew/system/>（Page updated 2026-10-20）・<https://kiro.dev/docs/crew/features/multi-instance/>（Page updated 2026-10-20）・<https://kiro.dev/docs/crew/running-24-7/>（Page updated 2026-08-04）
 
 ---
 
@@ -31,13 +34,13 @@ Crewは、SlackボットやCronジョブ、Task Runnerがデスクから離れ�
 
 ## ローカルサービス化
 
-最も簡単な方法は組み込みのインストーラです。システムレベルのサービス（Linuxはsystemd、macOSはlaunchd）として登録され、SSH切断後も生き続け、クラッシュ時は自動再起動、起動時は自動起動します。
+最も簡単な方法は組み込みのインストーラです。Linuxはsystemdのシステムレベルのサービス、macOSはlaunchdの**ユーザー単位のLaunchAgent**として登録され、SSH切断後も生き続け、クラッシュ時は自動再起動します。**Linuxは起動時（ブート時）に自動起動しますが、macOSはログインしたときに起動し、ブート時には起動しません**（下記「[macOS: ログインするまで Gateway が上がりません](#macos-ログインするまで-gateway-が上がりません)」）。
 
 ```bash
 kirocrew service install    # ユニットを登録して起動
 kirocrew service status     # 稼働状態を確認
 kirocrew logs -f            # ライブログを追跡
-kirocrew restart            # atomicな再起動（systemd）または unload+load（launchd）
+kirocrew restart            # atomicな再起動（systemd）または launchctl kickstart -k（launchd。unload+load は使わない）
 kirocrew service uninstall  # 削除
 ```
 
@@ -46,6 +49,35 @@ Linuxではインストール時にsudoを1回要求してユニットファイ�
 **sudoのスコープ**: `kirocrew service install` は `sudo tee`（ユニットファイルの書き込み）と `sudo systemctl ...`（daemon-reload・enable・restart）のみを実行します。`kirocrew`本体・MCP・LLMのコードパスはsudo下では動きません。
 
 サービス化を避けたい場合、`tmux` はSSH切断には耐えますが**クラッシュ時の自動再起動・再起動時の自動起動はしません**。
+
+### macOS: ログインするまで Gateway が上がりません
+
+- macOS の `kirocrew service install` は、`~/Library/LaunchAgents/dev.kirocrew.gateway.plist` に**ユーザー単位の LaunchAgent**を書きます（sudo は要りません）。launchd はこれをログインセッションの `gui/<uid>` ドメインに読み込みますが、このドメインは Mac 自体でログインして初めて生じ、SSH ログインでは作られません
+- **自動ログインをオフにした Mac（SSH や Tailscale だけで使う Mac mini など）では、再起動後にログインするまで Gateway が上がりません。** ログインすれば自動で上がります。毎回の再起動後に Gateway を上げたい場合は、そのユーザーの自動ログインをオンにするか、再起動のたびに 1 回ログインします
+- SSH から確かめるには、`launchctl print "gui/$(id -u)/dev.kirocrew.gateway"` と `lsof -nP -iTCP:5476 -sTCP:LISTEN` を使います（別のポートなら `dashboard.url` や `KIROCREW_PORT` の値に替えます）。ログイン前は前者が `gui` ドメインが見つからないと答え、後者は何も出しません。SSH で `service install` を実行したときに誰もログインしていなければ、ジョブは `user/<uid>` に入ります
+- 前回のブートから残った `~/.kiro/crew/gateway.lock` は安全です。ロックは実行中のプロセスが保持し、再起動で解放されるので、削除しません。起動がロックの保持で拒否されたときは、実際に何かのプロセスが保持しています（`lsof ~/.kiro/crew/gateway.lock` で分かります）
+- `kirocrew restart` は macOS では `launchctl kickstart -k`（`gui/<uid>`、次に `user/<uid>`）を使います。`unload`+`load` は使いません。Gateway 自身から実行すると `unload` が呼び出し元に SIGTERM を送り、`load` が走らないためです
+
+> **以前の本サイトの記述の訂正**: 本節の冒頭は以前、macOS も「システムレベルのサービス」で「起動時は自動起動する」と書き、`restart` を「unload+load（launchd）」と書いていました。macOS の LaunchAgent はログイン時に起動し、`restart` は `kickstart -k` です。これは本サイトの誤りで、v0.9.0 の `cli.md` 241行も `service install` が LaunchAgent を書くと記述していました。ログイン時のみ起動する旨を明記した `install.md` の記述は、v0.11.0 タグから確認できます（v0.10.0 タグの `install.md` にはありません）。
+
+> ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**（macOS で起動時に自動起動するか）
+> - `docs/system-specs/modules/cli.md` 358行（`fe6f5be`）: `kirocrew service install` を「system-level systemd service (Linux) or launchd LaunchAgent (macOS)」とし、「Auto-restarts on crash, auto-starts on boot」と記述（プラットフォームの区別なし）
+> - `docs/guides/install.md` 805-808行・`docs/guides/macos-troubleshooting.md` 127-159行: macOS ではログイン時に起動し、ブート時には起動しない
+
+出典: `docs/guides/install.md` 805-808行、`docs/guides/macos-troubleshooting.md` 127-170行、`docs/system-specs/modules/cli.md` 358・1942-1950行
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+**これらは仕様書・ガイドの差分で確認したもので、CHANGELOG・Release 本文は説明していません。**
+
+### `kirocrew stop` / `restart` はデスクトップアプリが管理する Gateway を拒否します（v0.11.1）
+
+- デスクトップアプリが管理する Gateway には、`kirocrew stop` と `kirocrew restart` は**何も送信せず、シグナルも送らず、exit 1** で止まります（監査の理由は `desktop_app_supervised`）。アプリ内の Settings → About → Restart gateway を使うか、アプリを終了します。アプリが Gateway を停止後に再起動するためです
+- `--port N` を付けた場合は、この `KIROCREW_HOME` の Gateway が N で待ち受けているときだけ適用されます。`stop --port PORT --expect-pid PID`（アプリ自身の停止）は拒否されません。Dev Fleet の前景再起動も同じ判定を使います
+- `restart` が、置き換えた Gateway がすぐ終了した場合の表示を詳しく出します。ポートがなお HTTP に応答するときは `Nothing is serving port` ではなく「exited at once … Port P still answers HTTP」を表示し、`gateway.lock` の保持者が分かれば名前を挙げ、`backend-dist` から動いていればデスクトップアプリと呼びます。終了コードと監査記録は変わりません
+- `kirocrew stop` が port ツールなしで使う `POST /api/shutdown` は、所有者検証付きの送信（owner-only の unix ソケットを優先、無ければ loopback TCP）になりました
+
+出典: `docs/system-specs/modules/cli.md` 356-357・1786-1792・1811-1820・1951-1956・1995-2004行
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+出典: CHANGELOG.md v0.11.1節 45-48行（`fe6f5be`）。`restart` の表示の詳細と `/api/shutdown` の送信方法は仕様書の差分で確認したもので、CHANGELOG は「another gateway still serves the port」としか説明していません
 
 ### Linuxのサービス管理（systemd の system／user の2スコープ）
 
@@ -81,6 +113,17 @@ docker exec -it kirocrew kiro-cli login
 # 2. ダッシュボードログインリンクを発行（すべてのリクエストがトークンを要求）
 docker exec kirocrew kirocrew token --ttl 2h
 ```
+
+### v0.11.1での変更（Docker）
+
+以下は `docs/guides/docker.md` の差分で確認したもので、**CHANGELOG・Release 本文は説明していません**。
+
+- 同梱の seccomp プロファイル `docker/seccomp/kirocrew-seccomp.json` の追加ルールに `umount2` が加わりました（`unshare`・`clone`・`mount` に続く。258-259行）
+- ローカル bootstrap（同一マシンのピアとファイルシステム上のシークレットを要求する経路）に `/api/logout` と `/api/update/revalidate` が加わりました（165-168行）
+- Teams の `teams` extra は `PyJWT[crypto]==2.15.0` になりました（99行。v0.9.0 の記載は `2.13.0`）
+
+出典: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/docker.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
 
 ## リモートホスト
 
@@ -121,19 +164,51 @@ ssh -L 5476:localhost:5476 user@your-host.example.com
 
 ダッシュボードトークンは既定1時間（最大20時間まで設定可）、presigned linkのクリック有効期限は5分です。
 
+### v0.11.1での変更（リバースプロキシ・Tailscale）
+
+以下は `docs/guides/remote-and-mobile.md` の差分で確認したもので、**CHANGELOG・Release 本文は説明していません**（v0.9.0 のガイドには、これらの節がありません）。
+
+- **リバースプロキシの背後に置く**（556行〜の新節「Behind a reverse proxy」）: ダッシュボード全体（ページ・API・WebSocket）を 1 つのホスト名のルートパスで出し、`dashboard.url` をその公開 URL にして再起動します。ダッシュボードの CSP が許すのは `'self'` の `connect-src` だけなので、ソケットを別のホストに置く構成はブラウザに拒否されます。プロキシが渡すヘッダは次のとおりです
+  - `Host`（公開名か `localhost:<port>`。他の値は `Host` の防壁に拒否されます）
+  - `X-Forwarded-Proto: https`（無いと認証 Cookie が `Secure` なしで設定され、モバイルブラウザが `wss://` のアップグレードで落とします）
+  - `Upgrade` と `Connection`（WebSocket のアップグレード用）
+
+  nginx と Caddy の設定例がガイドにあります
+- **サブパスの背後に置く**（868行〜の新節「Behind a reverse proxy at a sub-path」）: `https://gateway.example.com/proxy/kirocrew/` のようなプレフィックスで出す場合は、そのプレフィックス向けの専用フロントエンドビルドが要ります（`KIROCREW_BASE_PATH=/proxy/kirocrew npm run build`）。この変数はビルド時にだけ読まれ、Gateway は読みません。プロキシはプレフィックスを取り除いて転送し、Cookie を中継し、リダイレクトの `Location` を書き換えます
+- **Tailscale**（401行〜）: Tailscale の CLI は、標準のインストール先から、かつバイナリとその親ディレクトリの変更に管理者権限が要る場合にだけ実行されます。macOS の Homebrew 版は多くが利用者所有のため拒否され、カードが「Tailscale is installed but will not be run」と表示し、`kirocrew tailnet up` と `kirocrew tailnet status` が拒否したバイナリ名を示します。その場合は `tailscale serve` を自分で実行し、`dashboard.url` をブラウザで開くアドレスそのものに設定して再起動します
+
+出典: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/remote-and-mobile.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+
 ## マルチインスタンス
 
 複数のCrewインスタンスを運用するための機能です（詳細は公式 `features/multi-instance/` を参照）。**注記**: 公式ページの「4つの一般的な運用パターン」（ローカルサービス化・Docker常駐・リモートホスト・モバイルアクセス）には含まれず、公式ページの別項目です。
 
 ### Remote crews（呼称はv0.9.0で「Remote Crew」に統一）
 
-**v0.6.0 から、1つの Kiro Crew Gateway（hub）が、SSH または AWS SSM Session Manager のトンネル経由で複数のリモート Kiro Crew（開発ホスト・EC2・自宅サーバ）を管理・切り替えできます。** 各リモートのダッシュボードは、切り替えストリップの下に iframe ペインとして埋め込まれます。トランスポートはインスタンス単位（`connection_method`）です。v0.7.0 で AWS Fargate が3つ目の接続方式に加わりました（下記）。
+**v0.6.0 から、1つの Kiro Crew Gateway（hub）が、SSH または AWS SSM Session Manager のトンネル経由で複数のリモート Kiro Crew（開発ホスト・EC2・自宅サーバ）を管理・切り替えできます。** 各リモートのダッシュボードは、切り替えストリップの下に iframe ペインとして埋め込まれます。トランスポートはインスタンス単位（`connection_method`）です。v0.7.0 で AWS Fargate が3つ目の接続方式に加わりました（下記）。v0.10.0 では、AWS Lambda MicroVM のレーンが加わっています（下記「[v0.11.1での変更（MicroVM レーン）](#v0111での変更microvm-レーン)」）。
 
 **呼称（v0.9.0 で一次情報間の食い違いは解消）**: v0.9.0 の公式ドキュメントとモジュール仕様 `instances.md` は、UI 名をどちらも **「Remote Crew」** と記述しています。公式 `configuration/` ページの Settings 表（28行）は「**Remote Crew**｜SSH, AWS SSM, and Fargate connections」、公式 `features/multi-instance/` ページは「Settings → Remote Crew」「Add remote crew」（15・23・96行）、`instances.md` 9-11行は Settings セクション・ヘッダの切り替えグループ（「Remote Crews」／「Switch crew」）・キーボードショートカットを「Remote Crew」と記述します。**v0.7.2 では、公式が「Remote crews」、`instances.md` が「Remote Instances」と表記が分かれていました**（v0.6.0 の公式ページは「Remote Instances」）。コードと設定は引き続き「instance」を使います（`/api/instances`・`instances.json`・`instances.enabled`・EC2の`instance_id`／`ssm_target`）。製品名の **Kiro Crew** や、エージェントの **crew**（独自のワークスペース／メモリを持つアシスタント。Crew Members ページ）とは**意図的に別物**です（`instances.md` 9-18行）。
 
 **出典**: <https://kiro.dev/docs/crew/features/multi-instance/>・<https://kiro.dev/docs/crew/configuration/>（いずれも Page updated 2026-10-20）
 **出典**（呼称）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/instances.md>
 （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+
+### v0.11.1での変更（MicroVM レーン）
+
+v0.10.0 から、`cloud.json` の **`microvm` ブロック**で、crew を AWS Lambda MicroVM（秒課金）上で動かすレーンを使えます。以下は v0.10.0 の変更です（CHANGELOG.md v0.10.0節 343-345行）。
+
+- **crew のホームは VM のディスク上にあり、VM と一緒に消えます。** 既定の寿命は **1 時間**で、`wall_seconds` で変えられます（上限はプラットフォームの最大値で、延長はできません）。ホームを残す機能（アーカイブ・再開時の復元・アイドル時の停止）はありません
+- ブロックが完全でなければ、レーンはプロビジョナの一覧に出ません。ブロックの項目（`base_image_arn`・`build_role_arn`・`recipe_bucket`・`kms_key_id`・`activation_role_arn`・`identity_secret_ref` など）と必要な AWS リソースは、運用者が自分で作成します。製品はバケット・鍵・ロールを作らず、`cloud.json` も書きません
+- **VM の HTTPS エンドポイントはインターネットから常に到達可能で、`NO_INGRESS` コネクタを付けても閉じません。** そのためこのレーンの crew は全ルートで呼び出し元を認証し、`SMC_REQUIRE_AUTH_ALL_ROUTES=1` がイメージに焼き込まれます。VM 全体が Firecracker の境界で包まれるため、ゲストは `KIROCREW_ALLOW_UNSANDBOXED=1` で動きます
+- 起動は API（`POST /api/cloud/launch` に `provider_id` を `microvm` として渡し、プロビジョナ一覧が示す `confirm_recipient` を添える）で行います。ウィザードの手順・ダッシュボードのフォーム・`cloud` の CLI 動詞・Set-up の選択肢・チャットのペインはありません（`remote-crew-on-microvm.md` の「Known gaps」）
+- 公式 `features/multi-instance/` ページ（Page updated 2026-10-20）には MicroVM の記載がありません
+- **Keep crews in step**（v0.10.0）: Remote Crew の行と crew ウィンドウのヘッダが、crew が古いビルドで動いていることを示して更新を提案します。所有者は 1 つのリモート crew を無効化できます（CHANGELOG.md v0.10.0節 346-348行）
+- Fargate の `internal_only`・`task_ttl_seconds`・同時 10 タスクの記述は変わっていません
+
+**出典**（MicroVM レーン）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/remote-crew-on-microvm.md>（冒頭・「The `microvm` block」「The wall」「Security」「Known gaps」節）、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/cloud.md>（79・319-329行）
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+出典: CHANGELOG.md v0.10.0節 343-348行（`fe6f5be`）
 
 ### v0.9.0での変更（Remote crew sessions）
 
@@ -248,7 +323,13 @@ v0.7.2 の公式 `system/` ページは「保存形式はまだ pre-release」�
 
 ### Usage: クレジットと推定トークン（v0.9.0）
 
-- Settings → Overview の **Usage** カードから開く Usage タブに、**Estimated Tokens** カード（今月・先月の入力／出力／合計トークンとモデル要求数）と、Daily History の **Est. tokens** 列があります。Kiro CLI はクレジットを報告しますがトークン数を保存しないため、読めるセッションから推定します。入力は各要求で送った全コンテキスト（キャッシュの有無を問わない）、出力は返信の長さを4で割った値が目安で、tool 呼び出しと推論は含みません。このコンピュータに保存されたセッションだけが対象で、読めなかったセッションがあるとカードがそう表示して数値から除きます
+> **v0.11.0 で、Usage タブは kiro-cli の推定トークンを表示しなくなりました**（CHANGELOG.md v0.11.0節 166-167行。`fe6f5be`）。下の1つ目の箇条（Estimated Tokens カードと Est. tokens 列）は、v0.9.0 で導入され（CHANGELOG.md v0.9.0節 511-512行）、v0.10.0 までの説明です。
+>
+> ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**（Usage タブの推定トークン）
+> - CHANGELOG.md v0.11.0節 166-167行: Usage タブは「no longer shows estimated kiro-cli tokens」
+> - 公式 `system/` ページ（`docs_md/system.md` 37-41行。Page updated 2026-10-20）: Usage タブの **Estimated Tokens** カードと Daily History の **Est. tokens** 列を引き続き記述
+
+- （v0.9.0〜v0.10.0）Settings → Overview の **Usage** カードから開く Usage タブに、**Estimated Tokens** カード（今月・先月の入力／出力／合計トークンとモデル要求数）と、Daily History の **Est. tokens** 列があります。Kiro CLI はクレジットを報告しますがトークン数を保存しないため、読めるセッションから推定します。入力は各要求で送った全コンテキスト（キャッシュの有無を問わない）、出力は返信の長さを4で割った値が目安で、tool 呼び出しと推論は含みません。このコンピュータに保存されたセッションだけが対象で、読めなかったセッションがあるとカードがそう表示して数値から除きます
 - 上部バーのクレジット表示から開く **Kiro Account** モーダルは、条件が揃うと、クレジットがリセットまで持つか、今サイクルのペースだと尽きる日を1行で示します。ペースは同じアカウントの他クライアントを含む今サイクルの総消費から出し、この Gateway の Daily History が14日以上あると曜日の傾向も使います。使用状況が読み込み中・リセット日が不明・プランを使い切った・ボーナスクレジットを消費中・サイクルの1日目が終わる前、のいずれかでは表示されません
 - サブエージェントの実行は経過時間の隣にクレジットを表示します（例 `2.40 credits · 1m 5s`）。プロバイダがクレジットを報告しないときは経過時間のみです。cron 実行の結果行は、チャットのターンと同じ usage footer（経過時間・クレジット・モデル）を持ちます
 
@@ -303,11 +384,13 @@ kirocrew restore snapshot.tar.gz      # replace/mergeを自動判定
 ## 未確認事項
 
 - マルチインスタンスの詳細な運用手順（公式ページの参照のみで、本サイトでは概要にとどめる）
-- Fargateの最大同時タスク数（10）を `cloud.json` で変更できるか（**継続**。CHANGELOG v0.7.0節と、公式ページ・`cloud.md` で記述が異なる）
-- Fargate接続方式をダッシュボードから追加できるか（**継続**。公式ページ・CHANGELOG と `cloud.md`・`remote-crew-on-fargate.md` で記述が異なる）
-- 常時稼働ホストのRAMの下限（公式 `running-24-7/` ページは「~10 GB minimum」、リポジトリの `remote-and-mobile.md` は「no single published floor」。**v0.9.0 の再検証で見つかった食い違い**。v0.7.2 の `remote-and-mobile.md` も同じ記述）
-- `scripts/sync-to-remote.sh` の仕様と、公式ページが求めるWALファイルの同期との関係（上記「リモートホスト」節の注記。裁定しない）
-- Crew log の保存形式が pre-release のままかどうか（v0.7.2 の公式ページの記述。v0.9.0 の公式 `system/` ページには見つからない）
+- Fargateの最大同時タスク数（10）を `cloud.json` で変更できるか（**v0.11.1 でも継続**。CHANGELOG v0.7.0節 1503行と、公式 `features/multi-instance/` ページ51行・`cloud.md` 259行で記述が異なる）
+- Fargate接続方式をダッシュボードから追加できるか（**v0.11.1 でも継続**。公式 `features/multi-instance/` ページ49・96-102行と、`cloud.md` 206行・`remote-crew-on-fargate.md` 95行で記述が異なる）
+- 常時稼働ホストのRAMの下限（公式 `running-24-7/` ページ115行は「~10 GB minimum」、リポジトリの `remote-and-mobile.md` 29行は「no single published floor」。**v0.11.1 でも継続**。v0.9.0 の再検証で見つかった食い違い）
+- `scripts/sync-to-remote.sh` の仕様と、公式ページが求めるWALファイルの同期との関係（上記「リモートホスト」節の注記。**v0.11.1 でも継続**。裁定しない）
+- Crew log の保存形式が pre-release のままかどうか（v0.7.2 の公式ページの記述。v0.11.1 の公式 `system/` ページ・`crew-log-core.md`・`crew-log-emitter.md` にも「pre-release」の語は見つからず、判定できない）
+- Usage タブの推定トークンの表示（CHANGELOG v0.11.0節 166-167行は表示しなくなったと記述、公式 `system/` ページは Estimated Tokens カードを記述。**v0.11.0 で生じた新規の食い違い**。上記「Usage」節参照。裁定しない）
+- macOS の `kirocrew service install` が起動時に自動起動するか（`cli.md` 358行は「auto-starts on boot」と書き、`install.md` 805-808行・`macos-troubleshooting.md` 127-159行はログイン時のみと記述。上記「macOS」節参照。裁定しない）
 
 > 以前ここに記載していた「Remote crews の現行UI表示名」は、v0.9.0 で公式ドキュメントと `instances.md` がともに「Remote Crew」に統一されたため**解消**として外しました（上記「Remote crews」節参照）。「`instances.enabled` が live か要再起動か」の同一ページ内の記述差も、v0.9.0 の公式ページが起動時に読まれる旨に揃ったため解消しています。
 

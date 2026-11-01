@@ -10,6 +10,8 @@
 **出典**: <https://kiro.dev/docs/crew/interfaces/>（Page updated 2026-09-30）
 **出典**（v0.8.0・v0.9.0での変更・チャネル数の再測定・Slack との結び付け・Telegram の forum topic）: <https://kiro.dev/docs/crew/interfaces/slack/>・<https://kiro.dev/docs/crew/interfaces/telegram/>・<https://kiro.dev/docs/crew/interfaces/teams/>（いずれも Page updated 2026-10-20）、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/messaging.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/README.md>
 （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+**出典**（v0.10.0・v0.11.0・v0.11.1での変更・チャネル数の再測定・送信元の表記・チャネルの `/agent`）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/messaging.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/persistent-agent-channels.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/README.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/CHANGELOG.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
 
 ---
 
@@ -18,6 +20,7 @@
 - [1つのGateway・複数のサーフェス](#1つのgateway複数のサーフェス)
 - [メッセージングチャネル](#メッセージングチャネル)
 - [チャネルの振る舞い](#チャネルの振る舞い)
+- [v0.11.1での変更](#v0111での変更)
 - [v0.9.0での変更](#v090での変更)
 - [v0.8.0での変更](#v080での変更)
 - [v0.7.0での変更](#v070での変更)
@@ -38,7 +41,7 @@ Kiro Crewは1つのGateway（単一のasyncioプロセス）が複数のサー�
 | **デスクトップアプリ** | Gatewayをバンドルした最もシンプルなローカル体験。ローカル・リモートGatewayへのマルチタブ接続に対応 |
 | **Webダッシュボード** | 並行する会話・ファイル・承認・活動・メモリ・スケジュール・App・設定・システム状態を `localhost:5476` で提供 |
 | **CLI** | `kirocrew chat` |
-| **メッセージングチャネル** | Slack・Telegram・Discord・Teams・Webex・WeCom・WeChat・WhatsApp・iMessage・Feishu（公式 Interfaces ページの一覧。チャネル数は一次情報間で一致しません。「[v0.9.0での変更](#v090での変更)」参照） |
+| **メッセージングチャネル** | Slack・Telegram・Discord・Teams・Webex・WeCom・WeChat・WhatsApp・iMessage・Feishu（公式 Interfaces ページの一覧。チャネル数は一次情報間で一致しません。「[v0.11.1での変更](#v0111での変更)」参照） |
 
 ## メッセージングチャネル
 
@@ -67,9 +70,70 @@ Kiro Crewは1つのGateway（単一のasyncioプロセス）が複数のサー�
 - **永続エージェントチャネル（Channels App）**: オーケストレーターが専門エージェントをチャネルのメッセージ・スレッド・@mention で調整する、永続的なマルチエージェントのワークスペースです。メッセージングチャネル（Slack 等）の設定とは別の機能で、UI は非表示の opt-in 組み込み App `channels`（`defaultEnabled: false`）です。`kirocrew app enable channels` で有効にします（`persistent-agent-channels.md` 3-7行、`99e6253`）
   - **記述の訂正**: 本サイトは以前、これを「チャネルとエージェントの長期的な紐付け」と記載していました。v0.7.2 の同仕様書の Overview（3-5行、`c67c506`）も同じ内容で、この誤りは v0.7.2 以前からのものです
 
+## v0.11.1での変更
+
+v0.10.0・v0.11.0・v0.11.1 の間に、CHANGELOG の Notable fixes がチャネルの挙動を変えています。v0.11.1 の CHANGELOG（5-54行）にチャネルの項目はありません。
+
+### チャネル数（v0.11.1 での再測定・変化なし）
+
+> ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**
+>
+> | 出典 | v0.11.1 時点の記述 |
+> |------|------------------|
+> | 公式ドキュメント（`interfaces/` 配下の設定ガイドページ） | **7ページ**（Slack・Telegram・Discord・Teams・Webex・WeCom・WeChat。v0.9.0 から変化なし） |
+> | 公式 Interfaces ページの一覧（Page updated 2026-09-30） | メッセージングチャネルとして**10件**（上記7件＋WhatsApp・iMessage・Feishu） |
+> | 公式 Quick start（`index`、Page updated 2026-10-20） | 「additional channels such as」として上記7件を例示（総数の記載なし） |
+> | README.md 347行 | **10件**（Slack, Discord, Telegram, Teams, Webex, WeCom, WeChat (Weixin), WhatsApp, Feishu (Lark), iMessage）。v0.9.0 では 334行でした |
+> | `modules/messaging.md` | 168行「all ten transports」、990行「All **ten channels**」、3481行「all ten channel panels」、6240行「counts all ten channels」と、**10**で一貫しています。v0.9.0 の 5841行にあった「a ten-channel repo」は v0.11.1 に出現しません |
+>
+> 数値は v0.9.0 から変わっていません（v0.9.0 の行番号は下の「[v0.9.0での変更](#v090での変更)」にあります）。総数は出典ごとに異なるため、本サイトは公式の設定ガイドページ数（7）とそれぞれの列挙を併記します。
+
+**出典**（仕様書・README）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/messaging.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/README.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+**出典**: <https://kiro.dev/docs/crew/interfaces/>（Page updated 2026-09-30）、<https://kiro.dev/docs/crew/>（Quick start、Page updated 2026-10-20）
+
+### チャネルの挙動の変更（CHANGELOG の Notable fixes・設定）
+
+- **v0.10.0**: Slack・Telegram・Discord は、切断後に返信を二重に投稿しません。届けられなかった返信の部分には印が付きます。Feishu のグループメッセージは、bot にメンションしたときだけ処理されます。Slack は新しい既定エージェントにゲートウェイの再起動なしで追従します（出典: CHANGELOG.md v0.10.0節 388-391行（`fe6f5be`））
+- **v0.10.0**: チャネルのトークンが `secret://` 参照を受け付け、新しいトークンはボールトに保存されます（出典: CHANGELOG.md v0.10.0節 325-327行（`fe6f5be`））。`secret://` 参照は仕様書 `messaging.md` と公式のチャネルページに記述が見つからず、CHANGELOG のみが記載しています
+- **v0.11.0**: Slack は1ターンの返信全体をリンク済みのスレッドにミラーし、キャンセル時に作業中のステータスを消し、セッション自身のフォルダからインライン画像をアップロードします。Slack App Home の cron 一覧は各ジョブのタイムゾーンを守ります。Telegram は保留中のメッセージを再通知しません。Weixin は再接続後も QR で署名したトークンを保ちます（出典: CHANGELOG.md v0.11.0節 204-208行（`fe6f5be`））
+
+### 仕様書の差分にだけある項目（CHANGELOG・Release 本文に説明なし）
+
+> 本節の3項目は v0.11.1 タグの仕様書で確認したもので、v0.9.0 の `messaging.md`・`persistent-agent-channels.md` には記述がありません。CHANGELOG・Release 本文は説明していません。
+
+- **プロアクティブ送信が送信元を名乗る**: プロアクティブなチャネル送信（`send_message` の `session="<channel>"` 指定）は、本文の末尾に `Sent by cron: <job name>` または `Sent by chat: <chat title>` の1行を付けて、送信元の cron ジョブまたはチャットを名乗ります。`channel_type` 指定の送信には cron の場合だけ付き、チャットが自分の会話に送る場合は付きません。チャネルから始まった呼び出しなど送信元が分からない呼び出しには付かず、Slack への送信・設定済み宛先への送信・ミラーされた返信は変わりません。名前は1行で、redact され、長さが制限されます（`messaging.md` 1143-1153行）
+- **チャネルの `/agent`**（Webex・Discord・Teams・Feishu）: 1つのハンドラで処理されます。選んだエージェントはメモリ上に保持され（Telegram の dispatcher も同じ保存先を使います）、現在のセッションがビジー（処理中）のときは切り替えを拒否します。`/new` は再起動後も新規のセッションになります（`messaging.md` 1652-1664行）
+- **Channels App のターン未完了の通知**: 停止理由が `timeout` または `stale_recover` のターンは、エージェントの返信としてではなく、システムメッセージのエラーカードとして投稿されます。完了したターンと利用者が止めた（`cancelled`）ターンは従来どおり本文を投稿します（`persistent-agent-channels.md` 63行）。同じ仕様書は、人間の読み手向けの表示専用の通知を、メンバーのキューに積まずに記録・配信できる（エージェントを起こさない）と記載しています（72行）
+
+**出典**（仕様書）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/messaging.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/persistent-agent-channels.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+
+### v0.9.0 の記述が v0.11.1 でも成り立つことの再確認
+
+- Slack の `slack.auto_link_sessions`（既定 off）の自動リンク: `slack-gateway.md` 1216行
+- Telegram の forum topic: `messaging.md` 1752行（`## Telegram forum topics`）、`telegram.allow_forum`（既定 `false`）・`allowed_forum_chat_ids`（既定 `[]`）は `config.md` 3143-3144行。`TELEGRAM_API_BASE_URL` は v0.11.1 の仕様書（`docs/`）に記述がなく、CHANGELOG.md v0.11.1 のファイルの 503行（v0.9.0 節）と公式 Telegram ページ（Page updated 2026-10-20）が記載しています
+- `messaging.queue_mode`（既定 `steer`）と `/steer`・`/queue`: `messaging.md` 1892行ほか。Teams の `/sessions`（`teams.allowed_emails` が1件のときだけ）: 5608行
+- observe モード（200 件・1週間・ディスクに永続化）と Normal mode（50 件・5分）: `channel-history.md` 44-49行・89-90行
+- `agent.max_channels`（既定 1）・`agent.max_channel_agents`（既定 3）: `persistent-agent-channels.md` 45行。Channels App `channels` は `defaultEnabled: false`（`persistent-agent-channels.md` 5行、builtin App の実測）
+- WhatsApp グループの `TOOLLESS_TURN_AGENT`（`kirocrew-guest`）と `allowed_wa_ids`: `messaging.md` 67行・6429行・6258行。Slack の `update_message`: 1559行
+
+**出典**（仕様書）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/messaging.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/slack-gateway.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/channel-history.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/persistent-agent-channels.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+
+### 再起動が必要なチャネル設定（食い違いは継続）
+
+下の「[v0.9.0での変更](#v090での変更)」の「再起動が必要なチャネル設定（食い違い）」は v0.11.1 でも継続しています。公式 Configuration ページ（Page updated 2026-10-20、v0.9.0 時点から変化なし）は Slack のスラッシュコマンドと `mcp.honour_auto_approve` に **Changes need a restart** のバッジが付くと記載し、`messaging.md` は例外3つ（`slack.command`・`whatsapp.db_path`・`config_dir/.env` の資格情報）を「the whole list」としています。v0.11.1 の `messaging.md` では、その記述が 1099-1110行、`dm_scope` の `restart=True` が 1056-1057行にあります（v0.9.0 は 1066-1076行・1023-1024行）。
+
+**出典**（仕様書）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/messaging.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+**出典**: <https://kiro.dev/docs/crew/configuration/>（Page updated 2026-10-20）
+
 ## v0.9.0での変更
 
 ### チャネル数（v0.9.0 での再測定・一次情報間で一致しない）
+
+> 本節は v0.9.0 時点の記述です。v0.11.1 の再測定は「[v0.11.1での変更](#v0111での変更)」を参照してください。
 
 > ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**
 >
@@ -264,10 +328,10 @@ v0.4.0 CHANGELOGはWhatsApp・iMessage・Feishuの3チャネル追加を記載�
 
 ## 未確認事項
 
-- Webex／WeChat／Discord の個別の振る舞いの詳細（公式の各ページは v0.7.2 と v0.9.0 で同一。本サイトでは概要のみ記載）。WeCom のファイル送受信は「v0.8.0での変更」に記載しました
-- メッセージングチャネルの総数（公式の設定ガイドページは7、公式一覧と README と `messaging.md` は10、公式 Quick start は7件の例示。「[v0.9.0での変更](#v090での変更)」を参照）。v0.7.2 時点で `messaging.md` にあった「eleven channels」は v0.9.0 で「ten」に揃いました
-- 再起動が必要なチャネル設定の範囲（「[v0.9.0での変更](#v090での変更)」の食い違い）
-- 自分自身に応答する会話の一時停止（1時間に90ターン）の設定キー・対象チャネル
+- Webex／WeChat／Discord の個別の振る舞いの詳細（公式の各ページは v0.7.2・v0.9.0・v0.11.1 で Page updated が同じ。本サイトでは概要のみ記載）。WeCom のファイル送受信は「v0.8.0での変更」に記載しました
+- メッセージングチャネルの総数（公式の設定ガイドページは7、公式一覧と README と `messaging.md` は10、公式 Quick start は7件の例示。v0.11.1 でも値は変わりません。「[v0.11.1での変更](#v0111での変更)」を参照）。v0.7.2 時点で `messaging.md` にあった「eleven channels」は v0.9.0 で「ten」に揃い、v0.11.1 でも「ten」です
+- 再起動が必要なチャネル設定の範囲（「[v0.11.1での変更](#v0111での変更)」と「[v0.9.0での変更](#v090での変更)」の食い違い。v0.11.1 でも継続）
+- 自分自身に応答する会話の一時停止（1時間に90ターン）の設定キー・対象チャネル（CHANGELOG.md v0.11.1 のファイルの 1005-1006行（v0.8.0 節）の記述のみ。v0.11.1 の `docs/` 全体を検索しても設定キー・対象チャネルの記述は見つかりません）
 
 ## 関連リンク
 

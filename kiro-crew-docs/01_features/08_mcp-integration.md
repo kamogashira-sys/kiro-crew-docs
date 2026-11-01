@@ -4,7 +4,7 @@
 
 **出典**: <https://kiro.dev/docs/crew/capabilities/mcp-tools/>（Page updated 表記あり）
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/mcp.md>
-（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
 
 ---
 
@@ -14,6 +14,7 @@
 - [管理対象のMCPサーバ](#管理対象のmcpサーバ)
 - [設定ファイルの分離](#設定ファイルの分離)
 - [マージの優先順位](#マージの優先順位)
+- [v0.11.1での変更](#v0111での変更)
 - [v0.9.0での変更](#v090での変更)
 - [v0.8.0での変更](#v080での変更)
 - [v0.7.0での変更](#v070での変更)
@@ -30,31 +31,47 @@ LLMが使う新機能は、Skillsのラッパーではなく**MCP Toolとして�
 
 ## 管理対象のMCPサーバ
 
-Gatewayが所有する管理対象サーバです（`agent._MANAGED_MCP_SERVERS`）。v0.9.0 の `architecture/mcp.md` は、次の**8サーバ**を保持すると記述しています（144-148行。常時有効 2・条件付き（gated）1・オプトイン 5）。
+Gatewayが所有する管理対象サーバです（`agent._MANAGED_MCP_SERVERS`）。v0.11.1 の `architecture/mcp.md` は、次の**10サーバ**を保持すると記述しています（186-191行。常時有効 4・条件付き（gated）1・オプトイン 5）。v0.9.0 の同ファイルは 8 サーバ（常時有効 2）でした。`kirocrew-guide` と `kirocrew-mate` は v0.9.0 の仕様書にはなく、v0.10.0 タグの `mcp.md` で確認できます（CHANGELOG はこの 2 サーバを説明していません）。
 
 | サーバ | 区分 | 役割 |
 |-------|------|------|
 | `kirocrew-core` | 常時有効 | `spawn_run`（サブエージェント起動）・`learn_add`（レッスン追加）・`task_run`（タスク実行）等。ブラウザの `browser` ツールもここにあります（下記） |
 | `kirocrew-cron` | 常時有効 | cronスケジューリング関連ツール（9ツール） |
+| `kirocrew-guide` | 常時有効 | ダッシュボードの設定や操作を案内・提案する 12 ツール（下記「[追加された 2 サーバ](#追加された-2-サーバkirocrew-guidekirocrew-mate)」） |
+| `kirocrew-mate` | 常時有効 | 呼び出した Mate 自身の記録を扱う 11 ツール（同上） |
 | `kirocrew-computer` | 条件付き（gated） | Computer Use（デスクトップGUI自動化）のシム |
-| `kirocrew-dashboard` | オプトイン | チャットフォルダ（`chat_folder_*`）・ボードタグ（`chat_tag_*`）・他セッションの操作（`session_*`） |
+| `kirocrew-dashboard` | オプトイン | チャットフォルダ（`chat_folder_*`）・ボードタグ（`chat_tag_*`）・他セッションの操作（`session_*`）。37 ツール（v0.9.0 は 31） |
 | `kirocrew-work` | オプトイン | conductor と worker の作業台帳（`work_brief`・`work_report`・`work_ledger_read`・`work_ledger_record`・`work_ledger_rebuild`） |
 | `kirocrew-crew-log` | オプトイン | セッションの Crew log の読み取り専用（`crew_log_*`） |
 | `kirocrew-debug` | オプトイン | 動作中の Gateway に関する読み取り専用の 5 ツール（`debug_*`）。下記「[`kirocrew-debug`](#kirocrew-debug)」 |
-| `kirocrew-panel` | オプトイン | `panel_publish`・`panel_templates`。特定の crew member の DM セッション用 |
+| `kirocrew-panel` | オプトイン | `panel_publish`・`panel_templates` に加え、Mate が自分のダッシュボードページを書く `dashboard_*` の 8 ツール、計 10 ツール（v0.9.0 は 2）。crew member の DM セッション用 |
 
-オプトインのサーバは、既定のエージェントには追加されません。エージェントの設定が `mcpServers` のエントリと `tools` の `@<server>` 参照を持つときだけ読み込まれます（`mcp.md` 1832-1837行・1844-1850行）。`kirocrew-panel` はセッション単位の `mcpServers` エントリとして付与され、Capabilities エディタや spec からは付与できません。運用者側の上限は `agent.crew_panel` です（同 1548-1556行）。
+「Mate」は v0.11.0 以降の UI と CHANGELOG の呼称です（v0.10.0 以前、および公式ページでは crewmate。コード識別子・設定キー・API パスは crewmate のままです。CHANGELOG.md v0.11.0節 59・74-75行）。
 
-> **解消済みの食い違い**: v0.7.2 タグの `architecture/mcp.md` は、同じファイル内で「Managed servers」節が**3サーバ**、「Server and tool inventory」表が**7サーバ**を挙げ、`modules/mcp-shareability.md` は「All seven managed servers」と記述していました。本サイトは当時、両方を併記していました。**v0.9.0 の `architecture/mcp.md` は 8 サーバで一致し**（144-148行・1532-1546行の表・2352-2354行）、`modules/mcp-shareability.md` も「All eight managed servers」と全 8 サーバを列挙しています（44行）。新規は `kirocrew-debug` です。
+オプトインの 5 サーバは、既定のエージェントには追加されません。`opt_in` の印が付いていて、エージェントの設定が `mcpServers` のエントリと `tools` の `@<server>` 参照を持つときだけ読み込まれます（`mcp.md` 3791-3796行）。`kirocrew-panel` はセッション単位の `mcpServers` エントリとして付与され、Capabilities エディタや spec からは付与できません。運用者側の上限は `agent.crew_panel` です（同 2331-2338行）。一方 `kirocrew-guide` と `kirocrew-mate` は、常時送出され `opt_in` ではありません（同 1817行）。
+
+> ⚠ **出典間で記述が食い違っています。本サイトは裁定しません。** 管理対象サーバの数について、`architecture/mcp.md` 186-191行（v0.11.1）は上記の **10サーバ**（`kirocrew-mate` を含む）と記述し、`modules/mcp-shareability.md` 44行（v0.11.1）は「All nine managed servers」として `kirocrew-core`・`-cron`・`-computer`・`-dashboard`・`-work`・`-crew-log`・`-debug`・`-panel`・`-guide` の**9サーバ**を列挙し、`kirocrew-mate` を挙げません。`design-notes/mcp-stub-decoupling.md` の `MANAGED_STUB_FOLLOWERS` の記述は `kirocrew-mate` を含みます。
+>
+> 以前の本ページは、v0.7.2 時点の食い違い（3／7サーバ）が v0.9.0 で 8 サーバに一致して解消したと記載していました。**その解消は v0.11.1 では成り立ちません**（8 サーバは v0.9.0 の記述です）。
 
 **出典**（管理対象サーバ）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/mcp.md>
-（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
-**出典**（8サーバの記述）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/mcp-shareability.md>
-（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1。186-191・1799-1815・2331-2338・3791-3796行）
+**出典**（9サーバの記述）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/mcp-shareability.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1。44行）
 **出典**（`kirocrew-work` の conductor/worker の分担）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/reference/ledger-conductor-sequence.md>
 （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0。7行）
 
-公式 `capabilities/mcp-tools`（Page updated 2026-08-31）は、管理対象サーバのうち常時有効の 2 つ（`kirocrew-core`・`kirocrew-cron`）だけを記述しています。両者は「常時有効」の 2 つで一致し、公式は条件付き・オプトインのサーバに触れていません。
+公式 `capabilities/mcp-tools`（Page updated 2026-08-31）は、管理対象サーバのうち常時有効の 2 つ（`kirocrew-core`・`kirocrew-cron`）だけを記述しています。公式は、仕様書が常時有効に加える `kirocrew-guide`・`kirocrew-mate` と、条件付き・オプトインのサーバに触れていません。
+
+### 追加された 2 サーバ（`kirocrew-guide`・`kirocrew-mate`）
+
+- **`kirocrew-guide`**: 12 ツール（`guide_list_actions`・`guide_start`・`guide_status`・`guide_cancel`・`list_change_kinds`・`find_setting`・`get_member_capabilities`・`diagnose_settings`・`propose_change`・`get_change_status`・`search_docs`・`find_ui`）。既定の `kirocrew` テンプレート、そこから作る Mate、worker、ダッシュボードの全セッションに載ります。conductor とバックグラウンド系テンプレート（knowledge・research・heartbeat）には載りません。エントリは `autoApprove` を持たず、`agent._GUIDE_AUTO_GRANTS` の 12 ツールだけが `allowedTools` の完全一致の許可になります。ガバナンスの上限が拒否した許可は外れ、その場合は利用者に確認します。後からサーバに足したツールは許可に入らず、確認を求めます（`mcp.md` 1817-1850行）
+- **`kirocrew-mate`**: 11 ツール（`update_self`・`set_model`・`set_approval_mode`・`find_capabilities`・`request_capabilities`・`goal_read`・`set_goal`・`set_key_results`・`key_result_progress`・`save_goal_report`・`save_notes`）。同じ spec に同じ条件（常時送出、`autoApprove` なし）で載り、呼び出した Mate 自身にだけ作用します。名前を渡して別の Mate を指定することはできません（`mcp.md` 1851-1900行付近）
+
+どちらも CHANGELOG に説明がなく、`mcp.md` の目録と本文にだけある項目です。
+
+**出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/mcp.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1。1799-1815・1817-1900行）
 
 ### Crew log
 
@@ -66,17 +83,17 @@ v0.7.0〜v0.7.2 では既定オフで、`crew-log-core.md`（v0.7.2 の 145行�
 
 ### ブラウザ
 
-ブラウザ操作は、専用の MCP サーバではなく、`kirocrew-core` の**単一のツール `browser`** としても使えます。デスクトップアプリで Browser パネルがセッションに接続されている間、`op`（`navigate`・`snapshot`・`click`・`type`・`press_key`・`hover`・`select_option`・`screenshot`・`wait_for`・`back`・`console`）を 1 回ずつ送ります。パネルが無い場合と、`dashboard.use_builtin_browser`（既定 `true`）をオフにした場合は、ツールが `playwright-cli`（シェル）への切り替えを案内します。`navigate` が自動で扱うのは公開 HTTP(S) だけで、localhost・プライベート・リンクローカルなどは承認が必要な CLI 経路に回ります（`modules/browser.md` 3-14行・96-98行・115-123行、`mcp.md` 1803-1809行。公式 `features/browser`（Page updated 2026-09-25）も「The native Browser tool in the packaged desktop app」と記述）。
+ブラウザ操作は、専用の MCP サーバではなく、`kirocrew-core` の**単一のツール `browser`** としても使えます。デスクトップアプリで Browser パネルがセッションに接続されている間、`op`（`navigate`・`snapshot`・`click`・`type`・`press_key`・`hover`・`select_option`・`screenshot`・`wait_for`・`back`・`console`）を 1 回ずつ送ります。パネルが無い場合と、`dashboard.use_builtin_browser`（既定 `true`）をオフにした場合は、ツールが `playwright-cli`（シェル）への切り替えを案内します。`navigate` が自動で扱うのは公開 HTTP(S) だけで、localhost・プライベート・リンクローカルなどは承認が必要な CLI 経路に回ります。**例外**として、運営者が `dashboard.browser_local_origins` に書いたループバックのオリジンに一致する `navigate` は自動で扱われます（[v0.11.1での変更](#v0111での変更)）。セッション開始時に検証済みのランチャーがないとき、プロンプトの `## Browser` 節は短い案内（`web_fetch`、Settings → Browser）に置き換わります（`modules/browser.md` 3-14行・96-102行・118-146行。v0.9.0 では 3-14行・96-98行・115-123行。`mcp.md` のブラウザ記述は 1803-1809行から移動）。公式 `features/browser`（Page updated 2026-09-25）も「The native Browser tool in the packaged desktop app」と記述）。
 
 v0.7.2 以前の `browser.md` は「ブラウザは MCP サーバではなくシェル機能」と記述しており、本サイトも以前そのように記載していました（v0.8.0 タグの `browser.md` は既に単一の MCP ツールと記述）。詳細は [13_computer-and-browser.md](13_computer-and-browser.md) を参照してください。
 
 **出典**（Crew log）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/crew-log-core.md>
 （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
 **出典**（ブラウザ）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/browser.md>
-（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
 **出典**: <https://kiro.dev/docs/crew/features/browser/>（Page updated 2026-09-25）
 
-`architecture/mcp.md` の「Managed servers」節（144-165行）は、管理対象サーバの各エントリが再構築のたびに `_refresh_dynamic_fields()` によって `command`/`args` を書き換えられると記述しています。
+`architecture/mcp.md` の「Managed servers」節（v0.11.1 では 184 行から。v0.9.0 では 144-165行）は、管理対象サーバの各エントリが再構築のたびに `_refresh_dynamic_fields()` によって `command`/`args` を書き換えられると記述しています。
 
 ## 設定ファイルの分離
 
@@ -86,14 +103,16 @@ v0.7.2 以前の `browser.md` は「ブラウザは MCP サーバではなくシ
 | `~/.kiro/settings/mcp.json` | ユーザー | KiroのグローバルMCPサーバ | 全エージェントのkiro-cli。レンダリング時にKiro Crewのエージェントファイルにマージ |
 | `~/.kiro/crew/mcp.json` | ユーザー（ダッシュボードのMCPパネル経由） | Kiro Crew固有の追加・サーバ単位のツール無効化 | Kiro Crew Gatewayのみ |
 
-`rebuild_agent_config()` は**厳密に1つのファイル** `~/.kiro/agents/kirocrew.json` のみを書きます。第2のエージェントファイルはありません。provider は ACP のみで、kiro-cli 以外の ACP ハーネスは別のエージェントファイルではなく、投影された設定を受け取ります（`mcp.md` 34-39行。v0.7.2 の同ファイルは「no agent-file renderer for any other provider: Kiro Crew is KiroACP-only」と記述）。
+どの MCP 設定ファイルも JSONC（コメントと末尾カンマを許容）として読まれます。ダッシュボードの MCP パネルは素の JSON で書くため、コメントを含むファイルへの保存は拒否されます（[v0.11.1での変更](#v0111での変更)）。
+
+`rebuild_agent_config()` は**厳密に1つのファイル** `~/.kiro/agents/kirocrew.json` のみを書きます。第2のエージェントファイルはありません。provider は ACP のみで、kiro-cli 以外の ACP ハーネスは別のエージェントファイルではなく、投影された設定を受け取ります（`mcp.md` 46-50行。v0.9.0 では 34-39行。v0.7.2 の同ファイルは「no agent-file renderer for any other provider: Kiro Crew is KiroACP-only」と記述）。
 
 ## マージの優先順位
 
-`rebuild_agent_config()` が `~/.kiro/agents/kirocrew.json` を組み立てるときの順序です（`mcp.md` 63-106行）。`clean=False` のとき、既存の `kirocrew.json` がマージの**ベース**になり、ユーザーが調整したサーバ（`autoApprove` の編集・手編集・`kiro-cli mcp add --agent kirocrew` で追加したサーバ）が残ります。そのベースに次を順に適用します。
+`rebuild_agent_config()` が `~/.kiro/agents/kirocrew.json` を組み立てるときの順序です（`mcp.md` 72-118行。v0.9.0 では 63-106行）。`clean=False` のとき、既存の `kirocrew.json` がマージの**ベース**になり、ユーザーが調整したサーバ（`autoApprove` の編集・手編集・`kiro-cli mcp add --agent kirocrew` で追加したサーバ）が残ります。そのベースに次を順に適用します。
 
 1. **App 由来のサーバ**（`{app}:{server}` のキー）を**代入**します（`setdefault` ではありません）。マニフェストが正であり、再構築のたびに導出し直すため、前回の再構築のエントリを残すと、今回取り除いた `autoApprove` の付与が残ってしまうからです
-2. `~/.kiro/settings/mcp.json`（Kiroグローバル）: 無い名前は追加します。**前回の再構築が残した名前**は reconcile され、ソースが持つ `timeout`・`disabled` が上書きされ、ソースが取り除いたキーは削除されます。`autoApprove` を含む他のキーはユーザーのものとして残ります
+2. `~/.kiro/settings/mcp.json`（Kiroグローバル）: 無い名前は追加します。**前回の再構築が残した名前**は reconcile され、ソースが持つ `timeout`・`disabled` が上書きされ、ソースが取り除いたキーは削除されます。`args` と `env` も reconcile されますが、エントリの `command` が「ソースの宣言する command と同じプログラム」を指すときに限ります（解決済みの `/…/bin/npx` はソースの素の `npx` と同一視されます）。プログラムが変わったソースの `env` は古い command には貸さず、エントリの旧 command／args／env の組をそのまま保ちます（v0.11.1 の `mcp.md` 86-100行。v0.9.0 の本ページはこの扱いを書いていませんでした）。`autoApprove` を含む他のキーはユーザーのものとして残ります
 3. seam経由のプロバイダグローバル（このビルドでは空）。手順 1・2 が既に確保した名前には触れません
 4. `~/.kiro/crew/mcp.json` を既存エントリへの `update()` でマージします（Kiro Crewの `command`/`args`/`env` が勝ち、ユーザー設定の `autoApprove` 等は保持されます）
 
@@ -101,24 +120,71 @@ v0.7.2 以前の `browser.md` は「ブラウザは MCP サーバではなくシ
 
 > **以前の記述の訂正**: 本ページは以前、手順 2・3 を `setdefault` でマージすると記載していました。これは v0.3.0（`21584ea`）・v0.4.1・v0.6.0 の各タグの `architecture/mcp.md` の記述に基づくものです。**v0.7.0 タグ以降の同ファイルは上記の記述**（App 由来サーバの代入、reconcile）に変わっています。変更の理由は CHANGELOG に説明がありません。
 
-コマンドが解決できないときは、同じサーバを他のソースから優先順に再試行します（kirocrew → kiro-global → provider-global）。別のソースへ切り替えた場合は、そのソースの `command`・`args`・`env` を**ひとまとまり**で採用します（`mcp.md` 97-106行）。
+コマンドが解決できないときは、同じサーバを他のソースから優先順に再試行します（kirocrew → kiro-global → provider-global）。別のソースへ切り替えた場合は、そのソースの `command`・`args`・`env` を**ひとまとまり**で採用します（`mcp.md` 114-118行付近。v0.9.0 では 97-106行）。
 
 ### `includeMcpJson` は固定
 
-Kiro Crew は、自身が管理する全エージェント（主エージェントと App エージェント）で `includeMcpJson` を `false` に**固定**します（`mcp.md` 122-140行）。Gatewayが既にKiroグローバルをエージェントファイルにマージしているため、`true` にするとkiro-cliがセッション開始時にグローバルを二重にマージし、重複エントリや古いパスによる新しいパスの上書きが発生します。Kiro Crew の管理外の kiro-cli エージェントは、kiro-cli 自身の既定のままです。v0.7.2 以前の本ページは「`includeMcpJson: false` が既定」と記載していました。
+Kiro Crew は、自身が管理する全エージェント（主エージェント・生成されたすべてのエージェント spec・記録されたすべての fork・App エージェント）で `includeMcpJson` を `false` に**固定**します（`mcp.md` 139-183行。v0.9.0 の本ページは「主エージェントと App エージェント」と書いており、fork と生成 spec への固定は v0.11.1 の記述です。詳細は [v0.11.1での変更](#v0111での変更)）。Gatewayが既にKiroグローバルをエージェントファイルにマージしているため、`true` にするとkiro-cliがセッション開始時にグローバルを二重にマージし、重複エントリや古いパスによる新しいパスの上書きが発生します。Kiro Crew の管理外の kiro-cli エージェントは、kiro-cli 自身の既定のままです。v0.7.2 以前の本ページは「`includeMcpJson: false` が既定」と記載していました。
 
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/mcp.md>
-（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1。36-50・72-118・139-183行）
+
+## v0.11.1での変更
+
+v0.10.0・v0.11.0・v0.11.1 の 3 版の変更のうち、本ページの範囲のものです。CHANGELOG に説明があるものは行を示します。**それ以外は v0.11.1 タグの仕様書で確認したもので、CHANGELOG・Release 本文は説明していません**（v0.9.0 の仕様書に記述がなく v0.10.0 タグ以降で確認できるものは、その旨を示します）。
+
+### 運営者が確認を求めるサーバ: `hooks.confirm_tools`
+
+- `config.json` の `hooks.confirm_tools` に、ツールのパターン（`@server`・`@server/tool*`・`Running: @server/*`、またはエージェントの spec が許可するすべての MCP サーバを指す `*`）を書くと、一致したサーバの静的な許可（`allowedTools`・`autoApprove`）は書かれなくなります。そのサーバの呼び出しは毎回 PreToolUse ゲートに届きます（`mcp.md` 418-475行）
+- ゲートでは `confirm_tools` の一致が `auto_approve_tools` の許可に勝ちます。読み取り専用の分類は、確認対象の MCP 呼び出しを確定しません。Trust モード・YOLO モードは、利用者が指示したとおりに従来どおり承認します（同）
+- 組み込み App のエージェントが自分の App 用サーバを呼ぶ場合は、ゲートの `app-own-server` 層が先に承認するため、`*` は届きません（同）
+- スキーマ上 `restart=True` のキーで、変更後は Gateway の再起動（またはサーバの次の有効化）で許可が取り下げられます。キーが未設定なら従来どおりです（同）
+- 設定ファイルが読めないなど一覧が不明のとき、静的な書き込み側はすべての MCP の許可を保留し、ゲート側も `auto_approve_tools` の許可を保留します（フェイルクローズ）。どのファイルにもキー名がなければ、キー未設定と同じ動作です（同）
+- v0.9.0 の仕様書に記述がなく、v0.10.0 タグの `mcp.md` で確認できます
+
+### KAS での MCP
+
+- **MCP サーバからの elicitation**（確認・短いフォーム・リンクなど、人の応答を求める要求）に応答します。要求はカードとして利用者に提示され、人が応答できないセッションは辞退します（CHANGELOG.md v0.11.0節 158-161行、`mcp.md` 796-806行）
+- **MCP の変更を生きているセッションにその場で適用**します。チャット全体のリセットはありません。KAS は `session/close` → 同じセッションの `session/load` → `session/set_mode` で新しい MCP の一覧を渡し直します（同、`mcp.md` 913-936行）
+- **`agent.kas_persist_mcp_sign_in`**（既定オフ）で、リモート MCP のサインインをセッション間で保ちます（CHANGELOG.md v0.11.0節 158-161行）
+- **`autoApprove`**: KAS ではキーに席がなく、投影が落とします。`mcp.honour_auto_approve` で保持された verb のうちリテラルな単一ツール名のものは `@server/tool` の形で `allowedTools` の入力に入り、他の許可と同じ上限と PreToolUse フックの保留を受けます。リテラルな単一ツール名でない verb は確認を求めます（`mcp.md` 218-224行。CHANGELOG に説明なし）
+- **Tool Search**: KAS はトグルとしきい値を無視し、`toolSearch.neverDefer` に載らない MCP ツールをすべて遅延提示します。`tools` に `tool_search` の許可がないエージェントには、各 MCP ツールを `<server>::<tool>` として `neverDefer` に送ります（`mcp.md` 3768-3786行。CHANGELOG に説明なし。kiro-cli 2.27.0 以上の記述は変わりません）
+
+### プローブと共有 MCP バックエンド
+
+- **リモート（HTTP）サーバのプローブは SSRF 検査を受けます**。URL は `link_unfurl.vet_unfurl_url` で検査され、リンクローカルやクラウドメタデータ（`fd00:ec2::254` を含む）に解決される URL は POST の前に拒否されます。接続は検査済みアドレスに固定され、リダイレクトは追わずステータスと行き先（スキーム・ホスト・ポート・パス）として報告します。`allow_any_port`・`allow_private` で、設定したエンドポイントに合わせてオプトインできます（`mcp.md` 516-540行、CHANGELOG.md v0.11.0節 219-225行の「a remote MCP probe URL is vetted for SSRF」）
+- **同じプロセスを起動する名前は 1 つずつプローブ**されます。`_spawn_fingerprint`（command と args。env は含めない）ごとに直列化し、別のキーの行は並列のままです。遅いサーバに多数の名前があると、1 回のプローブが最大 *n* 回分かかります。起動時のゲートは `mcp_probe_timeout_secs + 15` 秒待ってからセッションを始めます（`mcp.md` 545-563行）
+- **共有バックエンドの `PoolKey` の次元は 6 つ**です（`server_name`・`command_args_hash`・`effective_env_hash`・`work_dir`・`binary_version`・`os_uid`）。v0.9.0 の仕様書は 8 次元で、`agent_name` が含まれていました。現在は `agent_name` が次元ではなく、同じ宣言のサーバを持つ 2 つのエージェントは同じプロセスを共有します（`mcp.md` 1136-1150行。v0.9.0 は 888行以降）
+- **管理対象サーバの stub 追従**: `kirocrew-core` が stub の名簿にあるとき、`kirocrew-guide`・`-mate`・`-panel`・`-dashboard`・`-work`・`-crew-log`・`-debug` も追従して共有バックエンド 1 つになります（`MANAGED_STUB_FOLLOWERS`）。`kirocrew-computer` と `kirocrew-cron` は追従しません。MCP Management で個別にオフにでき、その選択は上書きとして保たれます（`mcp.md` 990-1002行）
+- **stub の起動承認**: MCP Management の `stub: true` は、画面が `GET /api/mcp-gateway/servers/launch` で読んだ起動内容（`expected_launch`）に対する compare-and-set です。トークンがないと 409 `expected_launch_required`、表示後に内容が変わると 409 `launch_changed_since_display` で拒否され、承認はその起動内容に限られます（`mcp.md` 1048-1064行）
+- **bare registry pointer**: `"type": "registry"` で `command` も `url` も持たないユーザーのエントリ（Kiro IDE・kiro-cli がカタログからインストールしたときに書く形）は、生成される spec にそのまま写されます。ダッシュボードでは「Not verified」のバッジで表示され、`kiro-cli mcp list` を案内します（`mcp.md` 305-322行）
+
+### 設定とツールポリシー
+
+- **`dashboard.browser_local_origins`**: 運営者が書くループバックの正確なオリジン（`localhost`・`127.0.0.1`・`[::1]` にポート必須。`localhost` にポート番号を付けた形式）の一覧です。一致する `navigate` は自動で扱われます。Gateway 自身の API ポートは列挙しても拒否されます。エージェントは一覧を拡張できません（`config.json` はサンドボックス内で読み取り専用で、`PUT /api/dashboard/config` はこのキーを受けません）。運営者が `kirocrew config set` かファイルの編集で設定します。残るリスクとして、一覧のページを開いた後の `click`・`back` はそのページのリンクに従います（`modules/browser.md` 118-146行）
+- **ツールポリシーは Kiro Crew 自身のサーバだけに適用**されます。`mcp_shared.serves_managed_tools` が `tools/call` ハンドラの定義場所を調べ、`kiro_crew` パッケージ内のサーバにだけポリシーを適用します。利用者がインストールした App が `run_mcp_stdio_loop` で出すツールは「除外なし」と答え、読み取りをしません（`mcp.md` 1626-1636行）
+- **サーバを無効にしたとき**: ダッシュボードで MCP サーバを無効にすると、エージェントファイルのエントリに `disabled: true` を書き、`tools` の参照と `allowedTools` の `@server`／`@server/tool` の許可を取り除きます（`@serverx` のように前方が同じ別名は残します）。`tools` の参照を外すだけでは、動いているサーバのツールは載ったままになるためです（`mcp.md` 972-981行）
+
+### 設定ファイルの扱いが変わった点
+
+- **`includeMcpJson: false` の固定範囲**が、主エージェントと App エージェントから、**生成されたすべてのエージェント spec・記録されたすべての fork・App エージェント**に広がりました。fork では、グローバルの `mcp.json` 経由でしか届かなかったサーバは読み込まれなくなり、fork 自身の `mcpServers` に書く必要があります。`true` に戻しても次の更新で `false` に戻ります。更新で `true` または未設定から `false` に切り替わったとき、Gateway は fork 名を示す警告をログに書き、SEL に `fork_mcp_json_merge_disabled` を記録します（`mcp.md` 139-183行。CHANGELOG に説明なし）
+- **MCP 設定ファイルは JSONC として読まれます**（コメントと末尾カンマを許容）。ダッシュボードの MCP パネルの書き込みは素の JSON を出すため、コメントや末尾カンマを含むファイルへの保存は `409 mcp_config_has_comments` で拒否されます。手で編集するか、コメントを消してください（`mcp.md` 36-44行。CHANGELOG に説明なし）
+
+**出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/mcp.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+**出典**（ブラウザ）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/browser.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1。118-146行）
+出典: CHANGELOG.md v0.11.0節 158-161・219-225行（`fe6f5be`）
 
 ## v0.9.0での変更
 
 | 変更 | 内容 | 出典 |
 |------|------|:---:|
-| **画面名の変更: Agent Capabilities → Customize** | CHANGELOG は「Agent Capabilities is now Customize」と記載しています。公式 `capabilities/mcp-tools`（Page updated 2026-08-31）は導線を「Agent Capabilities → Integrations (MCP)」と記述しており、公式ページの記述はこの改称を反映していません。`mcp.md`（641行）は「The Connections page's MCP panel」と記述します。呼び名が出典ごとに異なるため、本サイトは裁定せず、両方を示します | CHANGELOG 150-153行 |
+| **画面名の変更: Agent Capabilities → Customize** | CHANGELOG は「Agent Capabilities is now Customize」と記載しています。公式 `capabilities/mcp-tools`（Page updated 2026-08-31）は導線を「Agent Capabilities → Integrations (MCP)」と記述しており、公式ページの記述はこの改称を反映していません。`mcp.md`（v0.11.1 では 824行、v0.9.0 では 641行）は「The Connections page's MCP panel」と記述します。呼び名が出典ごとに異なるため、本サイトは裁定せず、両方を示します | CHANGELOG 150-153行 |
 
 出典: CHANGELOG.md v0.9.0節 150-153行（`99e6253`）。
 
-> ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。** MCP の画面の導線について、公式 `capabilities/mcp-tools`（Page updated 2026-08-31）は「Open Agent Capabilities → Integrations (MCP)」と記述します。CHANGELOG v0.9.0節 150行は「Agent Capabilities is now Customize」と記載し、`architecture/mcp.md` 641行は「The Connections page's MCP panel」と記述します。「常時有効」の 2 つのサーバ（`kirocrew-core`・`kirocrew-cron`）の記述は公式とリポジトリで一致しています。
+> ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。** MCP の画面の導線について、公式 `capabilities/mcp-tools`（Page updated 2026-08-31）は「Open Agent Capabilities → Integrations (MCP)」と記述します。CHANGELOG v0.9.0節 150行は「Agent Capabilities is now Customize」と記載し、`architecture/mcp.md` 641行（v0.11.1 では 824行）は「The Connections page's MCP panel」と記述します。常時有効の 2 つ（`kirocrew-core`・`kirocrew-cron`）の記述は公式とリポジトリで一致していますが、リポジトリは v0.11.1 でさらに 2 サーバ（`kirocrew-guide`・`kirocrew-mate`）を常時有効とします。
 
 **出典**（導線）: <https://kiro.dev/docs/crew/capabilities/mcp-tools/>（Page updated 2026-08-31）
 
@@ -135,7 +201,7 @@ Kiro Crew は、自身が管理する全エージェント（主エージェン�
 - 変更には再起動が必要なキーです（`config.md` 2547行）
 - CHANGELOG は「auto-approve list you wrote yourself in `mcp.json` or an agent file is now kept」と記載しています。v0.7.2 の仕様書は、ガバナンス上限に基づく取り上げ（`mcp_auto_approve_withheld`）を記述し、オーナーが書いた verb の扱いは明記していませんでした
 
-> ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。** `mcp.honour_auto_approve` の値が不正（真偽値でない）なときの扱い: `mcp.md` 343行は「only a real `false` there drops every verb」と記述し、`config.md` 1540行は「honour only a real `true`」と記述します。さらに `config.md` 1550行は、型の違う値は検証で取り除かれ、`load()` を通ると field default を読むと記述します。不正な値のとき保持されるかどうかは、仕様書から確認できません。
+> ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。** `mcp.honour_auto_approve` の値が不正（真偽値でない）なときの扱い: `mcp.md` 343行（v0.11.1 では 411-412行）は「only a real `false` there drops every verb」と記述し、`config.md` 1540行（v0.11.1 では 1751行）は「honour only a real `true`」と記述します。さらに `config.md` 1550行（v0.11.1 では 1759-1762行）は、型の違う値は検証で取り除かれ、`load()` を通ると field default を読むと記述します。この食い違いは v0.11.1 でも続いており、不正な値のとき保持されるかどうかは、仕様書から確認できません。
 
 出典: CHANGELOG.md v0.8.0節 616-621行（`99e6253`）。
 
@@ -227,7 +293,7 @@ MCP サーバのランチャーが見つからないときに使う、絶対パ�
 
 | 変更 | 内容 | 出典 |
 |------|------|:---:|
-| **管理対象サーバの一覧が増えた** | v0.6.0 タグの inventory 表（4サーバ）に対し、v0.7.0 タグ以降の表は `kirocrew-work`・`kirocrew-crew-log`・`kirocrew-panel` を加えた7サーバになりました。`kirocrew-dashboard` のツールにも `chat_folder_file_self`・`chat_tag_*`・`session_*` が並びます（`session_*` は v0.6.0 タグの `modules/session-control.md` にも `kirocrew-dashboard` のツールとして記載あり）。v0.7.2 タグでは「Managed servers」節の3サーバとの食い違いがありましたが、v0.9.0 で8サーバ（`kirocrew-debug` を追加）に一致して解消しています（「[管理対象のMCPサーバ](#管理対象のmcpサーバ)」参照） | v0.7.2 の mcp.md 1175-1186行 |
+| **管理対象サーバの一覧が増えた** | v0.6.0 タグの inventory 表（4サーバ）に対し、v0.7.0 タグ以降の表は `kirocrew-work`・`kirocrew-crew-log`・`kirocrew-panel` を加えた7サーバになりました。`kirocrew-dashboard` のツールにも `chat_folder_file_self`・`chat_tag_*`・`session_*` が並びます（`session_*` は v0.6.0 タグの `modules/session-control.md` にも `kirocrew-dashboard` のツールとして記載あり）。v0.7.2 タグでは「Managed servers」節の3サーバとの食い違いがありましたが、v0.9.0 で8サーバ（`kirocrew-debug` を追加）に一致していましたが、v0.11.1 では 10 サーバと 9 サーバの食い違いに変わっています（「[管理対象のMCPサーバ](#管理対象のmcpサーバ)」参照） | v0.7.2 の mcp.md 1175-1186行 |
 | **読み取り専用の `kirocrew-crew-log`** | セッションごとの追記専用ログ（Crew log）を、エージェントが検証用に読める読み取り専用MCPサーバです。v0.7.0〜v0.7.2 では Crew log は `KIROCREW_CREW_LOG` を有効にしたときに記録されました（**既定オフ**）。**v0.8.0 から既定オン**です（「[Crew log](#crew-log)」参照） | CHANGELOG 314-318行 |
 | **エージェントがボードタグ間でセッションを移せる** | `chat_tag` ツールで、タグマネージャで設定した権限の範囲内でセッションをボードタグ間で移動できます | CHANGELOG 410-414行 |
 | **MCPサーバの埋め込みUIがダッシュボードのテーマを継承** | 色・フォントファミリー・角丸・影を継承し、テーマ変更時にも再継承します。対象は **Developer Mode を有効にし**、Developer → MCP Management で Gateway スタブ経由にルーティングしたサーバです | CHANGELOG 232-235行 |
@@ -252,12 +318,13 @@ MCP サーバのランチャーが見つからないときに使う、絶対パ�
 
 ## 未確認事項
 
-- `mcp.honour_auto_approve` の値が不正なときに保持されるかどうか（`mcp.md` 343行と `config.md` 1540・1550行の記述が異なる。「[自動承認の扱い](#自動承認autoapproveの扱い-mcphonour_auto_approve)」参照）
+- `mcp.honour_auto_approve` の値が不正なときに保持されるかどうか（`mcp.md` 411-412行と `config.md` 1751・1759-1762行（いずれも v0.11.1）の記述が異なる。「[自動承認の扱い](#自動承認autoapproveの扱い-mcphonour_auto_approve)」参照）
 - `agent.mcp_quarantine_after_failures` の既定値（仕様書は「three transient failures」と例示するだけで、既定値を明記する箇所を確認できない）
 - `mcp.extra_path_dirs` が macOS 以外で効果を持つかどうか
 - v0.7.2 の `mcp.md` の目録にあった `browse_outline`・`browse_search` は、v0.8.0 以降の `mcp.md` と全 docs・CHANGELOG に記述がなく、廃止か改名か、単に列挙から外れたのかを一次情報から確認できない（本ページでは扱わない）
-- 管理対象サーバの数の食い違い（v0.7.2 時点）は v0.9.0 で解消済みです（「[管理対象のMCPサーバ](#管理対象のmcpサーバ)」参照）
-- 上記以外の本ページの記述は `docs/architecture/mcp.md`（v0.9.0）で確認済みです。v0.7.0・v0.3.0 の表は、CHANGELOG の該当節が v0.7.2 の時点から変わっていないことを確認しています
+- 管理対象サーバの数: v0.7.2 時点の食い違い（3／7サーバ）は v0.9.0 で一致しましたが、v0.11.1 で `mcp.md`（10サーバ、`kirocrew-mate` を含む）と `mcp-shareability.md`（9サーバ、`kirocrew-mate` なし）の食い違いが再発しています（「[管理対象のMCPサーバ](#管理対象のmcpサーバ)」参照）
+- 公式 `capabilities/mcp-tools`（Page updated 2026-08-31）が記述しない `kirocrew-guide`・`kirocrew-mate` の常時有効の扱い（仕様書にだけ記述があります）
+- 上記以外の本ページの記述は `docs/architecture/mcp.md`（v0.11.1）で確認済みです。ただし v0.9.0 節・v0.8.0 節の行番号は、各節の版のファイルの行番号です。v0.7.0・v0.3.0 の表は、CHANGELOG の該当節が v0.7.2 の時点から変わっていないことを確認しています
 
 ## 関連リンク
 

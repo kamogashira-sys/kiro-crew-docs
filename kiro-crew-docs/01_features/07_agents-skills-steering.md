@@ -12,6 +12,8 @@
 
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/memory-skills-hooks.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/config.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/steering-viewer.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/context-management.md>
 （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+**出典**（v0.11.1での変更。v0.10.0・v0.11.0 由来の内容を含む）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/memory-skills-hooks.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/config.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/steering-viewer.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/agent-host-contract.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/context-management.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/mcp.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
 **出典**（v0.7.0での変更）: <https://kiro.dev/docs/crew/capabilities/skills/>（Page updated 2026-09-25）、<https://kiro.dev/docs/crew/capabilities/agents/>（Page updated 2026-10-20）、<https://kiro.dev/docs/crew/capabilities/agent-templates/>（Page updated 2026-10-12）
 
 ---
@@ -25,6 +27,7 @@
 - [`skill://` によるIDE/CLIとの往復](#skill-によるidecliとの往復)
 - [Hooks](#hooks)
 - [Steering](#steering)
+- [v0.11.1での変更](#v0111での変更)
 - [v0.9.0での変更](#v090での変更)
 - [v0.8.0での変更](#v080での変更)
 - [v0.7.0での変更](#v070での変更)
@@ -51,7 +54,7 @@ v0.9.0 の CHANGELOG は「Agent Capabilities is now Customize」と記載して
 
 ## エージェント設定
 
-エージェント設定は `~/.kiro/agents/` に置かれるファイル（`*.json`。v0.7.0 からは YAML frontmatter 付きの Markdown ファイル単体も可。「[v0.7.0での変更](#v070での変更)」参照）で、kiro-cliに「どう振る舞うか」（システムプロンプト・有効なツール・MCPサーバ）を指示します。詳細は [01_architecture.md](01_architecture.md) を参照してください。
+エージェント設定は `~/.kiro/agents/` に置かれるファイル（`*.json`。v0.7.0 からは YAML frontmatter 付きの Markdown ファイル単体も可。「[v0.7.0での変更](#v070での変更)」参照）で、kiro-cliに「どう振る舞うか」（システムプロンプト・有効なツール・MCPサーバ）を指示します。詳細は [01_architecture.md](01_architecture.md) を参照してください。v0.11.0 以降の Mate（v0.10.0 以前・公式ページでは crewmate）は、`~/.kiro/mates/agents/` に自分のエージェントファイルを持ちます（「[v0.11.1での変更](#v0111での変更)」参照）。
 
 ## エージェントの切り替え
 
@@ -95,13 +98,13 @@ v0.6.0 の仕様書では、`skills.lazy_load` は「OFFなら全件をランク
 
 > ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**
 >
-> - `config.md` 3813-3821行: 既定（`lazy_load=true`）のエントリは使用頻度順のインデックスで、最大8件の名前を並べる短いエントリは `lazy_load=false` のとき。`memory-skills-hooks.md` 3912-3916行も、既定を「the usage-ranked index with a family hint」、false を「a shorter search pointer」と記載
-> - `memory-skills-hooks.md` 6197-6200行: 「The default discovery entry lists up to eight names and short purposes」と記載し、既定のエントリが最大8件の名前を並べるとしている
+> - `config.md` 4267-4275行（v0.9.0 では 3813-3821行）: 既定（`lazy_load=true`）のエントリは使用頻度順のインデックスで、最大8件の名前を並べる短いエントリは `lazy_load=false` のとき。`memory-skills-hooks.md` 4261-4265行（v0.9.0 では 3912-3916行）も、既定を「the usage-ranked index with a family hint」、false を「a shorter search pointer」と記載
+> - `memory-skills-hooks.md` 6611-6614行（v0.9.0 では 6197-6200行）: 「The default discovery entry lists up to eight names and short purposes」と記載し、既定のエントリが最大8件の名前を並べるとしている
 >
-> この食い違いは v0.7.2 の仕様書にも同じ形でありました（v0.7.2 では `memory-skills-hooks.md` 4637-4638行）。v0.9.0 でも継続しています。
+> この食い違いは v0.7.2 の仕様書にも同じ形でありました（v0.7.2 では `memory-skills-hooks.md` 4637-4638行）。v0.9.0・v0.11.1 でも継続しています。
 >
 > **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/memory-skills-hooks.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/config.md>
-> （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+> （参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
 
 ### 用途の区別
 
@@ -113,21 +116,21 @@ v0.6.0 の仕様書では、`skills.lazy_load` は「OFFなら全件をランク
 
 > ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**
 >
-> エージェントが独自の `skill://` マッピングを持つときのスキル本文の扱いについて、v0.9.0 の仕様書2ファイルの記述が異なります。
+> エージェントが独自の `skill://` マッピングを持つときのスキル本文の扱いについて、v0.11.1 の仕様書2ファイルの記述が異なります。
 >
-> - `memory-skills-hooks.md` 3927-3928行: 「A `skill://` mapping restricts availability, not eager body delivery」（マッピングは利用できる範囲を絞るもので、本文を先に配るものではない）
-> - `config.md` 3820-3821行: 「An agent with its own `skill://` mapping gets neither -- those skills arrive as complete instructions」（どちらのエントリも受け取らず、スキルは完全な指示として届く）
+> - `memory-skills-hooks.md` 4276-4277行（v0.9.0 では 3927-3928行）: 「A `skill://` mapping restricts availability, not eager body delivery」（マッピングは利用できる範囲を絞るもので、本文を先に配るものではない）
+> - `config.md` 4274-4275行（v0.9.0 では 3820-3821行）: 「An agent with its own `skill://` mapping gets neither -- those skills arrive as complete instructions」（どちらのエントリも受け取らず、スキルは完全な指示として届く）
 >
-> この食い違いは v0.7.2 の仕様書にも同じ形でありました（v0.7.2 では `memory-skills-hooks.md` 3189-3190行、`config.md` 2730-2731行）。v0.9.0 でも継続しています。
+> この食い違いは v0.7.2 の仕様書にも同じ形でありました（v0.7.2 では `memory-skills-hooks.md` 3189-3190行、`config.md` 2730-2731行）。v0.9.0・v0.11.1 でも継続しています。
 >
 > **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/memory-skills-hooks.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/config.md>
-> （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+> （参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
 
 ## Hooks
 
 Kiro Crew には、本ページの出典上、2種類のフック設定が登場します。両者の関係（どちらが他方を置き換えるか等）は一次情報で確認できません。
 
-- **`config.json` の `hooks` 節**: `hooks.py` がconfig駆動のフック機構を提供します（`auto_approve_tools`・`auto_deny_tools`・`auto_replies`・`transforms`・`context_rules`。PreToolUseゲート等）。deny が approve に優先します（`memory-skills-hooks.md` 5400-5406行）。詳細はセキュリティ節（[09_security.md](09_security.md)）で扱います
+- **`config.json` の `hooks` 節**: `hooks.py` がconfig駆動のフック機構を提供します（`auto_approve_tools`・`auto_deny_tools`・`confirm_tools`・`auto_replies`・`transforms`・`context_rules`。PreToolUseゲート等）。deny が approve に優先します（`memory-skills-hooks.md` 5790-5797行。v0.9.0 では 5400-5406行）。`confirm_tools` は v0.11.1 の仕様書にあり、v0.9.0 の仕様書にはありません（「[v0.11.1での変更](#v0111での変更)」参照）。詳細はセキュリティ節（[09_security.md](09_security.md)）で扱います
 - **Hooks ページで管理するフック**（下記）: 公式 hooks ページ（Page updated 2026-10-12）が記載する、トリガー・マッチャー・アクションを持つフックです
 
 公式 hooks ページは Page updated 2026-10-12 で全面的に書き換えられています（v0.7.2 時点の公式ページは `~/.kiro/crew/hooks/`（または `.kiro/hooks/`）の JSON ファイルと `SessionStart`・`PostFileSave` などのイベント名を記載していました。v0.9.0 の取得時点のページと v0.9.0 の仕様書は、保存先を `~/.kiro/crew/hooks.json` と記載しており、一致しています）。
@@ -235,13 +238,48 @@ CHANGELOG v0.8.0節 405行の見出しは「More backends, and hooks you can aut
 （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
 出典: CHANGELOG.md v0.8.0節 249-253行（`99e6253`）。
 
+## v0.11.1での変更
+
+v0.10.0（CHANGELOG 日付 2026-10-15）・v0.11.0（2026-10-24）・v0.11.1（2026-10-31）の CHANGELOG と、v0.11.1 タグの仕様書で確認できる、本ページの範囲に関わる変更です。項目ごとに由来する版を示します。3つの版の CHANGELOG に「Before you upgrade」節はありません。
+
+### 呼称: Mate と、Mate のエージェントファイル（v0.11.0）
+
+- **呼称**: v0.11.0 の CHANGELOG は、Mates ページ・ロスター・ダイアログ・設定の行・チャットのヘッダが、crewmate と表示していた箇所で Mate と表示すると記載しています（CHANGELOG v0.11.0節 74-75行）。本ページは、説明用語を **Mate（v0.10.0 以前・公式ページでは crewmate）** と表記します。公式 agents ページ（Page updated 2026-10-20）は「crewmate」のままです。コード識別子・設定キー・API パスは crewmate のままです。この違いについて、本サイトは裁定しません。下の v0.9.0 以前の節は、当時の記述のとおり crewmate と書いています
+- **エージェントファイル**: v0.11.0 の CHANGELOG は、すべての Mate が `~/.kiro/mates/agents/` の下に自分のエージェントファイルを持ち、既存の Mate は起動時に1回だけ移行されると記載しています（CHANGELOG v0.11.0節 67-70行）。仕様書も、Mate が所有するエージェントファイルを `~/.kiro/mates/agents/` に置き、`~/.kiro/agents/` には置かないと記載しています（`crew-mode.md` 3569-3572行）。「[エージェント設定](#エージェント設定)」の `~/.kiro/agents/` は、Mate 以外のエージェントの置き場所です。Mates ページと Crew mode の詳細は本ページでは扱いません
+- **Mate のスキル**: CHANGELOG は、Mate が自分の worker セッションにスキルを渡すと記載しています（CHANGELOG v0.11.0節 67-70行）
+
+### スキル
+
+- **組み込みスキル**: v0.11.0 は組み込みの `living-ui` スキルを加えました。ウィジェットとダッシュボードページでの動き・フォーカス・表示の作法を、エージェントに教えるスキルです（CHANGELOG v0.11.0節 181-183行）。v0.10.0 では、Mate（当時の呼称は crewmate）が `dashboard` スキルで自分のページを書けるようになりました（CHANGELOG v0.10.0節 253-255行）
+- **使えないスキルは注入されない**（v0.11.0）: そのターンで使えないスキルは注入されません。例として `computer-use` は、そのセッションの Computer Use が off のとき、トリガーが一致しても選ばれません（CHANGELOG v0.11.0節 190-193行、`context-management.md` 265-268行）
+- **仕様書だけで確認した項目**（CHANGELOG の v0.10.0・v0.11.0・v0.11.1 節に説明なし。`skills.max_triggered` の既定は 0 なので、トリガーに関する次の2点は既定では働きません）
+  - **トリガー語の大文字小文字**: 既定では大文字小文字を区別せずに照合します。`=` を前置した語句は、書いたとおりの大文字小文字で現れた場合だけ発火します（`=Word` は「Word」に一致し「word」に一致しません。`context-management.md` 261-265行）
+  - **一致の判定に使う文**: 人が書いたリクエストです（`skill_trigger_text`）。ダッシュボードが前置するサブエージェント通知などは含みません。回復や Continue の継続ターンなど、人が書いていないターンでは何も一致せず、何も選ばれません（`context-management.md` 270-276行）
+  - **`skills.extra_paths`**: Settings → Skills は、1行1パスの複数行入力で編集します。64項目・各4096文字までで、読み込み側が拒否したパスは保存時ではなく読み込み時に読み飛ばされます（`memory-skills-hooks.md` 5047-5052行、`config.md` 4254-4261行）
+  - **Kiro Crew が生成するエージェント**: プロンプトがスキルを名指すものには `skill://` のエントリが付きます。以前はスキル検索の範囲が空で、エージェントが自分の手順書を見つけられませんでした（`memory-skills-hooks.md` 4388-4395行）
+  - **プロジェクトの `.kiro/skills` の直下のシンボリックリンク**: その項目は読み込まれず、プロジェクトルートごとに1回、WARNING が出ます。リンクは全て列挙されます（`memory-skills-hooks.md` 4033-4042行）
+  - **レジストリの検索・インストールの失敗**: ユーザーに理由が届くようになりました。コードは `rate_limited`・`not_found`・`refused`・`unavailable` で、文面は300文字までです（`memory-skills-hooks.md` 4684-4690行）
+
+### Hooks
+
+- **`hooks.confirm_tools`**（仕様書だけで確認。CHANGELOG の3節と v0.9.0 の仕様書に記載なし）: `config.json` の `hooks` 節に加わりました。`auto_approve_tools` と同じ書式のツール名パターンで、一致した呼び出しは常に承認を求めます。一致する MCP サーバの静的な許可（`allowedTools`・`autoApprove`）は外れ、呼び出しは承認の門を通ります。`auto_approve_tools` の許可より優先され、呼び出しを拒否はしません（`memory-skills-hooks.md` 5792行、`docs/architecture/mcp.md` 418-430行）
+- **agent spec のフックの終了コード**（v0.11.1）: KAS では、agent spec のフックは終了コード 2 のときだけツールをブロックします（kiro-cli と同じ。CHANGELOG v0.11.1節 24-25行）。Kiro Crew は、KAS・goose・opencode のターンループで agent spec のフックを自分で発火します（`agent-host-contract.md` 635行）。上の「Hooks」節の「それ以外の終了、タイムアウト、クラッシュ: `PreToolUse` をブロックします（fail closed）」は、公式 hooks ページのフック（`hooks.json`）の記述です。agent spec のフックは `hooks.json` のフックとは別の設定です。終了コードの規則が両者で同じかどうかは、一次情報で確認できていません
+
+### Steering: フォルダの Additional steering をエージェントが提案できる（仕様書だけで確認）
+
+エージェントが `propose_change(kind="folder.steering", ...)` で変更を提案し、人が自分のブラウザでカードを適用する経路が加わりました。追加は `widen`、削除だけは `tighten` です。Undo は、フォルダが適用後の値のままのときに前の一覧へ戻します。他の保存が先に入っていると 409 `steering_dirs_changed` です。MCP ツール呼び出しが持つ内部資格での書き込みは、2か所の書き込み口で拒否されます（`config.md` 439-465行）。CHANGELOG に説明はありません。
+
+**出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/memory-skills-hooks.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/config.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/crew-mode.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/agent-host-contract.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/context-management.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/mcp.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+出典: CHANGELOG.md v0.10.0節 253-255行・v0.11.0節 67-75行・181-183行・190-193行・v0.11.1節 24-25行（`fe6f5be`）。
+
 ## v0.9.0での変更
 
 v0.9.0 の CHANGELOG（v0.9.0節）で、本ページの範囲に関わる変更です。v0.8.0・v0.9.0 の CHANGELOG に「Before you upgrade」節はありません。
 
 - **画面名の改称**: Agent Capabilities は Customize になりました（CHANGELOG v0.9.0節 150-152行）。公式ページの表記の違いは「[画面名: Customize（旧 Agent Capabilities）](#画面名-customize旧-agent-capabilities)」を参照してください
 - **信頼できないチェックアウトの agent spec のフック**: 信頼できないチェックアウトの agent spec にあるフックは、ターンループに届かなくなりました（CHANGELOG v0.9.0節 176-178行の「Security and access」の段落）
-- **crewmate の呼称**: v0.8.0 の CHANGELOG は Preview を「the Crew Members preview」と呼び（CHANGELOG v0.8.0節 338行）、v0.9.0 時点の公式 agents ページ（Page updated 2026-10-20）は同じ Preview を Settings → Developer → Feature Previews → **Crewmates** と呼んでいます。本サイトは裁定せず、両方の呼称を示します
+- **crewmate の呼称**（v0.11.0 以降の CHANGELOG と UI は Mate と表記します。「[v0.11.1での変更](#v0111での変更)」参照）: v0.8.0 の CHANGELOG は Preview を「the Crew Members preview」と呼び（CHANGELOG v0.8.0節 338行）、v0.9.0 時点の公式 agents ページ（Page updated 2026-10-20）は同じ Preview を Settings → Developer → Feature Previews → **Crewmates** と呼んでいます。本サイトは裁定せず、両方の呼称を示します
 
 公式 agents ページ（Page updated 2026-10-20）は、Preview の Crewmates 機能で、各 crewmate が表示名・プライベートメモリ・ワークスペース・agent template・既定モデル・任意のトリガーを持つと記載しています。**Preview の機能です**（Settings → Developer → Feature Previews → Crewmates を有効にします）。crewmate のメモリは [04_memory-and-learning.md](04_memory-and-learning.md) の「Crewmate のプライベートメモリ（Preview）」を参照してください。
 
@@ -307,14 +345,17 @@ v0.7.0 の CHANGELOG と、公式 skills／agents／agent-templates ページ（
 
 ## 未確認事項
 
-- 本ページの記述は公式 `capabilities/` 配下と `memory-skills-hooks.md`・`config.md` で確認済み。ただし v0.9.0 の仕様書2ファイルの間で、次の2点の記述が食い違っており、本サイトは裁定していません（どちらも v0.7.2 から継続）
+- 本ページの記述は公式 `capabilities/` 配下と `memory-skills-hooks.md`・`config.md` で確認済み。ただし v0.11.1 の仕様書2ファイルの間で、次の2点の記述が食い違っており、本サイトは裁定していません（どちらも v0.7.2 から継続）
   - `skills.lazy_load` の既定（true）のときに提示されるエントリの形（「[読み込み方式](#読み込み方式)」参照）
   - 独自の `skill://` マッピングを持つエージェントでのスキル本文の扱い（「[`skill://` によるIDE/CLIとの往復](#skill-によるidecliとの往復)」参照）
-- 画面名は、CHANGELOG v0.9.0節・公式 agents ページ（Customize）と、公式の他の capabilities ページ（Agent Capabilities）で表記が異なります（「[画面名: Customize（旧 Agent Capabilities）](#画面名-customize旧-agent-capabilities)」参照）。本サイトは裁定していません
-- Hooks の編集画面が Preview 扱いかどうかは、一次情報で確認できません（「[Preview・Developer Mode の扱い](#previewdeveloper-mode-の扱い)」参照）
-- 公式 hooks ページの「None fires automatically in Crew 0.8」は版が「0.8」のままの記述です。v0.9.0 の仕様書に矛盾する記述はありませんが、Page updated 2026-10-12 より後の公式ページ側の更新は確認できません
-- `config.json` の `hooks` 節と `hooks.json` のフックの関係は、一次情報で確認できません
-- 仕様書だけに記載があり、公式ドキュメントと CHANGELOG に記載がない項目: `skills.lazy_load` の書き換え、トリガーしたスキルの本文の重複排除、`skill_search` の1回の読み取りの上限、フォルダの Additional steering の詳細（4096文字・403/400 のコード）
+- 画面名は、CHANGELOG v0.9.0節・公式 agents ページ（Customize）と、公式の他の capabilities ページ（Agent Capabilities）で表記が異なります（「[画面名: Customize（旧 Agent Capabilities）](#画面名-customize旧-agent-capabilities)」参照）。CHANGELOG の v0.10.0・v0.11.0・v0.11.1 節に画面名の再改称はなく、v0.11.1 の仕様書 `steering-viewer.md` 3行は Customize のままです。本サイトは裁定していません
+- Hooks の編集画面が Preview 扱いかどうかは、一次情報で確認できません（「[Preview・Developer Mode の扱い](#previewdeveloper-mode-の扱い)」参照）。v0.9.0〜v0.11.1 の CHANGELOG に追加の記述はありません
+- 公式 hooks ページの「None fires automatically in Crew 0.8」は版が「0.8」のままの記述です。v0.11.1 の仕様書（`memory-skills-hooks.md` 6044-6045行）にも矛盾する記述はありませんが、Page updated 2026-10-12 より後の公式ページ側の更新は確認できません
+- `config.json` の `hooks` 節と `hooks.json` のフックの関係は、一次情報で確認できません。v0.11.1 で `hooks.confirm_tools` が `config.json` 側に加わりましたが、両者の関係の説明はありません。agent spec のフックと `hooks.json` のフックの終了コードの規則が同じかどうかも、確認できません
+- 仕様書だけに記載があり、公式ドキュメントと CHANGELOG に記載がない項目: `skills.lazy_load` の書き換え、トリガーしたスキルの本文の重複排除、`skill_search` の1回の読み取りの上限、フォルダの Additional steering の詳細（4096文字・403/400 のコード）、`hooks.confirm_tools`、トリガー語の `=` 前置、`skills.extra_paths` の入力、フォルダの Additional steering のエージェント提案カード
+- Mate のエージェントファイルが `~/.kiro/mates/agents/` にあることを「[エージェント設定](#エージェント設定)」の `~/.kiro/agents/` の説明とどう並べるかは、人の判断を待っています。本ページは両方の事実を示すに留めています
+- Mate（crewmate）が Feature Preview のままかどうかは判定できません。v0.10.0 の CHANGELOG（236行）は Settings → Developer → Feature Previews → Crewmates を前提にし、公式 agents ページ（Page updated 2026-10-20）は「Crewmates (Preview)」の見出しです。v0.11.0 の CHANGELOG は、Mates 全体の Preview 状態を述べていません。本ページの「Preview の機能です」は公式 agents ページの記述に基づきます
+- v0.11.1 の CHANGELOG にある KAS エンジンの変更（許可されたシェルコマンドの扱い、許可パス外の書き込みの拒否、MCP サーバへ渡す env とシークレット、再開した KAS セッションの履歴の再生。CHANGELOG v0.11.1節 20-27行）は、本ページの範囲との関係を確認しておらず、仕様書での裏付けも確認していません。本ページでは扱いません
 - Memory V2・`src/` 由来の値（builtin App 数など）は `src/` の解析が必要なため、本ページでは扱いません
 
 ## 関連リンク

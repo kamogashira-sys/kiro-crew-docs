@@ -12,6 +12,8 @@
 **出典**: <https://kiro.dev/docs/crew/features/computer-use/>（Page updated 2026-08-31）・<https://kiro.dev/docs/crew/features/browser/>（Page updated 2026-09-25）
 **出典**（v0.9.0 での再検証・ブラウザの2経路・食い違いの解消・Computer Use の owner 専用 API）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/browser.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/computer-use.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/mcp.md>
 （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0。公式 `features/computer-use/` は Page updated 2026-08-31、`features/browser/` は 2026-09-25 で、いずれも v0.7.2 時点から変化なし）
+**出典**（v0.11.1 での再検証・`dashboard.browser_local_origins`・利用者の Chrome へのアタッチ・Browser セクションの省略・Computer Use のエディション固定）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/browser.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/computer-use.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/mcp.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/CHANGELOG.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1。公式 `features/computer-use/` は Page updated 2026-08-31、`features/browser/` は 2026-09-25 で、いずれも v0.9.0 時点から変化なし）
 
 ---
 
@@ -19,6 +21,7 @@
 
 - [Computer Use（デスクトップGUI自動化）](#computer-useデスクトップgui自動化)
 - [ブラウザ自動化](#ブラウザ自動化)
+- [v0.11.1での変更](#v0111での変更)
 - [v0.9.0での変更](#v090での変更)
 - [v0.8.0での変更](#v080での変更)
 - [v0.7.0での変更](#v070での変更)
@@ -78,6 +81,86 @@ agent turn ──MCP browser(op, args)──▶ gateway command bus ──▶ El
 
 > **解消済み（以前の食い違い）**: 以前は、公式 `features/browser/` ページ（デスクトップアプリでは埋め込み Browser ビューを直接操作し、ネイティブの Browser ツールは Node.js や Playwright の別途インストールが不要）と、`modules/browser.md`（ブラウザはシェル機能）が食い違っていました。v0.9.0 の `browser.md` 3-7行は公式ページと同じ内容で、デスクトップアプリでは `browser` ツールがネイティブ Browser ビューを操作し、`playwright-cli` がフォールバックだと記述しています。なお `architecture/mcp.md` は、v0.7.2 では 1391行で「Browsing is deliberately not an MCP server」と記述していました（`c67c506`）。v0.8.0 の 1508行・1581-1587行（`4d205da`）から、`browser` ツールを core MCP の入口として記述しています。
 
+## v0.11.1での変更
+
+CHANGELOG.md の v0.11.1 節（5-54行）に、Computer Use とブラウザ自動化を扱う項目はありません。v0.10.0 節にもありません。v0.11.0 節に1件（Browser セクションの省略）があります。
+
+### ブラウザ: プロンプトの Browser セクションの省略（v0.11.0・CHANGELOG に記載あり）
+
+v0.11.0 の CHANGELOG は、ブラウズが設定されていないとき、プロンプトから Browser セクションを省くと記載しています（「Quicker starts」の項目）。仕様書 `browser.md` は、エージェントのプロンプトの `## Browser` セクションが `{{BROWSER_BEGIN}}`・`{{BROWSER_END}}` で囲まれており、検証済みのランチャーが解決しない状態でセッションが始まる（`browser` ツールが全操作を拒否する）と、このセクションの代わりに短い案内（`web_fetch`・Settings → Browser）が入ると記述しています。ランチャーが解決する場合、または状態を読めない場合は、元のセクションが残ります。
+
+出典: CHANGELOG.md v0.11.0節 190-193行（`fe6f5be`）。
+**出典**（仕様書）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/browser.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1。96-101行）
+
+### ブラウザ: `dashboard.browser_local_origins`（仕様書にだけ記述がある例外）
+
+v0.9.0 の `browser.md` は、`navigate` が自動で操作するのを公開 HTTP(S) の宛先だけと記述していました（上の「[v0.9.0での変更](#v090での変更)」）。v0.11.1 の `browser.md` は、運用者が書く設定 `dashboard.browser_local_origins` を例外として記述しています。
+
+- **形式**: loopback のオリジンの一覧です。`localhost`・`127.0.0.1`・`[::1]` のいずれかに、必須のポート番号を付けます（`localhost:<ポート>` の形。仕様書が具体例を載せています）。設定の読み込みはそれ以外の形をすべて捨てるため、ホスト名だけの指定・private や LAN のアドレス・別表記のアドレスは一覧に入れられません
+- **動作**: `navigate` の `host:port`（ポートの省略時はスキームの既定ポートで補う）が一覧のエントリとバイト単位で一致すると、ツールがその宛先へ移動します。userinfo を含む宛先は常に拒否します。ゲートウェイ自身の API ポートは一覧に載せていても拒否します。一覧は呼び出しのたびに読み、読めなければ空として扱います
+- **設定できる人**: エージェントは一覧を変更できません。`PUT /api/dashboard/config` はこのキーを受け付けず、運用者が自分の端末で `kirocrew config set` を実行するか、設定ファイルを直接編集します。`config.json` はサンドボックス内で読み取り専用です。`sandbox: off` のときはこの防壁がなくなると仕様書は記載しており、これは他の設定すべてと同じです
+- **受け入れ済みの残余リスク**: 一覧のページを開いたあとの `click`／`back` は、そのページのリンク先に従います（`navigate` だけが URL で制限されるため。公開ページにも同じ残余リスクがあると仕様書は記述しています）
+- 同じ仕様書のツール表（1079行）も、`browser` ツールが公開 HTTP(S) の宛先に加えて運用者が列挙した `dashboard.browser_local_origins` を対象にすると記載しています
+
+> 本内容は、v0.10.0 のタグの仕様書から出現し、v0.9.0 の `browser.md` にはありません。CHANGELOG（v0.10.0・v0.11.0・v0.11.1）・Release 本文は説明していません。公式 `features/browser/` ページにも記述がありません。
+
+**出典**（仕様書）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/browser.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1。122-145行・1079行）
+
+### ブラウザ: 利用者自身の Chrome へのアタッチ（仕様書にだけ記述がある）
+
+仕様書 `browser.md` は、エージェントが操作するブラウザの優先順位を「利用者の Chrome が先、ヘッドレスが最後」と記述しています。Browser パネルも `open` も利用者の Chrome ではなく、どちらも利用者のログイン状態を持ちません（`open` はヘッドレスです）。ログインが必要な作業と「自分の Chrome」を求める依頼では、アタッチ（`attach --extension`）を使います。`browser` ツールは、ホストの状態に応じた指示を2つの `playwright-cli` フォールバック文に付け足します。
+
+| ホストの状態 | 指示 |
+|---|---|
+| Google Chrome がインストールされていない | ヘッドレスの `open`（利用者のログインは持たない） |
+| Chrome はあるが、どのプロファイルにも拡張がない | 拡張を追加するよう利用者に頼んでからアタッチ。それまではヘッドレス |
+| 拡張はあるが、環境にトークンがない | アタッチする。利用者が Chrome で承認するか、Settings → Browser にトークンを貼る |
+| 拡張もトークンもある | アタッチする |
+
+- 利用者がヘッドレスを求めた場合と、別のマシンから到達したゲートウェイの場合は、この表より優先されます
+- エージェント向けのアタッチのコマンドは、すべて `PLAYWRIGHT_MCP_ISOLATED=false playwright-cli attach --extension=chrome` の形です。Windows のホストでは PowerShell の形（変数をアタッチの間だけ設定し、あとで消す）で指示されます。運用者の設定ファイル（`PLAYWRIGHT_MCP_CONFIG`）が `browser.isolated: true` を指定していると、アタッチが成功と表示されても使い捨てのブラウザが `about:blank` で起動することがあるため、この変数で実際のアタッチに戻します
+- アタッチのあとは `tab-list` を確認します。`about:blank` が1つだけなら利用者の Chrome に届いていないため、その旨を伝えます
+- 公式 `features/browser/` ページが、利用者が明示的に選んだときだけ利用者自身の Chrome に接続できると説明している点（上の「v0.7.0での変更」）と整合します
+
+> 本内容は、v0.10.0 のタグの仕様書から出現し、v0.9.0 の `browser.md` にはありません。CHANGELOG・Release 本文は説明していません。
+
+**出典**（仕様書）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/browser.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1。503-545行）
+
+### ブラウザ: Playwright CLI のインストールと診断（仕様書にだけ記述がある）
+
+- `kirocrew doctor` は、インストール先の書き込み可否を `browser npm:`・`browser node:` の行で表示します（`browser.md` 180-186行）。この行は v0.10.0 のタグの仕様書から出現します
+- `playwright-cli` の起動元の検証は `browser_cli/install_launcher.py` が担います（`browser.md` 235行）。この記述は v0.11.0 のタグの仕様書から出現します
+- Linux で必要なライブラリの案内はディストリビューションで異なります。rpm 系の Chromium は、ホストにある `dnf`・`yum`・`microdnf` のいずれかの install 行を案内します。rpm 系の Firefox／WebKit は、エンジン名と Playwright が出力したライブラリを指す行だけを案内し、パッケージ一覧は出しません。Amazon Linux（`ID=amzn`）では WebKit をサポート対象外とし、Chromium がサポート対象のエンジンだと案内します（`browser.md` 1116-1120行）
+
+> 本項目は CHANGELOG・Release 本文が説明していません。
+
+**出典**（仕様書）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/browser.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+
+### Computer Use: エディション固定（仕様書にだけ記述がある）
+
+`computer-use.md` は、enterprise ビルドではオプトインが無視されると記述しています。`is_enabled()` は `False` を返し、`GET /api/computer-use/config` は `locked_by_policy: true` を返し、`enabled: true` を送る PUT は 409 `locked_by_policy` で拒否されます。仕様書は、これをガバナンスのスコープではなくエディションによる固定と位置づけ、`oss` ビルドは変わらないと記述しています（501-506行）。この段落は v0.11.0 のタグの仕様書から出現します。
+
+enterprise ビルドが公開されているかどうかは、一次情報で確認できません（「[未確認事項](#未確認事項)」参照）。CHANGELOG・Release 本文は説明していません。
+
+**出典**（仕様書）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/computer-use.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+
+### v0.9.0 の記述が v0.11.1 でも成り立つことの再確認
+
+- ブラウザの2経路（`browser` MCP ツールと `playwright-cli`）と `dashboard.use_builtin_browser`（既定 `true`）: `browser.md` 3-7行・104-110行。`architecture/mcp.md` 2749行も、ブラウズの入口が `browser` ツール1つだと記述しています
+- ガバナンスの確認は呼び出しのたびに行い、拒否時は CLI へフォールバックしない点、サブエージェントが親のネイティブパネルを操作しうる受け入れ済みの残余リスク: `browser.md` 104-110行・1079行
+- コマンドキュー（1セッション 32 件）・操作のタイムアウト・パネル liveness・内部ルート3つ: `browser.md` 29-36行
+- インストールジョブの 409 `install_already_running`: `browser.md` 256-290行（276行に記述）。`NODE_USE_SYSTEM_CA=1`: 212行
+- 同一オリジン relay（`/browser-view/<token>/`）・`dashboard.browser_view_port`: `browser.md` 647-649行・1051-1057行。Browser パネルの2つの transport: 818-832行
+- Computer Use: macOS で実カーソルを動かすのは `click_method: "global"` だけ（`computer-use.md` 17行・23行）、Windows の座標クリックとドラッグは実ポインタを動かす（1837行）、`PUT /api/computer-use/config` は owner 専用（528行・580行）、`GET` の応答の `cursor_motion`・`cursor_motion_supported`・`policy_error`（547行・566-567行）、ctypes の障害でゲートウェイが終了しうる既知の制限（157行・2559行）
+
+**出典**（仕様書）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/browser.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/computer-use.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/mcp.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+
 ## v0.9.0での変更
 
 CHANGELOG.md の v0.9.0節（5-186行）に、Computer Use とブラウザ自動化を扱う項目は見つかりません。本節の内容は v0.9.0 タグの仕様書で確認したもので、CHANGELOG/Release 本文は説明していません。
@@ -85,7 +168,7 @@ CHANGELOG.md の v0.9.0節（5-186行）に、Computer Use とブラウザ自動
 ### ブラウザ: ネイティブ `browser` ツールの制約
 
 - **ガバナンスの確認**: `browser` ツールは常に提示されますが、呼び出しのたびに `capabilities.browse` のガバナンスと CLI の利用可否を確認します。ガバナンスが拒否した場合は CLI へフォールバックしません。`dashboard.use_builtin_browser`（既定 `true`）を off にしても、ガバナンスの拒否は上書きされません（`browser.md` 97-100行・957行、`99e6253`）
-- **`navigate` の対象**: 自動で操作するのは**公開 HTTP(S) の宛先だけ**です。loopback・private・link-local・予約済みのアドレス、数値表記の別形式やパーセントエンコードされた形式、非 ASCII のホスト名、パーサ間で解釈が分かれる形式、HTTP(S) 以外の形式は拒否され、承認ゲート付きの CLI 経路へ誘導されます。DNS 名は解決しないため、公開名から private アドレスへの rebinding は、仕様書が「accepted residual（受け入れ済みの残余リスク）」と記載しています（`browser.md` 115-123行）
+- **`navigate` の対象**（v0.9.0 時点の記述。v0.10.0 の仕様書以降は、運用者が列挙した loopback オリジンの例外が加わっています。「[v0.11.1での変更](#v0111での変更)」参照）: 自動で操作するのは**公開 HTTP(S) の宛先だけ**でした。loopback・private・link-local・予約済みのアドレス、数値表記の別形式やパーセントエンコードされた形式、非 ASCII のホスト名、パーサ間で解釈が分かれる形式、HTTP(S) 以外の形式は拒否され、承認ゲート付きの CLI 経路へ誘導されます。DNS 名は解決しないため、公開名から private アドレスへの rebinding は、仕様書が「accepted residual（受け入れ済みの残余リスク）」と記載しています（`browser.md` 115-123行）
 - **結果の扱い**: 引数はスカラーまたはスカラーのリストに限られ、結果のテキストは認証情報と持ち出し用 URL を redact したうえで長さが制限されます。スクリーンショットのデータはモデルへの応答にインラインで入りません（`browser.md` 957行）
 - **サブエージェントからの操作**: 仕様書は、サブエージェントのプロセスが親のスロットに解決されうるため、サブエージェントのツール呼び出しが親のネイティブパネルを操作することがあると記載しています（同一ユーザー・同一マシン内で、公開宛先への移動に限られる、受け入れ済みの残余リスクとして）
 - **内部ルートと上限**: ネイティブ経路は `/api/browser/command`・`/api/browser/command-drain`・`/api/browser/command-result` を使い、3つとも internal-secret 認証でダッシュボードの cookie の呼び出しは受け付けません。コマンドキューは**1セッションあたり 32 件**、操作のタイムアウトは **15 秒**（`navigate` と `wait_for` は **60 秒**）、パネルの liveness は drain も結果もないまま **30 秒**で失効します（`browser.md` 29-36行）
@@ -93,7 +176,7 @@ CHANGELOG.md の v0.9.0節（5-186行）に、Computer Use とブラウザ自動
 出典（仕様書）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/browser.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/mcp.md>
 （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0。`browser.md` 29-36行はキュー・タイムアウトの上限、97-123行・957行はガバナンスと `navigate` の対象）
 
-> 内部ルート・キュー・タイムアウトの記述（`browser.md` 29-36行）は v0.8.0 のタグにも同じ内容があります。`navigate` の公開宛先限定の記述は、v0.8.0 の `browser.md` 849行（Native `browser` MCP tool の行）にも同じ趣旨があります。
+> 内部ルート・キュー・タイムアウトの記述（`browser.md` 29-36行）は v0.8.0 のタグにも同じ内容があります。`navigate` の公開宛先限定の記述は、v0.8.0 の `browser.md` 849行（Native `browser` MCP tool の行）にも同じ趣旨があります。v0.9.0 時点の「公開 HTTP(S) の宛先だけ」という記述は、v0.11.1 では例外つきの記述に変わっています（v0.10.0 の仕様書で加わりました）。
 
 ### ブラウザ: インストールジョブと証明書
 
@@ -196,7 +279,9 @@ v0.3.0のCHANGELOGは「**The Browser panel is the browser**（Browser panelが�
 
 ## 未確認事項
 
-なし。以前の未確認事項（エージェントがデスクトップアプリの埋め込み Browser ビューを `playwright-cli` を介さずに直接操作するのかどうか）は、v0.9.0 の `modules/browser.md` 3-7行（`99e6253`）が `browser` MCP ツールによる操作を記述し、公式 `features/browser/` ページと一致したため、解消しました。
+- enterprise ビルドの提供状況: `computer-use.md` 501-506行（`fe6f5be`）が enterprise ビルドと edition lock に言及しますが、公開されたビルドかどうかは一次情報で確認できません。本サイトは「仕様書にエディション固定の記述がある」ことだけを書きます
+
+以前の未確認事項（エージェントがデスクトップアプリの埋め込み Browser ビューを `playwright-cli` を介さずに直接操作するのかどうか）は、v0.9.0 の `modules/browser.md` 3-7行（`99e6253`）が `browser` MCP ツールによる操作を記述し、公式 `features/browser/` ページと一致したため、解消しました。
 
 ## 関連リンク
 

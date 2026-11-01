@@ -1,13 +1,17 @@
 # 公式49ページ 1対1割当台帳
 
-- **取得日**: 2026-10-25（v0.9.0対応で再取得。URL集合は 2026-10-04 取得分と完全一致・新規0・消滅0。担当ページの変更なし。49ページ中24ページで Page updated と `.md` sha256 が変化）
+- **取得日**: 2026-11-01（v0.11.1対応で再確認。URL集合は 2026-10-25 取得分と完全一致・新規0・消滅0。担当ページの変更なし。49ページ全件で Page updated と `.md` sha256 が前回台帳と一致＝変更0）
 - **出典**: `https://kiro.dev/sitemap.xml`（`docs/crew/` 配下の抽出。49件）
 - **検証**: `check-coverage.py` の入力データ。49行すべてに担当ページまたは不扱い理由があること（未割当0件）を機械検証する
-- **公式 Page updated・`.md` sha256 列（固定時点）**: v0.9.0 タグのスナップショットの `PIN.json`（ref `v0.9.0`・commit `99e6253`・reference_date 2026-10-25）の `official_page_updated`・`official_md_sha256` の値。`measure-ssot.py --page-updated-diff`・`--expect-ledger-current`（`make check-kiro-crew-ledger-current`）が、新しく取得した `PIN.json` と URL ごとに比べる。版更新では対象版の `PIN.json` の値で更新する。sha256 は `.md` companion の内容から計算した値だけを置き、内容そのものは置かない
+- **公式 Page updated・`.md` sha256 列（固定時点）**: v0.11.1 タグのスナップショットの `PIN.json`（ref `v0.11.1`・commit `fe6f5be`・reference_date 2026-11-01）の `official_page_updated`・`official_md_sha256` の値。`measure-ssot.py --page-updated-diff`・`--expect-ledger-current`（`make check-kiro-crew-ledger-current`）が、新しく取得した `PIN.json` と URL ごとに比べる。版更新では対象版の `PIN.json` の値で更新する。sha256 は `.md` companion の内容から計算した値だけを置き、内容そのものは置かない
 
 > **v0.3.0再確認（2026-08-22・v0.3.0タグ`21584ea`）**: sitemap実測43件＝台帳記録44行（ヘッダ含む）で一致確認済み（変化なし・S1）。（v0.3.0 対応。コミット `aaaefa9`）
 >
 > **v0.6.0再構築（2026-09-13・v0.6.0タグ`8575209`）**: sitemap実測**49件**（43→49、**新規6件・消滅0件**）。新規は `features/agent-backends/`・`features/computer-use/`・`features/browser/`・`features/workflows/`・`apps/aws-control/`・`system/`。番号は振り直したため、v0.4.1以前の台帳の #N とは対応しない。（v0.6.0 対応。コミット `1333ec1`）
+
+> **v0.11.1再確認（2026-11-01・v0.11.1タグ`fe6f5be`）**: sitemap実測**49件**（URL集合は v0.9.0 時点の台帳と完全一致・**新規0件・消滅0件**）。49ページ全件で「公式 Page updated」と `.md` sha256 が前回台帳（v0.9.0）と一致し、**変更は0件**です（`measure-ssot.py --page-updated-diff`・`--expect-ledger-current` の差分0件）。下表の固定時点の値は、v0.9.0 の `PIN.json` と v0.11.1 の `PIN.json` で同一です。（v0.11.1 対応）
+>
+> **v0.9.0再確認（2026-10-25・v0.9.0タグ`99e6253`）**: URL集合は 2026-10-04 取得分と完全一致（新規0・消滅0）。49ページ中24ページで Page updated と `.md` sha256 が変化しました。（v0.9.0 対応）
 
 | # | 公式URL | 担当ページ（`01_features/` 配下） | 備考 | 公式 Page updated（固定時点） | `.md` sha256（固定時点） |
 |---|--------|--------------------------------|------|---|---|

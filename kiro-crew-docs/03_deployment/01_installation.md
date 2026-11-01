@@ -10,6 +10,9 @@
 **出典**（v0.9.0での再検証: 前提要件・導入経路・管理対象venvの更新・デスクトップ版の自動更新）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/windows-install.md>
 （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
 **出典**（v0.9.0）: <https://kiro.dev/docs/crew/installation/>（Page updated 2026-10-20）
+**出典**（v0.11.1での再検証: KAS エンジンの取得・デスクトップアプリの kiro-cli 同梱の取りやめ・既定ハーネス・`KIROCREW_INSTALL_KAS`）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/windows-install.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/harness-parity.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+**出典**（v0.11.1）: <https://kiro.dev/docs/crew/installation/>（Page updated 2026-10-20）・<https://kiro.dev/docs/crew/features/agent-backends/>（Page updated 2026-10-12）
 
 ---
 
@@ -19,6 +22,7 @@
 - [デスクトップ版の配布物](#デスクトップ版の配布物)
 - [チャネル（stable/insider/nightly）](#チャネルstableinsidernightly)
 - [前提要件](#前提要件)
+- [v0.11.1での変更](#v0111での変更)
 - [v0.9.0での変更](#v090での変更)
 - [v0.8.0での変更](#v080での変更)
 - [v0.7.0での変更](#v070での変更)
@@ -33,8 +37,8 @@
 
 | 経路 | 同梱物 | 特徴 |
 |------|-------|------|
-| **デスクトップアプリ（Electron）** | Pythonバックエンド一式＋フロントエンド。**Kiro CLIも同梱**（v0.8.0〜。下記「[v0.8.0での変更](#v080での変更)」参照） | ローカルGatewayを自動起動。ダウンロードしたチャネルで自動更新。SSHトンネル経由でリモートGatewayに接続可能 |
-| **ワンライナー（署名済みwheel）** | – | `curl -fsSL https://download.crew.kiro.dev/cli.sh \| sh`。sha256検証済み。cloneもnpmもローカルビルドも不要 |
+| **デスクトップアプリ（Electron）** | Pythonバックエンド一式＋フロントエンド。v0.8.0〜v0.10.0 は **Kiro CLI も同梱**していましたが、**v0.11.0 から同梱しません**（アプリが利用者の導入済みの kiro-cli を検出します。下記「[v0.11.1での変更](#v0111での変更)」。公式 `installation/` ページは同梱のままで、食い違いがあります） | ローカルGatewayを自動起動。ダウンロードしたチャネルで自動更新。SSHトンネル経由でリモートGatewayに接続可能 |
+| **ワンライナー（署名済みwheel）** | – | `curl -fsSL https://download.crew.kiro.dev/cli.sh \| sh`。sha256検証済み。cloneもnpmもローカルビルドも不要。**v0.11.1 から、組み込みの KAS エンジンも既定で取得します**（`--no-kas` で省略。下記「[v0.11.1での変更](#v0111での変更)」） |
 | **Docker** | – | `linux/amd64`・`linux/arm64` の両方を全タグで提供 |
 | **ソースインストール** | 何も同梱しない | Windowsでは署名済みデスクトップインストーラ（v0.4.0〜）と並ぶ導入経路（[02_windows.md](02_windows.md)参照）。`install.md` 10行は「Windows supports both the signed desktop installer and a native Python source install」と記述。**本サイトは以前「Windowsの唯一のサポート経路」と書いていましたが、これは誤りでした**（同ページのデスクトップ版の配布物表・v0.4.0節の記述と矛盾しており、v0.7.2 以前からの誤り） |
 
@@ -80,24 +84,87 @@ curl -fsSL https://download.crew.kiro.dev/cli.sh | sh -s -- --version 0.6.0
 | 要件 | 用途 | 下限 |
 |------|------|------|
 | **Python** | バックエンド | **`>= 3.12`**（v0.6.0で3.10から引き上げ。`pyproject.toml` の `requires-python`） |
-| **Node.js + npm** | ダッシュボードのビルド | リポジトリの `install.md` 40行は **`>= 22.12.0`**（`website/package.json` の `engines`。Node 24 LTS推奨。ビルド時のみ必要。事前ビルド済みwheel/DMG/AppImage/`.deb`/`.rpm`の利用者はNode不要）。**公式 `installation/` ページ（16・75行）は「Node.js 22+」のままで、書き分けが生じています**（下記の注記参照）。`kirocrew doctor` は `node` が 22.12.0 未満だと失敗（exit 1）として報告します（`modules/cli.md` 1194行）。**本サイトは以前 `20 \|\| >= 22` と記載していましたが、これは v0.3.0〜v0.4.1 時点の `install.md` 40行の値で、v0.6.0 の `install.md` 40行は既に `>= 22` でした**（下記「[v0.3.0での変更](#v030での変更)」の注記参照） |
-| **Kiro CLI（`kiro-cli`）** | LLM駆動 | デスクトップアプリ（macOS・Linux・Windows）は動作確認済みのKiro CLIを**同梱**します（v0.8.0〜。公式 `installation/` ページ17・21-25行）。wheel・ソース・Docker・リモートGatewayでは、Gatewayホストへの導入が必要です。Crewは、絶対パスの `KIROCREW_KIRO_BIN` が指定されていればそれを最優先で選び、無い場合にデスクトップアプリは同梱版をシステム／`PATH` 上のものより先に使います。`kirocrew doctor` は選ばれたバイナリとサインイン状態を報告します |
+| **Node.js + npm** | ダッシュボードのビルド | リポジトリの `install.md` 40行は **`>= 22.12.0`**（`website/package.json` の `engines`。Node 24 LTS推奨。ビルド時のみ必要。事前ビルド済みwheel/DMG/AppImage/`.deb`/`.rpm`の利用者はNode不要）。**公式 `installation/` ページ（16・75行）は「Node.js 22+」のままで、書き分けが生じています**（下記の注記参照）。`kirocrew doctor` は `node` が 22.12.0 未満だと失敗（exit 1）として報告します（`modules/cli.md` 1425行。v0.9.0 では 1194行）。**本サイトは以前 `20 \|\| >= 22` と記載していましたが、これは v0.3.0〜v0.4.1 時点の `install.md` 40行の値で、v0.6.0 の `install.md` 40行は既に `>= 22` でした**（下記「[v0.3.0での変更](#v030での変更)」の注記参照） |
+| **Kiro CLI（`kiro-cli`）** | LLM駆動 | **v0.11.0 以降、デスクトップアプリは Kiro CLI を同梱しません**。アプリが利用者の導入済みの kiro-cli を検出し、見つかるまで **Set up Kiro** ページがインストールとサインインのコマンドを表示します（CHANGELOG.md v0.11.0節 154-156行、`install.md` 585-592行）。`BUNDLE_KIRO_CLI=1` を付けてビルドしたアプリだけが、アプリ内に kiro-cli を持ちます。wheel・ソース・Docker・リモートGatewayでは、従来どおりGatewayホストへの導入が必要です。**既定ハーネスが KAS になった v0.11.0 以降も、既定の KAS が kiro-cli を必要とするか**は出典間で記述が分かれます（下記「[v0.11.1での変更](#v0111での変更)」）。Crewは、絶対パスの `KIROCREW_KIRO_BIN` が指定されていればそれを最優先で選びます。`kirocrew doctor` は選ばれたバイナリとサインイン状態を報告します。**v0.8.0〜v0.10.0 のデスクトップアプリは動作確認済みの Kiro CLI を同梱し、同梱版をシステム／`PATH` 上のものより先に使っていました**（公式 `installation/` ページ17・21-25行は現在もこの記述です） |
 
 > ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**（Node.jsの下限）
-> - リポジトリ `docs/guides/install.md` 40行・`docs/guides/windows-install.md` 191行・`docs/system-specs/modules/cli.md` 1194行（`99e6253`）: `22.12.0`（`cli.md` は `MIN_NODE_VERSION` ＝ 22.12.0 を `doctor` が検査すると記述）
+> - リポジトリ `docs/guides/install.md` 40行・`docs/guides/windows-install.md` 205行・`docs/system-specs/modules/cli.md` 1425行（`fe6f5be`。v0.9.0 の `99e6253` では `windows-install.md` 191行・`cli.md` 1194行）: `22.12.0`（`cli.md` は `MIN_NODE_VERSION` ＝ 22.12.0 を `doctor` が検査すると記述）
 > - 公式 `installation/` ページ（`docs_md/installation.md` 16・75行。Page updated 2026-10-20）: 「Node.js 22+」
 >
 > v0.7.2 の `install.md` 40行は `>= 22` で公式と一致していました（v0.8.0 の `install.md` にも `22.12.0` の記載はありません）。
 
-> ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**（デスクトップアプリがKiro CLIを同梱するか）
-> - 公式 `installation/` ページ（17・21-25行）・CHANGELOG.md v0.8.0節 214-218・666-668行（`99e6253`）・`install.md` 573-577行: デスクトップアプリはKiro CLIを同梱する
-> - リポジトリ `README.md` 51-52行: 「`kiro-cli`, which you install and sign in to separately」。`windows-install.md` 80行: Windowsインストーラの Finish ページが「the default Kiro agent needs Kiro CLI」と案内する（`windows-install.md` 189行の前提表は、ソースインストールの文脈で `kiro-cli` を「install and sign in separately」と記述）
-> - 公式 `installation/` ページ内にも、157行の Info 注記（デスクトップアプリが「guides kiro-cli installation and sign-in from the app itself」）と、17・21-25行の同梱の記述があります
+> ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**（デスクトップアプリがKiro CLIを同梱するか。v0.11.0 で記述の組み合わせが変わりました）
+> - 公式 `installation/` ページ（`docs_md/installation.md` 17・21-25行。Page updated 2026-10-20）: デスクトップアプリは動作確認済みの Kiro CLI を同梱し、`KIROCREW_KIRO_BIN` が無ければ同梱版をシステム／`PATH` 上のものより先に使う
+> - CHANGELOG.md v0.11.0節 154-156行・`docs/guides/install.md` 585-592行（`fe6f5be`）: アプリは kiro-cli の同梱をやめ、利用者が導入したものを検出する。同梱されるのは `BUNDLE_KIRO_CLI=1` でビルドしたアプリだけ
+> - 公式ページ内にも、157行の Info 注記（デスクトップアプリが「guides kiro-cli installation and sign-in from the app itself」）と、17・21-25行の同梱の記述があります
+> - リポジトリ `README.md` 51-52行と `windows-install.md` 93-94行（Finish ページ）は、利用者が別に kiro-cli を導入しサインインする前提の記述で、v0.11.0 の記述とは矛盾しません。v0.9.0 まではこれらが公式・CHANGELOG（同梱）との食い違いの当事者でした
 
-出典（Node.js要件）: `docs/guides/install.md` 40行・`docs/guides/windows-install.md` 191行・`docs/system-specs/modules/cli.md` 1194行、公式 `installation/` ページ（`docs_md/installation.md` 16・75行）。
-（参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0。公式ページは Page updated 2026-10-20）
-出典（Kiro CLIの同梱）: 公式 `installation/` ページ（`docs_md/installation.md` 17・21-25行）、CHANGELOG.md v0.8.0節 214-218・666-668行（`99e6253`）、`docs/guides/install.md` 573-577行、`README.md` 51-52行。
+出典（Node.js要件。v0.11.1 でも `22.12.0` のまま）: `docs/guides/install.md` 40行・`docs/guides/windows-install.md` 205行（v0.9.0 では 191行）・`docs/system-specs/modules/cli.md` 1425行（v0.9.0 では 1194行）、公式 `installation/` ページ（`docs_md/installation.md` 16・75行）。
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1。公式ページは Page updated 2026-10-20）
+出典（Kiro CLIの同梱）: 公式 `installation/` ページ（`docs_md/installation.md` 17・21-25行）、CHANGELOG.md v0.11.0節 154-156行、`docs/guides/install.md` 585-592行、`README.md` 51-52行、`docs/guides/windows-install.md` 93-94行。
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+出典（v0.8.0〜v0.10.0 の同梱の記述）: CHANGELOG.md v0.8.0節 214-218・666-668行（`99e6253`）、`docs/guides/install.md` 573-577行（`99e6253`）。
 （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+
+## v0.11.1での変更
+
+v0.10.0・v0.11.0・v0.11.1 のいずれにも CHANGELOG の「Before you upgrade」節はありません。以下のうち、各項目の版は見出しに明記しています。
+
+### インストーラが KAS エンジンを既定で取得します（v0.11.1）
+
+- ワンライナー（`cli.sh`）と `install.sh` は、Kiro Crew を入れたあとに **`kirocrew kas install`** を実行し、この版がピン留めする KAS エンジン（プラットフォームごとに約 55〜70 MB）を既定でダウンロードします。取得に失敗してもインストールは成功し、再試行するコマンドを表示します
+- **`--no-kas`**（または環境変数 **`KIROCREW_INSTALL_KAS=0`**）で取得を省けます。インストーラは取得するだけで、`agent.kas_bundle` はオンになりません
+- 他の方法で入れた場合や再試行は、`kirocrew kas install` を自分で実行します。ソースビルドもこのコマンドを自動では実行しません（`windows-install.md` 262-274行）
+- **`KIROCREW_INSTALL_KAS` は `install.md` 163行にだけあり、CHANGELOG には書かれていません**。`--no-kas` は CHANGELOG に書かれています
+
+```bash
+curl -fsSL https://download.crew.kiro.dev/cli.sh | sh -s -- --no-kas
+```
+
+出典: `docs/guides/install.md` 159-168・595-605行、`docs/system-specs/modules/cli.md` 384行
+出典: CHANGELOG.md v0.11.1節 45-47行（`fe6f5be`）
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+
+### 組み込み KAS エンジン経路（v0.10.0 導入、`agent.kas_bundle` は既定オフ）
+
+- v0.10.0 で、Settings → Agent Harness の「Use the built-in KAS engine」（既定オフ）が加わりました。この版がピン留めしたエンジンを Crew 自身が入れて KAS を動かすため、そのために kiro-cli を導入する必要がなくなる経路です（CHANGELOG.md v0.10.0節 299-301行）
+- v0.11.0 で、この切り替えは Settings → Developer → Feature Previews の「**Run KAS on Kiro Crew's own engine**」に移りました（CHANGELOG.md v0.11.0節 154-157行）。`install.md` 595-605行は、スイッチが**全プラットフォームで既定オフ**で、シャドウテスト中の扱いであり、何も自動ではオンにしないと記述しています
+- 試すには、そのスイッチをオンにするか `kirocrew config set agent.kas_bundle true` を実行して再起動します。サインインは Settings → Agent Harness → KAS の **Kiro sign-in** カードで行い、`kiro-cli login` は使いません
+- デスクトップアプリはエンジンをアプリ内に同梱します（ビルド時の `BUNDLE_KAS=1` が既定）。ダウンロードは要りません
+
+出典: `docs/guides/install.md` 595-605行（`fe6f5be`）、CHANGELOG.md v0.10.0節 299行・v0.11.0節 154-157行
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+
+### デスクトップアプリは kiro-cli を同梱しなくなりました（v0.11.0）
+
+- 出荷されるデスクトップアプリは kiro-cli を持ちません。アプリは利用者が導入した kiro-cli を検出し、見つかるまで **Set up Kiro** ページがインストールとサインインのコマンドを表示します（CHANGELOG.md v0.11.0節 154-156行、`install.md` 585-592行）
+- `BUNDLE_KIRO_CLI=1` でビルドしたアプリだけが kiro-cli をアプリ内に持ちます。その場合の kiro-cli はシェルの `PATH` 上に無く、ページは同梱バイナリの絶対パス付きのログインコマンドを表示します
+- **v0.9.0 以前のアプリから更新し、自前の kiro-cli を入れていない場合**は、公式サイト（<https://kiro.dev/cli/>）の手順で入れます。サインインは引き継がれます（同梱版と導入版が同じアカウントストアを読むため。`install.md` 585-592行）
+
+出典: `docs/guides/install.md` 583-592行（`fe6f5be`）、CHANGELOG.md v0.11.0節 154-156行
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+
+### 既定ハーネスは KAS です（v0.11.0）
+
+保存した選択のない新規インストールの既定ハーネスは、v0.11.0 から KAS です（`harness-parity.md` 89行、CHANGELOG.md v0.11.0節 151-153行。明示した Kiro CLI の選択は維持されます）。KAS を kiro-cli なしで動かせるかについて、出典の表現が分かれています。
+
+> ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**（既定ハーネスと kiro-cli の要否）
+> - CHANGELOG.md v0.11.0節 58-59行・154-157行（`fe6f5be`）: 新規インストールは KAS で始まり、KAS は「no longer needs kiro-cli」
+> - `docs/guides/install.md` 47-52行: 見出しは「Default agent backend: kiro-cli」で、「a fresh configuration uses Kiro」。595-605行は、kiro-cli が要らない組み込みエンジン経路を、スイッチをオンにした場合の代替として記述
+> - `docs/guides/windows-install.md` 203行: `kiro-cli` は「既定の KAS ハーネスも中継する」ため、別途導入してサインインする
+> - 公式 `features/agent-backends/` ページ24行（Page updated 2026-10-12）: Kiro CLI を「Default backend」と記述
+
+出典: 上記の各ファイルの行（`fe6f5be`）、`docs/system-specs/modules/harness-parity.md` 89行
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+
+### その他
+
+- **wheel の extras**: `voice` の依存の下限が `amazon-transcribe>=0.6.3,<1` になりました（v0.9.0 の記載は `>=0.6`。`install.md` 436行）。ほかの extras の記述は変わっていません。本内容は仕様書・ガイドの差分で確認したもので、CHANGELOG には説明がありません
+- **README の「App downloads」表**: macOS・Windows・Linux（x86_64・aarch64 の `.deb`・`.rpm`・AppImage）の Stable・Insider・Nightly への直リンクに拡張されました（`README.md` 54-77行）。Linux デスクトップパッケージの手順は `install.md` の「Installing a Linux desktop package」節に案内されています。CHANGELOG には説明がありません
+- 前提要件の Python（`>= 3.12`）、Node.js（`>= 22.12.0`）、`--version` でピン留めできる最小の版（`0.1.2`）、管理対象 venv の記述は v0.9.0 から変わっていません（`install.md` 39-40・188・201・209-221行）
+
+出典: `docs/guides/install.md`、`README.md`（`fe6f5be`）
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
 
 ## v0.9.0での変更
 
@@ -118,8 +185,8 @@ v0.9.0 に「Before you upgrade」節はありません。以下のうち、CHAN
 
 v0.8.0 に「Before you upgrade」節はありません。
 
-- **デスクトップアプリがKiro CLIを同梱**: macOS・Linux・Windowsの新規インストールは、サインインだけでエージェントが動きます。セットアップ画面は、同梱版の絶対パス付きサインインコマンドを表示します（CHANGELOG.md v0.8.0節 214-218行）。同梱版は kiro-cli 2.27.1 です（同 666-668行）
-- **Kiro CLIの選択順**（v0.9.0 時点の公式ページ・`install.md` の記述）: 絶対パスの `KIROCREW_KIRO_BIN` が最優先、次にデスクトップアプリの同梱版、その次にシステム／`PATH` 上のものです（公式 `installation/` ページ21-25行、`install.md` 573-577行）。wheel・ソース・Docker・リモートGatewayでは、従来どおりGatewayホストにKiro CLIが必要です
+- **デスクトップアプリがKiro CLIを同梱**（**v0.11.0 で同梱をやめました**。上記「[v0.11.1での変更](#v0111での変更)」。以下は v0.8.0 当時の内容）: macOS・Linux・Windowsの新規インストールは、サインインだけでエージェントが動きます。セットアップ画面は、同梱版の絶対パス付きサインインコマンドを表示します（CHANGELOG.md v0.8.0節 214-218行）。同梱版は kiro-cli 2.27.1 です（同 666-668行）
+- **Kiro CLIの選択順**（v0.9.0 時点の公式ページ・`install.md` の記述。v0.11.0 以降は `install.md` が同梱を前提にしていません）: 絶対パスの `KIROCREW_KIRO_BIN` が最優先、次にデスクトップアプリの同梱版、その次にシステム／`PATH` 上のものです（公式 `installation/` ページ21-25行、`install.md` 573-577行）。wheel・ソース・Docker・リモートGatewayでは、従来どおりGatewayホストにKiro CLIが必要です
 - **wheel の extras の記載**（`install.md` 428-437行・594行、`docker.md` 3-8行）: `voice-aws`（`boto3`＋`amazon-transcribe`）、`voice`（`voice-aws`＋`pywhispercpp`）、`whatsapp`（`neonize`）、`feishu`（`lark-oapi`）。`kirocrew setup --whatsapp` はWhatsAppの任意依存とペアリング状態を確認してから有効化します。Dockerの標準イメージはMicrosoft Teams・Feishu・WhatsAppの依存を含まず、iMessageはmacOS専用でイメージでは使えません。**本内容は v0.8.0 タグの仕様書で確認したもの（v0.7.2 の `install.md` には `voice-aws`・`neonize`・`lark-oapi`・`--whatsapp` の記載が無い）で、CHANGELOG/Release 本文は extras 一覧としては説明していません**
 
 出典: CHANGELOG.md v0.8.0節 214-218・666-668行（`99e6253`）、公式 `installation/` ページ（Page updated 2026-10-20）、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md>
@@ -248,9 +315,10 @@ CHANGELOGは以下2件を新機能として挙げています。**ただし上�
 
 ## 未確認事項
 
-- インストーラ実体のNode.js下限（`install.sh` の `NODE_MIN_MAJOR`・`constants.py` の `MIN_NODE_MAJOR`）の v0.9.0 での値（`src/` の解析は行っていないため未再測定。v0.3.0 時点は22。ドキュメント側では `install.md` 40行・`cli.md` 1194行が `22.12.0`、公式 `installation/` ページが「22+」で食い違っています）
-- AppImage の FUSE 要件（CHANGELOG と `install.md` の記述差。**継続**。上記「[v0.7.0での変更](#v070での変更)」参照）
-- デスクトップアプリがKiro CLIを同梱するか（公式ページ・CHANGELOGと、`README.md`・`windows-install.md` 80行の記述差。**v0.9.0 で見つかった新規の食い違い**。上記「[前提要件](#前提要件)」参照）
+- インストーラ実体のNode.js下限（`install.sh` の `NODE_MIN_MAJOR`・`constants.py` の `MIN_NODE_MAJOR`）の v0.11.1 での値（`src/` の解析は行っていないため未再測定。v0.3.0 時点は22。ドキュメント側では `install.md` 40行・`cli.md` 1425行が `22.12.0`、公式 `installation/` ページが「22+」で食い違っています。**継続**）
+- AppImage の FUSE 要件（CHANGELOG 1577行と `install.md` 136・518行の記述差。v0.11.1 でも**継続**。上記「[v0.7.0での変更](#v070での変更)」参照）
+- デスクトップアプリがKiro CLIを同梱するか（公式 `installation/` ページ（Page updated 2026-10-20）と、CHANGELOG v0.11.0節・`install.md` 585-592行の記述差。**継続**。v0.9.0 の `README.md`・`windows-install.md` との食い違いからは当事者が入れ替わりました。上記「[前提要件](#前提要件)」参照）
+- 既定ハーネスが KAS の新規インストールで kiro-cli が要るか（CHANGELOG v0.11.0節と `install.md` 47-52・595-605行・`windows-install.md` 203行の記述差。公式 `features/agent-backends/` ページは Kiro CLI を既定と記述。**v0.11.0 で生じた新規の食い違い**。上記「[v0.11.1での変更](#v0111での変更)」参照。裁定しない）
 - 公式 `installation/` ページの `--version 0.1.0` の例と `install.md` の「`0.1.0` はインストーラで入れられない」記述の差（**継続**。上記「[チャネル](#チャネルstableinsidernightly)」参照）
 
 > 以前ここに記載していた2件は**解消**したため外しました。

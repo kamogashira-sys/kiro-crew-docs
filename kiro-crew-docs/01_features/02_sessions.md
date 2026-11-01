@@ -13,6 +13,8 @@
 （参照: 2026-10-04 / commit `c67c506` / 版 v0.7.2）
 **出典**（v0.8.0・v0.9.0での変更・`remove()`/`destroy()`・`thread:`・Crew log の既定）: <https://kiro.dev/docs/crew/chat/sessions/>（Page updated 2026-10-20）、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/session.md>
 （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+**出典**（v0.10.0・v0.11.0・v0.11.1での変更・サイドバーの並び順・ターン時間の上限・`_STATELESS_PREFIXES` の訂正）: <https://kiro.dev/docs/crew/chat/sessions/>（Page updated 2026-10-20）、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/session.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/config.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/CHANGELOG.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
 
 ---
 
@@ -23,6 +25,7 @@
 - [Warm Pool](#warm-pool)
 - [Session Resume](#session-resume)
 - [Circuit Breaker](#circuit-breaker)
+- [v0.11.1での変更](#v0111での変更)
 - [v0.9.0での変更](#v090での変更)
 - [v0.8.0での変更](#v080での変更)
 - [v0.7.0での変更](#v070での変更)
@@ -37,7 +40,7 @@
 
 ## session_keyの形式
 
-`session_key` は名前空間付きの文字列で、起源によってプレフィックスが変わります。確認できているプレフィックス（`_STATELESS_PREFIXES` に列挙）:
+`session_key` は名前空間付きの文字列で、起源によってプレフィックスが変わります。確認できているプレフィックス（`_STATELESS_PREFIXES` に列挙。Heartbeat／background は接頭辞ではない点を下で訂正しています）:
 
 | プレフィックス | 起源 |
 |--------------|------|
@@ -46,14 +49,18 @@
 | `subagent:` | サブエージェント |
 | `side:` | `/side` の一時的な会話（[03_chat.md](03_chat.md)参照） |
 | `secretary:` | （内部用途） |
-| `heartbeat:`／background | Heartbeatタスク |
 | `wf-author:` | ワークフローのオーサリング（オーサリング試行ごとに明示的に破棄される） |
 | `wf-pool:` | ワークフローのプールされたワーカー（実行ごとにクリーンなセッションを渡す） |
-| `thread:` | crewmate のチャットのメッセージへの返信スレッド（v0.9.0 の `session.md` で `_STATELESS_PREFIXES` に含まれると確認。機能は `dashboard.crewmate_threads` の背後で**既定 `false`**。詳細は「[v0.9.0での変更](#v090での変更)」） |
+| `thread:` | Mate（v0.10.0 以前・公式ページでは crewmate）のチャットのメッセージへの返信スレッド（`session.md` で `_STATELESS_PREFIXES` に含まれると確認。機能は設定キー `dashboard.crewmate_threads` の背後で**既定 `false`**。設定キーは v0.11.1 でも `crewmate` の綴りのままです。詳細は「[v0.9.0での変更](#v090での変更)」） |
 
 **ステートレスなセッション**（cron・subagent・taskrunner・channel・secretary・side・heartbeat/background・`wf-author:`・`wf-pool:`・`thread:`）は `SessionMap`（`session_key → kiro_session_id` の永続マッピング）の対象外です。**長寿命の対話的セッションのみ**がマッピングされます。
 
 v0.9.0 の `session.md` 2018-2034行（`99e6253`）で、上記の内容（`thread:` の追加を除く）が引き続き成り立つことを確認しました。
+
+> **記述の訂正（Heartbeat／background）**: 本サイトは以前、表に `heartbeat:`／background の行を載せ、これを `_STATELESS_PREFIXES` の接頭辞として扱っていました。v0.11.1 の `session.md` 2502-2508行（`fe6f5be`）は、接頭辞付きのキーが `_STATELESS_PREFIXES` に一致する一方で、`_bg` と `_hb` は「同じステートレス分類の中の、永続キーかどうかを見る別の判定」で除外され、接頭辞ではないと記述しています。v0.9.0 の `session.md` 2017-2022行（`99e6253`）は heartbeat/background も含めて `_STATELESS_PREFIXES` による除外と書いていましたが、`heartbeat:` という接頭辞は v0.9.0 と v0.11.1 のどちらの仕様書にも列挙されていません。表の行は誤りだったため削除しました（v0.9.0 以前の本サイトの記述から続いていた誤りです）。Heartbeat／background のセッションが `SessionMap` の対象外であることは、v0.11.1 の `session.md` 2502-2506行でも成り立ちます
+>
+> 出典（仕様書）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/session.md>
+> （参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
 
 > **記載漏れの修正**: `wf-author:` は v0.6.0 の `session.md`（586-587行、`8575209`）の時点で `_STATELESS_PREFIXES` の対象として記載されていましたが、本サイトの表から漏れていました。v0.7.x での新規追加ではありません。v0.7.2 では `session.md` 1258-1264行（`c67c506`）が同じ内容を記載しています。
 
@@ -101,6 +108,87 @@ v0.9.0 の `session.md` 2018-2034行（`99e6253`）で、上記の内容（`thre
 
 1セッションで5回連続失敗すると、リセットが強制されます。
 
+## v0.11.1での変更
+
+v0.10.0・v0.11.0・v0.11.1 の CHANGELOG と v0.11.1 の仕様書で確認できた、セッション運用に関わる変更です。v0.11.1 の CHANGELOG（5-54行）で本ページに関わるのは、バックグラウンド処理の項目（下記）とツール承認の項目（「アクセス制御」節）です。
+
+### サイドバー（v0.11.0）
+
+- **手動の並び順**: セッションをピン留めしていない2行の間にドロップすると、並び順が **Manual** に切り替わり、**Sorted by hand** と Undo が表示されます。フォーカスした行は Alt+↑／Alt+↓ で動かせます。並び順と並び替えの選択はゲートウェイに保存されるため、どのブラウザでも同じ一覧になります（CHANGELOG.md v0.11.0節 113-116行）。並び替えのキーは `dashboard.session_sort`（**既定 `date-desc`**）で、最終アクティビティ・作成日時・名前のそれぞれの昇順・降順に加えて `manual` を取ります。ピン留めした行は自分の順序を保ちます（`config.md` 3125行・3745-3750行）。v0.9.0 の `config.md` に `session_sort` はありません
+- **複数セッションへの一括送信**: サイドバーの **Broadcast message** が、1通のメッセージを複数のセッションへ一度に送ります（CHANGELOG.md v0.11.0節 117-118行）
+- **新規チャットの既定フォルダ**: **Settings → Chat** で **Default Sidebar Folder for New Chats** を選べます（同 118行）。ピン留め行の帯は、タグのフィルタで一覧を絞り込んでいる間、ラベル付きで表示されます（同 119行）
+- **セッションタブ**: **Settings → Chat → Sessions** で、サイドバーのセッションを専用のセッションタブで開けるようにできます（同 103-104行）
+- **検索**: `title:` を前に付けると、セッション検索がタイトルだけを対象にします。中国語の検索語は1文字ずつではなく単語に分割されます（同 120-121行）
+- **通知**: 通知は送信者ごとにまとまり、グループ単位で消せます。**Fix with Crew** は、通知の内容と次の手順の依頼を入力済みにした新しいチャットを開きます。エージェントが公開した通知は、その元のセッションへリンクします（同 122-124行）
+- **Git タブ**: チャットが作業しているすべてのリポジトリをサイドパネルの Git タブが一覧します（同 106-107行）
+
+### サイドバー（v0.10.0）
+
+- フィルタメニューに **Filter by model** が加わり、モデルごとのセッション数と **Hide sessions on these models** の行が出ます
+- 作業中のセッションの名前の前に脈動する点が出ます。crew グループのヘッダーは、承認待ち・回答待ち・作業中のチャットの件数を表示します
+- crew 自身のフォルダは、その crew のグループの中に表示されます。**Settings → Chat → Sessions → Show Full Titles While Scrolling** は、スクロール中も長いタイトルを読める状態に保ちます
+
+出典: CHANGELOG.md v0.10.0節 307-314行（`fe6f5be`）。
+
+### 仕様書・feature-map にだけ記述がある項目（CHANGELOG・Release 本文に説明なし）
+
+> 本節の項目は `docs/feature-map/README.md` の記述です。`docs/feature-map/` は一次情報の順位表（UPDATE_GUIDE §3）に載っていない資料のため、各項目は「feature-map のみ」と明記します。CHANGELOG・Release 本文は説明していません。
+
+- **Mute（feature-map のみ）**: セッション行の ⋯ メニューの **Mute this session**／**Unmute this session** で、そのセッションの完了音・バックグラウンド完了のトースト・未読バッジを止めます。承認プロンプト、利用者の入力待ちで止まる完了、終了時のエラーは、ミュート中でも通知されます。**既定はオフ**で、設定できるのは利用者だけです（エージェント／MCP の経路はありません）。**Mute sessions this one opens** は、ゴールの conductor のようにほかのセッションを開くセッションの行で、そのセッションが開いたセッション（その先に開かれたものも含む）を同様に静かにします（`feature-map/README.md` 107-108行）
+- **Broadcast の仕様（feature-map のみ）**: 実行中のターンを持つセッションには、メッセージが steer として届きます。そのほかのセッションには通常の送信になります。メッセージを受け取れないセッション（peer crew のセッション・読み取り専用の relay archive）は対象になりません。Mate のチャットは、対象に含める／除くを選べ、既定では除かれます（同 128行）
+- **新規チャットの既定フォルダの仕様（feature-map のみ）**: 既定のフォルダはオプトインで、フォルダの project と agent の pin を新規チャットが引き継ぎます。明示したフォルダが優先されます（同 93行）
+- **セッションタブで開く設定の既定（feature-map のみ）**: **Open Sidebar Sessions in a Session Tab** の既定はオフです（同 94行）
+- **短縮名のリンク（feature-map のみ）**: `/chat?sid=chat-7` のように短縮名でセッションを指す URL が、そのセッションを開きます。同じ名前のセッションが複数あるときは最も古いものを開き、ほかのセッションを通知で一覧します（同 104行）
+- **復元できなかったタブの通知（feature-map のみ）**: ゲートウェイの再起動でタブを復元しきれなかったとき、「N tabs were not restored」と表示します（同 105行）
+
+**出典**（feature-map）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/feature-map/README.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+
+### ターンの時間の上限と回復（v0.10.0）
+
+- **ターン時間の上限**: **Settings → Chat → Advanced → Turn Time Limit (seconds)** が、1ターンが走れる最長の時間を決めます。タイムアウトのカードから、1つのセッションだけを別の上限で走らせられます（CHANGELOG.md v0.10.0節 286-288行）。仕様書の設定キー `agent.chat_turn_timeout_secs`（既定14400秒、ロード時クランプ 300〜86400）は v0.11.1 でも同じです（`config.md` 2979行・3543行）。設定画面の名称 **Turn Time Limit (seconds)** がこのキーに対応するかは、一次情報に明記がありません（「[未確認事項](#未確認事項)」参照）
+- **セッションごとの上限（feature-map のみ）**: セッション行の ⋯ メニュー（または右クリック）の **Turn time limit** でプリセットを選ぶか **Same as all sessions** に戻します。範囲は全体設定と同じ 300〜86,400 秒で、次のターンから有効です（`feature-map/README.md` 109行。CHANGELOG・Release 本文に説明なし）
+- **ネットワーク断**: モデル提供元への短いネットワーク断は、ターンを失敗させず待ちます（CHANGELOG.md v0.10.0節 289-290行）
+- **満杯の会話**: 続けられないほど満杯の会話は、再試行を繰り返さず、新しいセッションを提案します（同 291-293行）
+
+### セッションに関する修正（Notable fixes）
+
+- **v0.11.0**: 新規チャット・フォーク・インポートは、遅れて届く古いセッション一覧で閉じません。新規チャット中の Back は元のセッションに戻ります。メモリモードを切り替えてもコンポーザの下書きが残ります。制限（throttle）されたターンは、プロンプトを1通だけ再送します。Claude の seat usage limit は、再試行せず上限として報告します（CHANGELOG.md v0.11.0節 197-203行）
+- **v0.11.1**: ライブの crew log・knowledge ingest・サブエージェントのイベントなどのバックグラウンド処理が、何も言わずに止まらず最後まで走ります（CHANGELOG.md v0.11.1節 35-37行）
+
+### アクセス制御に関わる変更
+
+- **v0.11.0**: owner gate が、セッションの履歴・knowledge の読み取り・タスクの操作を覆います。各ハーネス自身の権限ファイルは書き込み保護されます（CHANGELOG.md v0.11.0節 222-224行）
+- **v0.11.1**: バックグラウンドのツール承認ごとに個別の id が付き、1つの回答が別の承認を決着させません（CHANGELOG.md v0.11.1節 29-31行）
+
+### 呼称の変更: crewmate から Mate へ
+
+> ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**
+> - **CHANGELOG v0.11.0**（59行・74-75行）: 「crewmate」は見える場所すべてで「Mate」と表示されます。Mates ページ・roster・ダイアログ・設定の行・チャットのヘッダーが Mate と表示します（`fe6f5be`）
+> - **公式ページ**（Sessions・Agents は Page updated 2026-10-20）: 「Crewmates」のままです。Crew Mode の有効化の手順は **Settings → Developer → Feature Previews → Crewmates**（公式 Sessions ページ）、Agents ページも「Crewmates」と記載しています
+> - **仕様書**（`fe6f5be`）: 読み手に見える箇所は「Mate」「the Mates page」ですが（`session.md` 2518-2519行・`crew-mode.md` 48行）、設定キー `dashboard.crewmate_threads` のように識別子は `crewmate` の綴りのままです（`history.md` 2679行）
+
+本ページは、v0.11.0 以降の UI と CHANGELOG の呼称に合わせて **Mate**（v0.10.0 以前・公式ページでは crewmate）と書き、設定キー・コード識別子・API パスは元の綴りのまま書きます。Settings → Developer → Feature Previews のカード名は、v0.10.0 の CHANGELOG（236行）が「Crewmates」と記載しており、v0.11.0 以降のカード名は一次情報で確認できません。
+
+### Remote crew sessions（v0.10.0）
+
+- Remote Crew の行と crew のウィンドウのヘッダーは、crew が古いビルドで動いているときにそれを示し、更新を提案します。オーナーは1つのリモート crew を個別に無効にできます（CHANGELOG.md v0.10.0節 346-348行）。Remote crew sessions を Feature Preview として使う点（「[v0.9.0での変更](#v090での変更)」）が v0.11.1 でも同じかどうかは、一次情報で確認できません
+
+### v0.9.0 の記述が v0.11.1 でも成り立つことの再確認
+
+- `session.pool_size`（既定 0）と `POOL_SIZE_MAX = 10`: `config.md` 3017行・3542行。`session.timeout_secs`（既定3600秒）: 3012行。`session.idle_exempt_keys`（既定 `[]`）: 3013行。自動圧縮 `session.autocompact_pct`（既定 70.0、クランプ 5.0〜90.0）: 3016行・710行
+- `agent.chat_turn_timeout_secs`（既定14400、クランプ 300〜86400）: `config.md` 2979行・3543行。`agent.tool_approval_timeout_secs`（既定600、クランプ 30〜7200、かつ `chat_turn_timeout_secs` より60秒以上小さい値へ）: 2980行・3544行
+- サーキットブレーカー（5回連続失敗でリセット）: `session.md` 1448行
+- Session Resume の `reset()`・`remove()`・`destroy()`・`destroy_if()` の扱い、`wf-author:`・`wf-pool:`・`side:`・`thread:` がステートレスである点: `session.md` 2498-2521行
+- Crew log が既定で記録される（`KIROCREW_CREW_LOG` 既定 on）: `crew-log-core.md` 179行。`dashboard.folder_sort`（既定 `custom`）: `config.md` 3124行。`dashboard.title_refresh_every_turns`（既定 0）: `learn-cron-dashboard.md` 5033行
+- `dashboard.crewmate_threads`（既定 false、オフのとき `404 slot_not_found`）: `history.md` 2679-2686行
+- セッション起動は低速なホストで90秒待ちます: `acp-client.md` 3154行。Feature Previews は Developer Mode の背後にない: `learn-cron-dashboard.md` 5025行
+- 公式 Sessions ページ（Page updated 2026-10-20）の Crew Mode・Memory modes・Steer／Queue の説明は v0.9.0 時点から変化なし
+
+**出典**（仕様書）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/config.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/session.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/history.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/crew-log-core.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/learn-cron-dashboard.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/acp-client.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+**出典**: <https://kiro.dev/docs/crew/chat/sessions/>（Page updated 2026-10-20）
+
 ## v0.9.0での変更
 
 公式 Sessions ページ（Page updated 2026-10-20）と v0.9.0 の CHANGELOG で確認できた、セッション運用に関わる追加・変更です。
@@ -140,7 +228,7 @@ v0.9.0 の `session.md` 2018-2034行（`99e6253`）で、上記の内容（`thre
 ### `session.idle_exempt_keys` と返信スレッド
 
 - **`session.idle_exempt_keys`**（既定 `[]`）: アイドル時計で失効させないセッションキーの一覧です。最大 10 件（`POOL_SIZE_MAX` と同じ）、各キー 512 文字以下で、超過したキーは切り詰めずに破棄され、1回警告が記録されます。ダッシュボードやcronに結び付いたセッションは、そのタブが閉じたときの回収と RSS リサイクル（有効な場合）の対象のままです（`config.md` 2691行、`99e6253`）
-- **`thread:`（crewmate のチャットの返信スレッド）**: `session.md` 2031-2034行が `_STATELESS_PREFIXES` に含まれると記述しています（`side:` と同じ理由として、コールドセッションでは `build_thread_message` が封筒全体を再構築する、と記載されています）。機能は `dashboard.crewmate_threads`（**既定 `false`**）の背後にあり、オフのときは3つのルートが 404 `slot_not_found` を返します（`history.md` 1863-1876行、`99e6253`）
+- **`thread:`（Mate〈v0.10.0 以前・公式ページでは crewmate〉のチャットの返信スレッド）**: `session.md` 2031-2034行が `_STATELESS_PREFIXES` に含まれると記述しています（`side:` と同じ理由として、コールドセッションでは `build_thread_message` が封筒全体を再構築する、と記載されています）。機能は `dashboard.crewmate_threads`（**既定 `false`**）の背後にあり、オフのときは3つのルートが 404 `slot_not_found` を返します（`history.md` 1863-1876行、`99e6253`）
 
 > 本節の2項目は v0.9.0 タグの仕様書で確認したもので、CHANGELOG/Release 本文は説明していません。
 
@@ -221,21 +309,23 @@ v0.8.0 から、チャットごとの redact 済みの記録（Crew log）が**�
 
 ## 未確認事項
 
-- Crew Mode の扱い（下の食い違い）
-- Feature Previews のカード名が **Crew Members** から **Crewmates** に変わった版。v0.8.0 の CHANGELOG 338行（`99e6253`）は「Crew Members preview」、v0.9.0 の CHANGELOG は Crewmates ページと記述しており（17行）、Feature Previews のカード名は公式 Sessions ページ・Agents ページ（いずれも Page updated 2026-10-20）が「Crewmates」と記載しています。カード名の変更を告知した CHANGELOG の項目は確認できません
+- Crew Mode の扱い（下の食い違い。v0.11.1 でも継続）
+- Feature Previews のカード名が **Crew Members** から **Crewmates** に変わった版、および v0.11.0 以降のカード名。v0.8.0 の CHANGELOG 338行（`99e6253`。v0.11.1 のファイルでは 739行）は「Crew Members preview」、v0.10.0 の CHANGELOG 236行（`fe6f5be`）は **Settings → Developer → Feature Previews → Crewmates** と記載しています。v0.11.0 の CHANGELOG はカード名に触れず、呼称だけを Mate に改めています（59行・74-75行）。公式 Sessions ページ・Agents ページ（いずれも Page updated 2026-10-20）は「Crewmates」と記載しています。カード名の変更を告知した CHANGELOG の項目は確認できません
+- Settings の **Turn Time Limit (seconds)** と `agent.chat_turn_timeout_secs` が同じ設定かどうか。範囲（300〜86,400 秒）は一致しますが、キー名の対応はどの一次情報にも明記がありません
+- Remote crew sessions を Feature Preview として使う点（「[v0.9.0での変更](#v090での変更)」）が v0.10.0〜v0.11.1 でも同じかどうか。v0.10.0 の CHANGELOG（343-348行）に追加の記述がありますが、矛盾は見つからず、Feature Preview としての状態の変更も一次情報には書かれていません
 
 > ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**
 > - **公式 Sessions ページ**（Page updated 2026-10-20）: Crew Mode を、1つのチャットで独立した複数の話題をサブセッションで並行して進める機能として説明し、**Settings → Developer → Feature Previews → Crewmates** を有効にして使うと記載しています
-> - **`modules/crew-mode.md`**（v0.7.2 と v0.9.0。v0.9.0 は 5-13行・1924-1935行、`99e6253`）: Crew Mode（`"crew"` スロットモード）は Crew Members ページに置き換えられて廃止された（retired）と記述しています
-> - **v0.8.0 の CHANGELOG** 338行は、同じプレビューを「Crew Members preview」と呼んでいます
+> - **`modules/crew-mode.md`**（v0.7.2・v0.9.0・v0.11.1。v0.11.1 は 5-13行・4477行の「Retired: Crew Mode」、`fe6f5be`。v0.9.0 は 5-13行・1924-1935行、`99e6253`）: Crew Mode（`"crew"` スロットモード）は Crew Members ページに置き換えられて廃止された（retired）と記述しています
+> - **v0.8.0 の CHANGELOG** 338行（v0.11.1 のファイルでは 739行）は、同じプレビューを「Crew Members preview」と呼んでいます
 >
 > 公式 Sessions ページの Crew Mode と、リポジトリで廃止とされる Crew Mode が同じ機能か、Crewmates プレビューの別名かは、一次情報から判断できません。
 
-> **解消済み（Developer Mode の要否）**: 以前は、v0.6.0 の CHANGELOG 784-786行（`c67c506`）が「Developer Mode を有効にしてから Feature Previews」と記載する一方、仕様書は Developer Mode の背後にないと記述していました。v0.9.0 の `learn-cron-dashboard.md` 4265行（`99e6253`）は Feature Previews の節が「NOT behind Developer Mode」と記述し、v0.9.0 時点の公式 Sessions・Agents・Configuration ページも Developer Mode に触れず Feature Previews の手順だけを記載しています。v0.6.0 の CHANGELOG の文面自体は過去版の記述として残っています。
+> **解消済み（Developer Mode の要否）**: 以前は、v0.6.0 の CHANGELOG 784-786行（`c67c506`）が「Developer Mode を有効にしてから Feature Previews」と記載する一方、仕様書は Developer Mode の背後にないと記述していました。v0.9.0 の `learn-cron-dashboard.md` 4265行（`99e6253`。v0.11.1 では 5025行、`fe6f5be`）は Feature Previews の節が「NOT behind Developer Mode」と記述し、v0.9.0 時点の公式 Sessions・Agents・Configuration ページも Developer Mode に触れず Feature Previews の手順だけを記載しています。v0.6.0 の CHANGELOG の文面自体は過去版の記述として残っています。
 
 > **解消済み**: `session_key` の形式は当初Zenn記事のみを出典としていました（要検証扱い）が、`modules/session.md` で `_STATELESS_PREFIXES` の実装として確認済みです。
 
-> **解消済み**: `session.pool_size` の既定値の食い違い（`overview.md` は0、`config.md` は2）は **v0.6.0 実測で解消**しました（両出典が `0`）。v0.9.0 の `config.md` 2695行・`overview.md` 285行（`99e6253`）でも既定は `0` です。上記「Warm Pool」節を参照してください。
+> **解消済み**: `session.pool_size` の既定値の食い違い（`overview.md` は0、`config.md` は2）は **v0.6.0 実測で解消**しました（両出典が `0`）。v0.9.0 の `config.md` 2695行・`overview.md` 285行（`99e6253`）でも既定は `0` で、v0.11.1 でも `config.md` 3017行・`overview.md` 285行（`fe6f5be`）で `0` です。上記「Warm Pool」節を参照してください。
 
 ## 関連リンク
 

@@ -17,6 +17,10 @@
 （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
 **出典**（v0.8.0・v0.9.0での変更）: <https://github.com/kirodotdev/KiroCrew/blob/main/CHANGELOG.md>
 （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+**出典**（v0.10.0〜v0.11.1での変更・conductor の既定パトロール・ワークフローの再実行・監視ループ）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/{workflows,monitor-architecture,babysit-pr-watch,config}.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+**出典**（v0.10.0〜v0.11.1での変更）: <https://github.com/kirodotdev/KiroCrew/blob/main/CHANGELOG.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
 
 ---
 
@@ -30,6 +34,7 @@
 - [グローバルワークフローライブラリ](#グローバルワークフローライブラリ)
 - [エージェントが制御する監視ループ](#エージェントが制御する監視ループ)
 - [Workflows アプリ](#workflows-アプリ)
+- [v0.11.1での変更](#v0111での変更)
 - [v0.9.0での変更](#v090での変更)
 - [v0.8.0での変更](#v080での変更)
 - [v0.7.0での変更](#v070での変更)
@@ -156,7 +161,7 @@ conductor エージェントは**単一セッションでは大きすぎる目�
 
 同梱の **Workflows** アプリは、ワークフローの作成・検証・実行監視を行うダッシュボード面を提供します。
 
-**このアプリは無効かつメインのアプリカタログから隠された状態で出荷されます**（"It ships disabled and hidden from the main app catalog by default"）。CLI から有効化します。
+**このアプリは無効かつメインのアプリカタログから隠された状態で出荷されます**（公式ページ「It ships disabled and hidden from the main app catalog by default」）。v0.11.1 の builtin App 実測では、`workflows` は既定で無効（`defaultEnabled` が偽）であることを確認しました（`src/kiro_crew/apps/builtins/*/app.json`、`fe6f5be`）。「メインのアプリカタログから隠されている」点は、実測した項目に含まれず確認できていません。CLI から有効化します。
 
 ```bash
 kirocrew app enable workflows
@@ -177,12 +182,61 @@ kirocrew app enable workflows
 - 仕様書自身が「Open question」として、`effort` と呼び出しごとの `nudge` は凍結されたシグネチャに含まれるが、同梱の実行関数がどちらも読まないため現状では効果がないと記述しています（同 170-173行）
 - ほかに、同仕様書は `ctx` の節として Scheduling combinators・Concurrency・Progress・Budget・ports native to Kiro Crew を持ちます。これらの中身は本サイトでは確認できていません
 
+## v0.11.1での変更
+
+本節は v0.10.0・v0.11.0・v0.11.1 の範囲の変更を扱います。CHANGELOG の日付は v0.10.0=2026-10-15、v0.11.0=2026-10-24、v0.11.1=2026-10-31 です。公式 Workflows ページ（Page updated 2026-10-12）に変更はありません。**仕様書の差分にだけあり、CHANGELOG・Release 本文に説明がない項目には、その旨を注記します。**
+
+### conductor の既定パトロールの条件
+
+作業台帳に bind したときに既定のパトロールを張る条件は、v0.11.1 の仕様書では次のとおりです。**CHANGELOG v0.10.0〜v0.11.1 にこの変更の説明は見つかっていません（仕様書の差分のみ）。**
+
+- 条件は「conductor のスロットに**有効な（ACTIVE）**ループがない」です。有効な記録は残し、bind が2本目のループを積むことはありません
+- システムが止めた無効な記録（subject が終端になった、予算やサイクル上限が尽きた、など。`_stopped_row_is_replaceable` の許可リストに該当するもの）は、**誰が張ったループでも**「ループなし」として扱い、新しい既定のパトロールで置き換えます。新しい bind は新しい作業だからです
+- **人が止めた**無効な記録は残し、理由 `user-stopped` で arm を拒否します。拒否は WARNING としてログに残り、bind 自体は成功します
+- bind の応答は `patrol: armed | existing | refused | unsupported` に加えて、`patrol_reason` を返します。値は `no-loop`・`replaced-system-stopped`・`active-work-ledger`・`active-other-watch`・`user-stopped`・`outside-arm-refused`・`session-cannot-host-loop`・`arm-failed`・`autonudge-disabled`・`no-ledger` です。`patrol_note` は、bind の後に `work-ledger` の watch が有効でない場合、conductor 自身が同じターンで `monitor_start` を張るよう伝えます
+- `session_create`（`POST /api/session-control/create`。dry run でないもの）も dispatch として同じ `ensure_patrol` を呼び出し元に実行し、応答に同じ項目が付きます。作業台帳を持たない呼び出し元には何も張らず（`no-ledger`）、そのことが応答に書かれます
+- crew／member の conductor は、引き続き拒否されます
+- 値は変わっていません（gated・600秒・300サイクル・86400秒）。既定パトロールの印 `default_patrol: true` も同じで、conductor 自身の `monitor_start`・`monitor_watch`、人のダッシュボードからの作成、チャネルからの arm が有効な既定パトロールを置き換える点も同じです
+
+出典: `modules/monitor-architecture.md` 136-165行（v0.9.0 では 129-146行）。
+
+**出典**（conductor の既定パトロール）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/monitor-architecture.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+
+### 監視ループの周辺（仕様書のみ）
+
+次は v0.11.1 の仕様書にある記述です。CHANGELOG v0.10.0〜v0.11.1 に説明は見つかっていません。静かな間隔の床の値（10 と、`work-ledger` の 40）は変わっていません。
+
+- **PR watch の「変化なし」ターン**: 読み取りが完全で、前回と完全に同一のとき、判定（judge）が読む対象が監視中の PR だけで、judge の wake も終端のターンも残っていなければ、judge を呼ばずに静かな tick になります（`babysit-pr-watch.md` 126-138行、`gate.py` の `_unchanged_reading_skips_judge`）。静かな床は引き続き配送します。`decisions.nudge_wake.quiet_streak_floor` を静かな床より低く設定すると、すべての tick が判定されます
+- **不完全な読み取りの繰り返し**: 同じ内容の不完全な読み取りが続く間は、判定も基準線の確定もせず、所有セッションに「読み取りが不完全な理由と次のターンの時期」を示す通知を1行出します。静かな床の回数に達すると配送します（`babysit-pr-watch.md` 139-150行）
+- **`work-ledger` の wake はポインタ**: 配送される wake はボード全体のコピーではありません。何が動いたかの要約（最大 4000 文字）と、`work_ledger_read(item_id=<id>)`（または `compact=true`）を呼ぶよう指示する1行です。各報告イベントの ID と stall トークン（`stall:<last_report_at>`）は seen set に保持され、同じ報告で繰り返し起こしません（`monitor-architecture.md` 198-222行）
+
+出典: `modules/babysit-pr-watch.md`・`modules/monitor-architecture.md`（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）。
+
+### ワークフローの実行と再実行（仕様書のみ）
+
+次は v0.11.1 の仕様書にある記述です。CHANGELOG に説明が見つかっているのは、末尾の「無限・NaN の値」の1件だけです。
+
+- **再実行（replay）の照合方式**: 以前の run の `call_index` ではなく、呼び出しのフィンガープリントが一致するものだけが前回の結果を再利用します。フィンガープリントは、位置（`ctx.parallel` の枝と `ctx.pipeline` の項目の経路と、枝の中の順番）・プロンプト・モデルに届くすべてのオプションの SHA-256 で、表示専用の `label`・`phase` は含みません。フィンガープリントを持たない記録の再実行は、すべてライブで動きます。スクリプトを編集した場合に replay しない点は変わっていません（`workflows.md` 958-986行）
+- **ceiling は run 全体で1つの期限**: run の開始時に単調時計の期限を1つ取り、run 内の author 段階（`intent`＋`author_fn`）もその期限を使います。author がハングすると `run_failed(where="ceiling")` で終わります（`workflows.md` 584-588行）。既定の `agent.workflow_run_timeout_secs`（3600 秒、60〜21600 にクランプ）は変わっていません（同 1489行）
+- **再起動で止まった run の通知**: 読み込み時に failed に落とした run を保持し、ダッシュボードの起動時に `notify_runs_ended_by_restart` を1回呼んで、起動元のチャットへ通常の完了通知として失敗を届けます。failed の状態は書き戻されるため、次の起動で同じ run を再通知しません（`workflows.md` 657-665行）
+- **無限・NaN の値**: `inf`・`-inf`・`nan` は JSON で `null` として書かれます。run ファイルに裸の `Infinity` が残っていても読み込めます（`workflows.md` 784-788行）。CHANGELOG v0.11.1節 32-33行は「A workflow run that stored an infinite or not-a-number value opens again」と記述します
+- **構造化された 500**: author・source run・intent run・rerun の失敗は、JSON の 500 `{error, code}` で返ります。コードは `workflow_author_failed`・`workflow_run_failed`・`workflow_run_intent_failed`・`workflow_rerun_failed` です（`workflows.md` 1290-1296行）
+
+出典: `modules/workflows.md`（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）、CHANGELOG.md v0.11.1節 32-33行（`fe6f5be`）。
+
+### チャットのターン時間の上限（v0.10.0）
+
+Settings → Chat → Advanced → **Turn Time Limit**（秒）でターンの上限を設定でき、タイムアウトのカードから1つのセッションだけ別の上限で続けられます（CHANGELOG v0.10.0節 286-289行）。「[長時間の作業](#長時間の作業)」の既定の4時間（`agent.chat_turn_timeout_secs`、14400 秒、300〜86400 にクランプ。`config.md` 2979行）は変わっていません。
+
+出典: CHANGELOG.md v0.10.0節 286-289行、`modules/config.md` 2979行（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）。
+
 ## v0.9.0での変更
 
 本節の内容は v0.9.0 タグの仕様書で確認したもので、CHANGELOG の v0.9.0 節は説明していません（画面名の変更を除く）。
 
 - **画面名の変更**: CHANGELOG v0.9.0節 150-151行は、Agent Capabilities が **Customize** になったと記述します。ワークフローライブラリの管理場所の名称は、公式ページと仕様書で食い違っています（[グローバルワークフローライブラリ](#グローバルワークフローライブラリ)の表を参照）
-- **conductor の既定パトロール**: 作業台帳（work ledger）に bind（`work_ledger_record` の `action=bind`）したとき、conductor のスロットにループが1つもなければ、ゲートウェイが既定のパトロールを自動で開始します。内容は `watch: "work-ledger"`、gated、600秒ごと、300サイクル、86400秒です。conductor 自身の `monitor_start`・`monitor_watch`、人のダッシュボードからの作成、チャネルからの開始は、有効な既定パトロールを置き換えます（409 にはなりません）。crew／member の conductor では拒否されます。既存の記録（有効・承認待ち・人が停止したもの）には触れません。bind の応答は `patrol: armed | existing | refused | unsupported` を返します（`modules/monitor-architecture.md` 126-160行）。v0.8.0 タグの仕様書にこの記述は見つかっていません
+- **conductor の既定パトロール**: 作業台帳（work ledger）に bind（`work_ledger_record` の `action=bind`）したとき、ゲートウェイが既定のパトロールを自動で開始します。内容は `watch: "work-ledger"`、gated、600秒ごと、300サイクル、86400秒です。conductor 自身の `monitor_start`・`monitor_watch`、人のダッシュボードからの作成、チャネルからの開始は、有効な既定パトロールを置き換えます（409 にはなりません）。crew／member の conductor では拒否されます。bind の応答は `patrol: armed | existing | refused | unsupported` を返します（`modules/monitor-architecture.md` 126-160行、`99e6253`）。v0.8.0 タグの仕様書にこの記述は見つかっていません。**開始の条件の書き方に誤りがありました。** 本ページは v0.9.0 の時点から、条件を「スロットにループが1つもなければ」とだけ書き、既存の記録に触れない範囲も不完全でした。v0.9.0 の仕様書は、ゲートウェイ自身の既定パトロールがシステムによって停止された場合の再 arm も記述していました。現行の条件は[v0.11.1での変更](#v0111での変更)の「conductor の既定パトロールの条件」を参照してください
 - **`work-ledger` 監視の静かな間隔の下限**: ワーカーからの報告がまだない間、ゲートされた `work-ledger` の監視は、静かな確認が続いても配送されるまでの回数が 10 ではなく 40 になります（`_IDLE_LEDGER_QUIET_FLOOR`）。新しいワーカーの報告があると 10 に戻ります（同 160-170行）
 - **ワークフロー起動のルートはダッシュボード所有者に限られる**: ダッシュボードのユーザーからの要求で、ソース・intent・保存済み定義・再実行の起動（`POST /api/workflows/run`・`/run_intent`・`/definitions/{ref}/run`・`/runs/{run_id}/rerun`）を行うには、ダッシュボード所有者である必要があります（403 `owner_only`）。チャットの `workflow_*` MCP ツール（内部の呼び出し）とマニフェストで範囲が決まったアプリのトークンには、従来の制御が適用されます（`modules/workflows.md` 1205-1214行）。v0.7.2・v0.8.0 タグの仕様書に `owner_only` の記述は見つかっていません
 - **公式ページの更新**: 公式 Workflows ページ（Page updated 2026-10-12）が、静かな確認の選別と、PR の watch の起床条件と終了条件（マージまたはクローズ）を追記しました。[v0.8.0での変更](#v080での変更)を参照してください
@@ -251,7 +305,7 @@ CHANGELOG v0.8.0節 526-536行（`99e6253`）は、次を記述します。
 - ワークフロースクリプトが使える API のうち、`ctx.agent()` と入力以外の詳細（`modules/workflows.md` の Scheduling combinators・Concurrency・Progress・Budget・ports の各節。上記「ワークフロースクリプトの `ctx`」参照）
 - conductor エージェントの名称と、Agent Capabilities（v0.9.0 では Customize）上での扱い（builtin agent か組み込み機能か）。公式ページは名称を挙げていない。`modules/pipeline-conductor.md` は `kirocrew-pipeline-conductor`（1つのリポジトリの issue／PR パイプラインを、ワーカーのセッション群として監督するエージェント）を記述するが、公式ページの conductor との関係は確認できていない
 - ライブラリのリビジョン数の上限（保存先は確認済み: [グローバルワークフローライブラリ](#グローバルワークフローライブラリ)参照）
-- `docs/system-specs/modules/workflows.md`（1751行）の全体と `pipeline-conductor.md` の本文（本サイトでは `ctx` の入口・ライブラリ・ceilings・起動のアクセス制御・Configuration のみ確認。公式ページを主な出典としている）
+- `docs/system-specs/modules/workflows.md`（v0.9.0 で 1751行、v0.11.1 で 1815行。v0.11.1 では前回版との差分のうち[v0.11.1での変更](#v0111での変更)に書いた箇所だけを確認）の全体と `pipeline-conductor.md` の本文（本サイトでは `ctx` の入口・ライブラリ・ceilings・起動のアクセス制御・Configuration のみ確認。公式ページを主な出典としている）
 - goal chip に表示される予算（budget）の既定値と設定可否（v0.6.0 時点の公式ページの例 `23/24` の `24` を含め、既定値は確認できていない。v0.9.0 の仕様書 `modules/monitor-architecture.md` 126-160行は、conductor の既定パトロールの予算を 300 サイクル・86400 秒と記述するが、goal chip の表示値との対応は記述が見つかっていない）
 - 監視ループが KAS バックエンドで動くかどうかの現行の記述（v0.6.0 時点の公式ページにあった「Monitor loops also work on KAS」は v0.7.2 時点の公式ページから削除されている。公式 Agent Backends ページ（Page updated 2026-10-12）は Monitor controls がすべてのバックエンドで動くと記述する。[15_agent-backends.md](15_agent-backends.md#バックエンドをまたいで同じもの)参照）
 - interrupt controller の対象（公式ページの「eligible polling cron」と、仕様書の `irq.poll` のみとの関係。[エージェントが制御する監視ループ](#エージェントが制御する監視ループ)の表を参照）

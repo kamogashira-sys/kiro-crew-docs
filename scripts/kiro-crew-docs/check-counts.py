@@ -45,13 +45,13 @@ LEDGER_DIR = os.environ.get("KCD_LEDGER_DIR") or "scripts/kiro-crew-docs/ledgers
 
 SSOT = {
     "S1": {"value": 49, "label": "公式crewページ数"},
-    "S2": {"value": 349, "label": "docs/配下ファイル数"},  # v0.9.0タグ実測（v0.7.2タグは281）
-    "S4": {"value": 15, "label": "安定版リリース数"},  # v0.9.0対応時点（2026-10-25）
-    "S5": {"value": 95, "label": "総リリース数"},  # 2026-10-25取得時点（プレリリース79。版タグでないReleaseが1件）
+    "S2": {"value": 429, "label": "docs/配下ファイル数"},  # v0.11.1タグ実測（v0.9.0タグは349）
+    "S4": {"value": 18, "label": "安定版リリース数"},  # v0.11.1対応時点（2026-11-01）。版タグ vX.Y.Z のみ
+    "S5": {"value": 106, "label": "総リリース数"},  # 2026-11-01取得時点（プレリリース87。版タグでないReleaseが1件）
     "S11": {"value": 137, "label": "拒否コマンドルール件数"},
-    "S12": {"value": 20, "label": "builtin App数"},
+    "S12": {"value": 24, "label": "builtin App数"},
     "S13": {"value": 7, "label": "メッセージングチャネル数"},
-    "S14_sources": {"value": 5, "label": "インポート対応ソース数"},
+    "S14_sources": {"value": 6, "label": "インポート対応ソース数"},
     "S14_categories": {"value": 8, "label": "インポートカテゴリ数"},
 }
 

@@ -10,6 +10,8 @@
 **出典**（埋め込み共有機構の裏付け）: <https://kiro.dev/docs/crew/features/knowledge/>（Page updated 2026-09-25）
 **出典**（同上）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/overview.md>
 （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+**出典**（v0.11.1での変更。v0.10.0・v0.11.0 由来の内容を含む）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/memory-skills-hooks.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/config.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/cli.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/learn-cron-dashboard.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/context-management.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
 **出典**（v0.9.0・v0.8.0での変更）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/memory-skills-hooks.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/config.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/cli.md>
 （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
 **出典**（v0.7.0での変更。仕様書の行番号は v0.7.2 のもの）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/memory-skills-hooks.md>
@@ -24,6 +26,7 @@
 - [減衰の3機構](#減衰の3機構)
 - [競合解決の優先順位](#競合解決の優先順位)
 - [メモリモード](#メモリモード)
+- [v0.11.1での変更](#v0111での変更)
 - [v0.9.0での変更](#v090での変更)
 - [v0.8.0での変更](#v080での変更)
 - [v0.7.0での変更](#v070での変更)
@@ -55,13 +58,13 @@ Kiro Crew は新しいセッションでも、以前のセッションから好�
 > ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**
 >
 > - **公式 memory ページ**（Page updated 2026-10-20）: 図の見出しを「Context Window (~55K tokens)」とし、上表の各キャップ（Lessons 37,250文字など）を掲載しています。図の見出しと各キャップの値は、v0.6.0 時点・v0.7.2 時点の公式ページから変わっていません
-> - **リポジトリ `memory-skills-hooks.md`（v0.9.0）6135行**: 「`_CONTEXT_BUDGET_BASE` is a fixed 33,000-character Crew background admission allowance, reused from the former smallest-window tier. Model window size and `skills.lazy_load` cannot enlarge it」と記載します。基準値は固定 33,000文字で、モデルのウィンドウサイズで拡大しません（v0.6.0 の同ファイル15行は「reference budget 165,000 chars, ~55k tokens」と記載していました）
-> - **同ファイル 3377行（Lessons）**: `lessons` バジェットは「22.6% of the 33,000 base」です。一方、起動時に注入するルール層は `caps.lessons_startup`（`_LESSONS_STARTUP_CAP` = 37,000文字）という別枠で制限され、「deliberately NOT a share of the 33,000 base」（基準値の取り分ではない）と明記されています。37,000文字はモデルのウィンドウに比例しません
+> - **リポジトリ `memory-skills-hooks.md`（v0.11.1）6549行**: 「`_CONTEXT_BUDGET_BASE` is a fixed 33,000-character Crew background admission allowance, reused from the former smallest-window tier. Model window size and `skills.lazy_load` cannot enlarge it」と記載します。基準値は固定 33,000文字で、モデルのウィンドウサイズで拡大しません（v0.6.0 の同ファイル15行は「reference budget 165,000 chars, ~55k tokens」と記載していました）
+> - **同ファイル 3670行（Lessons）**: `lessons` バジェットは「22.6% of the 33,000 base」です。一方、起動時に注入するルール層は `caps.lessons_startup`（`_LESSONS_STARTUP_CAP` = 37,000文字）という別枠で制限され、「deliberately NOT a share of the 33,000 base」（基準値の取り分ではない）と明記されています。37,000文字はモデルのウィンドウに比例しません
 >
-> 行番号は v0.9.0 のもので、v0.7.2 では 4582行・2782行でした。基準値の固定 33,000文字と、起動時のルール層の 37,000文字は、どちらも v0.7.2 と同じです。`config.md` 3825-3829行も、オプションの内容に充てる枠を固定 33,000文字と記載しています。
+> 行番号は v0.11.1 のもので、v0.9.0 では 6135行・3377行、v0.7.2 では 4582行・2782行でした。基準値の固定 33,000文字と、起動時のルール層の 37,000文字は、どちらも v0.7.2 から変わっていません（v0.11.1 でも継続）。`config.md` 4281-4282行も、オプションの内容に充てる枠を固定 33,000文字と記載しています（v0.9.0 では 3825-3829行）。
 >
-> **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/memory-skills-hooks.md>
-> （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+> **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/memory-skills-hooks.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/config.md>
+> （参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
 > **出典**: <https://kiro.dev/docs/crew/features/memory/>（Page updated 2026-10-20）
 
 ### Preferences（好み）
@@ -94,13 +97,13 @@ SQLite に保存される構造化された事実。キーの接頭辞は `pref.
 
 > ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**
 >
-> - **lesson のスコープ**: 公式 CLI リファレンス（Page updated 2026-10-20）は `kirocrew learn add --scope workspace` を載せ、Scopes を `global`（既定）と `workspace` としています。仕様書 `memory-skills-hooks.md` 6250行は `lessons` グループの内容を「`[Learned corrections]`（global + workspace）」と記載します。一方、`memory-skills-hooks.md` 3216行は lesson を1つのリポジトリに限る `repo_scope` を記載し、`docs/architecture/context-management.md` 114-117行は「The legacy `scope="workspace"` tier never reaches a prompt」と記載しています
-> - **トピック重複の基準**: 公式 memory ページは「topic overlap (>50% keyword → replace)」と記載します。仕様書 `memory-skills-hooks.md` 3236行は「shared keywords ≥ 50% of the LARGER keyword set → newer wins」と記載します
+> - **lesson のスコープ**: 公式 CLI リファレンス（Page updated 2026-10-20）は `kirocrew learn add --scope workspace` を載せ、Scopes を `global`（既定）と `workspace` としています。仕様書 `memory-skills-hooks.md` 6679行は `lessons` グループの内容を「`[Learned corrections]`（global + workspace）」と記載します（v0.9.0 では 6250行）。一方、`memory-skills-hooks.md` 3494行は lesson を1つのリポジトリに限る `repo_scope` を記載し（v0.9.0 では 3216行）、`docs/architecture/context-management.md` 127-130行は（v0.9.0 では 114-117行）「The legacy `scope="workspace"` tier never reaches a prompt」と記載しています
+> - **トピック重複の基準**: 公式 memory ページは「topic overlap (>50% keyword → replace)」と記載します。仕様書 `memory-skills-hooks.md` 3514行は（v0.9.0 では 3236行）「shared keywords ≥ 50% of the LARGER keyword set → newer wins」と記載します
 >
-> どちらの食い違いも v0.7.2 の一次情報に同じ記述があり、v0.9.0 でも継続しています。
+> どちらの食い違いも v0.7.2 の一次情報に同じ記述があり、v0.9.0・v0.11.1 でも継続しています。
 >
-> **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/memory-skills-hooks.md>
-> （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+> **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/memory-skills-hooks.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/architecture/context-management.md>
+> （参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
 > **出典**: <https://kiro.dev/docs/crew/features/memory/>（Page updated 2026-10-20）、<https://kiro.dev/docs/crew/interfaces/cli-reference/>（Page updated 2026-10-20）
 
 ## 記憶がどう作られるか
@@ -130,7 +133,7 @@ SQLite に保存される構造化された事実。キーの接頭辞は `pref.
 
 好み経路は永続化された `last_consolidated` マーカーを進めません（履歴経路のみが進めます）。これにより、好み統合が先に走っても履歴統合が全メッセージを必ずカバーします。
 
-統合1回あたりの抽出上限は、セマンティック20件、エピソディック10件、暗黙の lesson 10件です（`memory-skills-hooks.md` 386-390行、v0.9.0）。`memory-skills-hooks.md` 2381行は、減衰の3機構（下記）を含むこれらの仕組みが V1 にだけ適用され、V2 は全履歴とエピソディックの内容を、年齢による順位下げや容量による自動削除なしで保持すると記載しています。本ページは V1 を前提とした記述です。
+統合1回あたりの抽出上限は、セマンティック20件、エピソディック10件、暗黙の lesson 10件です（`memory-skills-hooks.md` 438-442行、v0.11.1。v0.9.0 では 386-390行）。`memory-skills-hooks.md` 2597行は（v0.9.0 では 2381行）、減衰の3機構（下記）を含むこれらの仕組みが V1 にだけ適用され、V2 は全履歴とエピソディックの内容を、年齢による順位下げや容量による自動削除なしで保持すると記載しています。本ページは V1 を前提とした記述です。
 
 ### 明示的レッスン vs 暗黙的レッスン
 
@@ -200,6 +203,86 @@ Crew のセッションには `memory_mode` があり、値は **`persistent`（
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/memory-skills-hooks.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/learn-cron-dashboard.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/config.md>
 （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
 
+## v0.11.1での変更
+
+v0.10.0（CHANGELOG 日付 2026-10-15）・v0.11.0（2026-10-24）・v0.11.1（2026-10-31）の CHANGELOG と、v0.11.1 タグの仕様書で確認できる、メモリと学習に関わる変更です。項目ごとに由来する版を示します。3つの版の CHANGELOG に「Before you upgrade」節はありません。公式 memory ページ（Page updated 2026-10-20）と公式 crew ページ全体（49ページ）は、次の「メモリを止める設定と意図的な削除」「埋め込みモデルのアイドル時アンロード」「新しいチャットの記憶参照」の項目を記載していません。
+
+### 呼称: Mate（v0.11.0）
+
+v0.11.0 の CHANGELOG は、Mates ページ・ロスター・ダイアログ・設定の行・チャットのヘッダが、crewmate と表示していた箇所で Mate と表示すると記載しています（CHANGELOG v0.11.0節 74-75行）。本ページは、説明用語を **Mate（v0.10.0 以前・公式ページでは crewmate）** と表記します。公式 agents ページ（Page updated 2026-10-20）は「crewmate」のままです。コード識別子・設定キー・API パスは crewmate のままです。この呼称の違いについて、本サイトは裁定しません。本ページの下の節（v0.9.0 以前）は、当時の記述のとおり crewmate と書いています。
+
+### メモリを止める設定と意図的な削除（v0.10.0）
+
+v0.10.0 の CHANGELOG「Memory you control」（v0.10.0節 330-339行）と v0.11.1 の仕様書で確認できる変更です。
+
+`config.json` の次の2キーが加わりました。2つとも既定は `true` です（`config.md` 3035-3036行。v0.9.0 の `config.md` には両キーとも記載がありません）。
+
+| 設定 | `false` にしたときの効果 |
+|------|----------------------|
+| `memory.writes_enabled` | `memory.persistence_enabled` が止めるのと同じ自動書き込みを止めます。保存済みメモリの注入と `memory_recall` は続くため、読み取り専用のメモリになります |
+| `memory.lesson_extraction_enabled` | consolidation（既定ストアとメンバーのストア）とタスクランナーが、抽出した lesson を保存しなくなります。それ以外の書き込みと `learn_add` は続きます |
+
+「[v0.8.0での変更](#v080での変更)」の4キーの表と合わせると、`memory.persistence_enabled` は書き込みと注入の両方を止め、`memory.writes_enabled` は書き込みだけを止めます。
+
+**`kirocrew memory forget <key>`**: 既定ストアの semantic キーを1つ削除します（`cli.md` 595行）。
+
+- キーの値を表示し、キーの再入力を求めたうえで、実行中の Gateway に `DELETE /api/memory/semantic/{key}` を owner 専用の dashboard socket 経由で送ります。ダッシュボードの削除と同じ owner の確認を通り、Gateway に接続できないときは何も削除しません
+- 表示した値を `expect_value_json` として送るため、表示後に値が変わっていれば削除されません（409 `value_changed`）。`--superseded-by <key>` で置き換え先を記録でき、置き換え先が live でない場合とキー自身を指す場合は拒否されます（`memory-skills-hooks.md` 3089行）
+- エージェントのセッションのシェルからと、対話端末がない状態からは実行できません。Windows では使えず、Dashboard の Memory ページを使います
+- 公式 CLI リファレンス（Page updated 2026-10-20）に `memory forget` の記載は見つかりません
+
+CHANGELOG は、Memory ページが各 lesson の由来を表示するようになったとも記載しています（333行）。
+
+**メモリだけの書き出し・取り込み**: Settings → Import / Export に **Export memory only** と **Import memory only** が加わりました。crew config の書き出しは、シークレットを置き換えたエージェントテンプレートを含められます（CHANGELOG v0.10.0節 337-339行）。画面の詳細は本ページでは扱いません。
+
+**出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/config.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/cli.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/memory-skills-hooks.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+出典: CHANGELOG.md v0.10.0節 330-339行（`fe6f5be`）。
+
+### 埋め込みモデルのアイドル時アンロード（v0.10.0）
+
+読み込んだ埋め込みモデルは、`memory.embedding_idle_evict_secs`（既定 3600秒、`0` でアンロードしない）の間、埋め込み要求がなく、待機中・実行中の要求もないと、アンロードされます。約1GB（GGUF のマッピング約600MB＋コンテキスト約400MB）を解放し、次の埋め込みで再ロードします（`memory-skills-hooks.md` 2644行、CHANGELOG v0.10.0節 371-373行）。
+
+「[埋め込みの実行方式](#埋め込みの実行方式)」の「常時オン」は機能の有効化を指し、モデルがメモリに常駐し続けることを指しません。アンロード後の最初の埋め込みは、イベントループ上と `PRIORITY_BULK` の処理では待たずに `None` を返し、検索はキーワードに縮退します。それ以外の呼び出しは最大 30秒（`_COLD_LOAD_WAIT_SECS`）、再ロードを待ちます（`memory-skills-hooks.md` 2643行）。
+
+**出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/memory-skills-hooks.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+出典: CHANGELOG.md v0.10.0節 371-373行（`fe6f5be`）。
+
+### 新しいチャットの記憶参照が速くなった（v0.11.0・v0.11.1）
+
+- **v0.11.0**: 新しいチャットの記憶参照は、セッション起動と並行して走ります（CHANGELOG v0.11.0節 190行）。仕様書は、ダッシュボードのターンが最初のメッセージの埋め込みをビルドの前に開始し（`embed_startup_query`）、ビルドが結果を読むか、実行中の推論に最大 `memory.startup_recall_timeout_secs`（既定 1.0秒、0〜10秒の範囲）合流すると記載しています。時間内に終わらないときは、task facts・episodes・lessons をキーワード順位にします。`0` を設定すると先行の埋め込みと先行の memory 読み取りを止めます（`memory-skills-hooks.md` 1563-1570行、`config.md` 3041行）
+- **先行の memory 読み取り**: セッションを自分で起動するターンは、V1 の memory 読み取り（preferences・activity index・`[Memory activity]`）も先行して実行します（`prefetch_session_memory`）。ビルドは、入力が何も動いていない場合だけ結果を採用します（`memory-skills-hooks.md` 1570-1575行）
+- **v0.11.1**: 記憶の読み取りが書き込みを待たなくなりました。CHANGELOG は、混んだメモリプールがターンを待たせず再試行できるエラーで終えること、他のプロセスがメモリ DB を閉じても書き込みログが残り最近のメモリが失われないこと、起動時の先行読み取りでメモリのインデックスが壊れないことも記載しています（CHANGELOG v0.11.1節 13-19行）。仕様書は、単純な読み取りが書き込み用の共有接続とロックを使わず、読み取り専用の接続プール（`ReaderPool`）から WAL モードの SQLite で同時に読むと記載しています。プールが無効な場合（init 前、close 後、WAL でないファイル）は共有接続を使います（`memory-skills-hooks.md` 812-830行）。「busy なプールで再試行できるエラーで終える」挙動に直接対応する仕様書の行は見つかりません
+
+「[v0.8.0での変更](#v080での変更)」の「新しいセッションの初期注入」の記述（`inject_activity` で最初のターンに `[Memory activity]` が入る）は、そのまま成り立ちます。先行実行は注入の中身ではなく、注入までの速さを変えます。
+
+**出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/memory-skills-hooks.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/config.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+出典: CHANGELOG.md v0.11.0節 190行・v0.11.1節 13-19行（`fe6f5be`）。
+
+### lesson 保存の通知と、重複時の勝者の表示（v0.11.0）
+
+- **保存の通知**: エージェントが lesson を保存すると、チャットに「Lesson saved」または「Lesson updated」のカードが出て、Review lessons へのリンク（`/settings/overview?view=memory&focus=lessons`）が付きます（CHANGELOG v0.11.0節 99-101行、`learn-cron-dashboard.md` 200-217行）。カードが出るのは、保存結果がストアを変えた場合（`inserted`・`enriched`）で、MCP 経由の呼び出しが、ライブのチャット画面に結び付いたセッションから来たときだけです。重複（`deduped`）・変化なし・拒否では出ません
+- **重複時の勝者**（仕様書だけで確認。CHANGELOG に説明なし）: `learn_add` が重複と判定した場合、結果に重複を勝ち取った lesson（`winner`、`winner_repo_scope`）が入ります（`memory-skills-hooks.md` 3567-3572行）
+- **一覧 API の窓**（仕様書だけで確認）: `GET /api/lessons` は既定で直近50件を返します（`LESSON_LIST_LIMIT` = 50、上限 500。`learn-cron-dashboard.md` 196行）。これは一覧 API の窓で、注入する lesson 数の上限ではありません
+
+**出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/learn-cron-dashboard.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/memory-skills-hooks.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+出典: CHANGELOG.md v0.11.0節 99-101行（`fe6f5be`）。
+
+### 仕様書だけで確認した consolidation の細部
+
+次の項目は v0.11.1 タグの仕様書だけが記載しています。CHANGELOG の v0.10.0・v0.11.0・v0.11.1 節と公式ドキュメントに説明はありません（`docs/feature-map/`・`docs/decisions/` は根拠にしていません）。
+
+- **抽出メタデータが不正な場合**: モデルが付けた抽出メタデータの未知のフィールド名は捨てて、既知のフィールドで fact を保存します。既知のフィールドの値が不正な fact は、その fact だけを飛ばします。パス全体を rollback するのは、ストレージ障害のときだけです（`memory-skills-hooks.md` 373-392行）
+- **アイドル検出**: 統合する内容が残っていないキーは、トランスクリプトが変わるまで再走査しません（同 518行）
+- **バックグラウンドの統合**: `mc-membg` プール（同時に2パス）で走ります（同 582-583行）
+- **`lesson.*` のキー**: semantic の項目として来た `lesson.*` のキーは、lessons の経路に移されます（同 3060行）
+
+**出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/memory-skills-hooks.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+
 ## v0.9.0での変更
 
 v0.9.0 の CHANGELOG（v0.9.0節 125-127行）、公式 memory ページ（Page updated 2026-10-20）、v0.9.0 タグの仕様書で確認できる、メモリに関わる変更です。v0.8.0・v0.9.0 の CHANGELOG に「Before you upgrade」節はありません。
@@ -229,7 +312,7 @@ Settings → Overview の **Memory** カードで **Edit saved memories** を開
 
 公式 agents ページ（Page updated 2026-10-20）は、Settings → Developer → Feature Previews → Crewmates を有効にした Preview 機能として、各 crewmate が表示名・プライベートメモリ・ワークスペース・agent template・既定モデル・任意のトリガーを持つと記載しています。仕様書は、新規の Crew Member の作成で V2 のメモリストアが1つ割り当てられ、V2 は development-stage であると記載しています（`memory-skills-hooks.md` 5行、`config.md` 410-417行）。V2 の内部仕様は本サイトでは扱いません。
 
-> 呼称について: v0.8.0 の CHANGELOG は Preview を「the Crew Members preview」と呼び、v0.9.0 時点の公式 agents ページは同じ Preview を「Crewmates」と呼んでいます。本サイトは裁定せず、両方の呼称を示します。
+> 呼称について: v0.8.0 の CHANGELOG は Preview を「the Crew Members preview」と呼び、v0.9.0 時点の公式 agents ページは同じ Preview を「Crewmates」と呼んでいます。本サイトは裁定せず、両方の呼称を示します。v0.11.0 以降の CHANGELOG と UI は「Mate」と表記し、公式 agents ページ（Page updated 2026-10-20）は「crewmate」のままです。詳細は「[v0.11.1での変更](#v0111での変更)」の「呼称: Mate」を参照してください。
 
 ### Auto-Improvement の書き込みルートは owner 限定
 
@@ -275,7 +358,7 @@ v0.8.0 の CHANGELOG（v0.8.0節）、公式 memory ページ（Page updated 202
 
 `memory.inject_activity`（既定 `true`）が有効なとき、仕様書は、新しいセッションの最初のターンに、予算付きの `[Memory activity]` ブロックが加わると記載しています。ブロックの中身は、プロジェクト、日次履歴（14日分は全文、それ以降は要約と件数で180日目まで）、タスク事実、リクエストに関連するエピソードです（`memory-skills-hooks.md` 34-37行・132-137行・294-300行・1430-1440行・6128行）。`false` にすると、これらは `memory_recall` で取得する構成に戻り、起動時にクエリの埋め込みも行いません（同ファイル 1430-1440行）。公式 memory ページ（Page updated 2026-10-20）も `memory.inject_activity` を同じ意味で記載しています。v0.7.0〜v0.7.2 の仕様書にこのスイッチの記載はなく、v0.8.0 の仕様書に記載があります。v0.8.0 と v0.9.0 の CHANGELOG は、v0.7.0 の「初期注入が減った」記述を変更する旨を説明していません。
 
-これにより、v0.7.x で公式 memory ページと仕様書の間にあった「新しいセッションの初期注入」の食い違いは、v0.9.0 の一次情報では解消しています（下記「[v0.7.0での変更](#v070での変更)」参照）。
+これにより、v0.7.x で公式 memory ページと仕様書の間にあった「新しいセッションの初期注入」の食い違いは、v0.9.0 の一次情報では解消しています（下記「[v0.7.0での変更](#v070での変更)」参照）。v0.11.1 の仕様書（`memory-skills-hooks.md` 37-40行・138-143行・1552-1562行）でも同じ内容を確認しており、解消の状態は変わっていません。
 
 ### 統合で抽出される lesson も `applies` を宣言する
 
@@ -306,15 +389,15 @@ v0.7.0 の CHANGELOG と v0.7.2 タグのリポジトリ仕様書 `memory-skills
 > ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**
 >
 > - **公式 memory ページ**（Page updated 2026-10-20）: 「Injected as a distinct `[Learned corrections]` block」と、Lessons を1つのブロックとして説明しています
-> - **v0.7.0 の CHANGELOG と v0.9.0 の `memory-skills-hooks.md`**: 上記のとおり、Lessons は `applies` によって2ブロックに分かれます（`memory-skills-hooks.md` 3377行）
+> - **v0.7.0 の CHANGELOG と v0.11.1 の `memory-skills-hooks.md`**: 上記のとおり、Lessons は `applies` によって2ブロックに分かれます（`memory-skills-hooks.md` 3670行。v0.9.0 では 3377行）
 >
 > v0.7.x にあった、新しいセッションの初期注入（Recent history を含むかどうか）の食い違いは、v0.8.0 の `memory.inject_activity` により、v0.9.0 の一次情報では解消しています（「[v0.8.0での変更](#v080での変更)」参照）。
 
-> **注記**: `memory-skills-hooks.md` 5行（v0.7.2 も v0.9.0 も）は「Memory V2 is a development-stage replacement」（開発段階の置き換え）と記載していますが、公式 memory ページは Memory V2 を記載していません。本サイトは Memory V2 を機能として扱いません。
+> **注記**: `memory-skills-hooks.md` 5行（v0.7.2・v0.9.0・v0.11.1 のいずれも）は「Memory V2 is a development-stage replacement」（開発段階の置き換え）と記載していますが、公式 memory ページは Memory V2 を記載していません。本サイトは Memory V2 を機能として扱いません。
 
 出典: CHANGELOG.md v0.7.0節 422-425行・476-477行（`c67c506`）。
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/memory-skills-hooks.md>
-（参照: 2026-10-04 / commit `c67c506` / 版 v0.7.2。`applies` の記載は 2026-10-25 / commit `99e6253` / 版 v0.9.0 の 3377行で再確認）
+（参照: 2026-10-04 / commit `c67c506` / 版 v0.7.2。`applies` の記載は 2026-10-25 / commit `99e6253` / 版 v0.9.0 の 3377行と、2026-11-01 / commit `fe6f5be` / 版 v0.11.1 の 3670行で再確認）
 **出典**: <https://kiro.dev/docs/crew/features/memory/>（Page updated 2026-10-20）
 
 ## メモリ編集の保護（v0.3.0で追加）
@@ -360,14 +443,15 @@ Memory（本ページの6層メモリ）と [Knowledge Library](05_knowledge-lib
 
 ## 未確認事項
 
-- 公式 memory ページ（Page updated 2026-10-20）とリポジトリ `memory-skills-hooks.md`（v0.9.0）の間で、参照バジェットの基準値（~55K tokens と固定 33,000文字）と、Lessons の注入ブロック（1つと2つ）の記述が食い違っています。本サイトは裁定していません（「[6層メモリ](#6層メモリ)」「[v0.7.0での変更](#v070での変更)」参照）。このほかに、lesson のスコープとトピック重複の基準にも食い違いがあります（「[Lessons（学習した修正）](#lessons学習した修正)」参照）。新しいセッションの初期注入（Recent history を含むかどうか）の食い違いは、v0.9.0 の一次情報では解消しています
-- メモリモード用語（persistent/incognito/temporary）は当初 Zenn 記事由来の記述として要検証扱いだったが、`history.py` の `INCOGNITO_MEMORY_MODES` および `session-summary.md` 249行で実在を確認済み。各モードの意味は公式 sessions ページの表と仕様書（51-52行）で確認済み
-- 「Lessons 最大50件」は、公式 memory ページだけの記載です。仕様書で lesson 数の上限として確認できたのは、インポートが寄与する lesson の最大50件（`memory-skills-hooks.md` 3166行）だけで、起動時に注入する lesson 数の上限としての根拠は一次情報で確認できません
+- 公式 memory ページ（Page updated 2026-10-20）とリポジトリ `memory-skills-hooks.md`（v0.11.1）の間で、参照バジェットの基準値（~55K tokens と固定 33,000文字）と、Lessons の注入ブロック（1つと2つ）の記述が食い違っています。本サイトは裁定していません（「[6層メモリ](#6層メモリ)」「[v0.7.0での変更](#v070での変更)」参照）。このほかに、lesson のスコープとトピック重複の基準にも食い違いがあります（「[Lessons（学習した修正）](#lessons学習した修正)」参照）。いずれも v0.11.1 の一次情報で継続しています
+- 「Lessons 最大50件」は、公式 memory ページだけの記載です。仕様書で50件が確認できたのは、インポートが寄与する lesson の最大50件（`memory-skills-hooks.md` 3444行）と、`GET /api/lessons` の一覧の窓（`learn-cron-dashboard.md` 196行）だけで、起動時に注入する lesson 数の上限としての根拠は一次情報で確認できません
 - 公式 memory ページのキャップ値（Preferences 4,250文字など）と、リポジトリの各ブロックの割合（Preferences 2.6% など）の対応は、どちらの資料も文字数で対応表を載せておらず、確認できません。`context-management.md` は割合と定数名だけを記載しています
-- 公式 memory ページの「Thread conversation history 45,000 chars (LLM-compressed)」と、仕様書のスレッド履歴の許容量（`memory-skills-hooks.md` 6188-6193行）は、別の数値です。両者の関係は一次情報で確認できないため、本サイトは裁定していません
-- Memory V2 の挙動は、仕様書が development-stage と記載し、公式 memory ページが触れていません。本サイトは V2 を機能として扱わず、仕様書の範囲を超える内容は確認していません
-- 仕様書 `memory-skills-hooks.md` 3383行は、lesson のランキングを評価するベンチ `lesson-recall` を記載しています。このベンチは公式 CLI リファレンスに載っていません。利用者向けのコマンドかどうかは確認できないため、本サイトは扱いません
-- Knowledge Libraryの埋め込み機構は、公式ドキュメント `features/knowledge/` および `memory-skills-hooks.md`／`install.md`／`overview.md`／`config.md`で「Memoryと共有するin-process機構」と確認済み。**v0.4.1 まで食い違っていた `docs/system-specs/modules/knowledge.md` も v0.6.0 で `InProcessEmbedder` に更新され、不整合は解消した**（上記「埋め込みの実行方式」参照）
+- 公式 memory ページの「Thread conversation history 45,000 chars (LLM-compressed)」と、仕様書のスレッド履歴の許容量（`memory-skills-hooks.md` 6602-6607行）は、別の数値です。両者の関係は一次情報で確認できないため、本サイトは裁定していません
+- Memory V2 の挙動は、仕様書が development-stage と記載し（5行）、公式 memory ページが触れていません。一方、仕様書 `memory-skills-hooks.md` 1371行は、v0.10.0 の Meet Mate で作られる最初の Mate が専用の V2 ストアを持ち、Global メモリは使わないと記載しています。本サイトは V2 を機能として扱わず、この2つの記述の関係を一次情報から判定できません。扱いは人の判断を待っています
+- V1 の `preferences.md`・`projects.md` を30メッセージごとに全面置換するという本ページの記述は、公式 memory ページの記述に合わせています。仕様書は「V1 legacy consolidation may replace the file」（`memory-skills-hooks.md` 184-185行）、「V1 legacy mode also updates `preferences.md` and `projects.md`」（435行）と、V1 の legacy モードに限定しています。どちらが既定かは、手元の一次情報では判定できません。この差は v0.9.0 の仕様書にもありました
+- 「busy なメモリプールで、ターンを待たせず再試行できるエラーで終える」（CHANGELOG v0.11.1節 13-19行）に直接対応する仕様書の行は、見つかりません
+- Mate（crewmate）が Feature Preview のままかどうかは判定できません。v0.10.0 の CHANGELOG（236行）は Settings → Developer → Feature Previews → Crewmates を前提にし、公式 agents ページ（Page updated 2026-10-20）は「Crewmates (Preview)」の見出しです。v0.11.0 の CHANGELOG は、Mates 全体の Preview 状態を述べていません
+- 仕様書 `memory-skills-hooks.md` 3676行は、lesson のランキングを評価するベンチ `lesson-recall` を記載しています。このベンチは公式 CLI リファレンスに載っていません。利用者向けのコマンドかどうかは確認できないため、本サイトは扱いません
 
 ## 関連リンク
 

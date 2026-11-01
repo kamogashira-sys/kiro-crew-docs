@@ -3,7 +3,7 @@
 > **本ページは Kiro Crew（OSS）の仕様です。**
 
 **出典**: <https://kiro.dev/sitemap.xml>（実測）／<https://kiro.dev/docs/crew/>
-（参照: 2026-08-22 / commit `21584ea` / 版 v0.3.0）
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
 
 ---
 
@@ -50,6 +50,12 @@
 >
 > `features/computer-use/`・`features/browser/` は **v0.4.1 まで公式ページが存在せず**、モジュール仕様書のみが出典でした。単独ページは5→6（`system/` の追加）です。1対1の割当は [`scripts/kiro-crew-docs/ledgers/official-pages.md`](../../scripts/kiro-crew-docs/ledgers/official-pages.md) で管理しています。
 
+> **v0.11.1 対応時点の確認**: sitemap 上の `docs/crew/` 配下は**49件で、URL 集合は v0.9.0 対応時点と完全に一致**します（新規0件・消滅0件）。構成（トップ1＋カテゴリ索引5＋カテゴリ配下37＋単独6）も変わっていません。49ページすべてで Page updated 表記と `.md` companion の内容（sha256）が v0.9.0 対応時点の台帳と一致し、**変更されたページは0件**です。Page updated 表記の分布は 2026-10-20 が16件、2026-10-12 が8件、2026-09-25 が11件、2026-09-12 が6件、2026-08-04 が3件、2026-08-31 が2件、2026-09-30 が2件、2026-09-11 が1件です。
+>
+> **出典**: <https://kiro.dev/sitemap.xml>（参照: 2026-11-01）
+>
+> **ページ冒頭の参照スタンプの訂正**: このページと [03_information-sources.md](03_information-sources.md) の冒頭の参照スタンプは、本文が v0.9.0 対応の確認を含むようになった後も「2026-08-22 / commit `21584ea` / 版 v0.3.0」のまま残っていました（前の版から残っていた不整合です）。今回、本ページは v0.11.1 対応時点の再確認に合わせて更新しました。
+
 > **v0.9.0 対応時点の確認**: sitemap 上の `docs/crew/` 配下は**49件で、URL 集合は v0.7.2 対応時点と完全に一致**します（新規0件・消滅0件）。構成（トップ1＋カテゴリ索引5＋カテゴリ配下37＋単独6）も変わっていません。v0.7.2 対応時点の記録と比べて、49ページ中**24ページ**で Page updated 表記と `.md` companion の内容が変わっています（Page updated が 2026-10-20 のページが16件、2026-10-12 のページが8件）。残る25ページは v0.7.2 対応時点の記録と一致します。
 >
 > **出典**: <https://kiro.dev/sitemap.xml>（参照: 2026-10-25）
@@ -64,7 +70,7 @@ Kiro公式サイトにはCrew用changelogパスがありません（changelogの
 
 ## `.md` companionの実在
 
-**49ページ全件に `.md` companion が存在します**（末尾スラッシュを除去して `.md` を付与するURL形式。`content-type: text/markdown` で確認済み）。値の取得はHTMLを正としますが、テキスト抽出にはcompanionも利用可能です。
+**49ページ全件に `.md` companion が存在します**（末尾スラッシュを除去して `.md` を付与するURL形式。`content-type: text/markdown` で確認済み。v0.11.1 対応時点でも49ファイルすべてを取得できました）。値の取得はHTMLを正としますが、テキスト抽出にはcompanionも利用可能です。
 
 ## 未確認事項
 

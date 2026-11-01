@@ -108,16 +108,16 @@ SSOT = [
      # 「特定の2ページ」を指す表現が実在し、1桁を許すと誤検知になる。公式ページの
      # 総数は2桁以上であるため、この制約で総数の指し先だけを拾える。
      "extra_patterns": [re.compile(r"公式\s*(\d{2,4})\s*ページ")]},
-    {"id": "S2", "label": "リポジトリdocs配下ファイル数", "value": "349",
+    {"id": "S2", "label": "リポジトリdocs配下ファイル数", "value": "429",
      "pattern": re.compile(r"(?:リポジトリ`docs/`配下ファイル数|`docs/`\s*配下は)\D{0,8}?\**\s*(\d{1,5})\s*\**")},
-    {"id": "S3", "label": "最新安定版", "value": "0.9.0",
+    {"id": "S3", "label": "最新安定版", "value": "0.11.1",
      "pattern": re.compile(r"最新安定版\D{0,8}?\**\s*v(\d+\.\d+\.\d+)\s*\**")},
-    {"id": "S4", "label": "安定版リリース数", "value": "15",
+    {"id": "S4", "label": "安定版リリース数", "value": "18",
      "pattern": re.compile(r"安定版リリース数\D{0,8}?\**\s*(\d{1,4})\s*\**")},
-    {"id": "S5", "label": "総リリース数", "value": "95",
+    {"id": "S5", "label": "総リリース数", "value": "106",
      "pattern": re.compile(r"総リリース数(?:（プレリリース含む）)?\D{0,8}?\**\s*(\d{1,4})\s*\**"),
      "extra_patterns": [re.compile(r"全\s*(\d{1,4})\s*Release")]},
-    {"id": "S6", "label": "CHANGELOG.mdの版節数", "value": "13",
+    {"id": "S6", "label": "CHANGELOG.mdの版節数", "value": "16",
      "pattern": re.compile(r"CHANGELOG\.mdの版節数\D{0,8}?\**\s*(\d{1,3})\s*\**")},
 ]
 

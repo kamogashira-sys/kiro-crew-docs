@@ -17,6 +17,10 @@
 （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
 **出典**（v0.8.0・v0.9.0での変更）: <https://github.com/kirodotdev/KiroCrew/blob/main/CHANGELOG.md>
 （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+**出典**（v0.10.0〜v0.11.1での変更・既定ハーネス・Pi の MCP・KAS の bundle 経路）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/{harness-parity,harness-onboarding,acp-client,kas-auth,cli,config,claude-code-provider,subagent}.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+**出典**（v0.10.0〜v0.11.1での変更）: <https://github.com/kirodotdev/KiroCrew/blob/main/CHANGELOG.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
 
 ---
 
@@ -29,6 +33,7 @@
 - [ハーネスごとの機能差](#ハーネスごとの機能差)
 - [バックエンドをまたいで同じもの](#バックエンドをまたいで同じもの)
 - [設定キー](#設定キー)
+- [v0.11.1での変更](#v0111での変更)
 - [v0.9.0での変更](#v090での変更)
 - [v0.8.0での変更](#v080での変更)
 - [v0.7.0での変更](#v070での変更)
@@ -40,7 +45,7 @@
 
 **v0.6.0 で追加された Preview 機能です。既定では無効で、Developer Mode をオンにしないとセレクタが現れません**（公式ページ「The selector is a Preview feature and remains behind Developer Mode」）。
 
-公式ページは「新しい Crew セッションを動かすハーネスを選ぶ」機能と説明しています。従来 Kiro Crew は Kiro CLI をランタイムとして固定的に使っていましたが、v0.6.0 で Claude Code・Codex・KAS が選択肢になり、**v0.7.0 で OpenCode・Pi・goose が加わり**（[v0.7.0での変更](#v070での変更)）、**v0.8.0 で DeepSeek Harness が加わりました**（[v0.8.0での変更](#v080での変更)）。公式ページ（Page updated 2026-10-12）は Kiro CLI を含む**8種**を挙げています。
+公式ページは「新しい Crew セッションを動かすハーネスを選ぶ」機能と説明しています。従来 Kiro Crew は Kiro CLI をランタイムとして固定的に使っていましたが、v0.6.0 で Claude Code・Codex・KAS が選択肢になり、**v0.7.0 で OpenCode・Pi・goose が加わり**（[v0.7.0での変更](#v070での変更)）、**v0.8.0 で DeepSeek Harness が加わりました**（[v0.8.0での変更](#v080での変更)）。公式ページ（Page updated 2026-10-12）は Kiro CLI を含む**8種**を挙げています。**v0.11.0 以降、保存した選択のない新規インストールの既定は KAS です**（Kiro CLI が既定だった v0.9.0 以前から既定値が変わりました。公式ページとは記述が食い違っています。[v0.11.1での変更](#v0111での変更)）。
 
 リポジトリ側の仕様書では、`AgentConfig.provider` が受け付けるのは ACP プロバイダのみで、**ハーネスの選択は `provider` とは別のフィールド `agent.acp_backend`** であると記述されています（`claude-code-provider.md` 7行）。
 
@@ -85,12 +90,12 @@ CHANGELOG v0.6.0 節は「A tool pre-approved in Claude's own settings never rea
 
 | バックエンド | 公式ページの説明 |
 |---|---|
-| **Kiro CLI** | **既定のバックエンド**。Crew との統合が最も完全で、MCP 設定の変更が実行中に反映される |
+| **Kiro CLI** | **既定のバックエンド**（公式ページの記述。v0.11.0 以降、リポジトリ側は保存した選択がない場合の既定を KAS としており、食い違っています。[v0.11.1での変更](#v0111での変更)）。Crew との統合が最も完全で、MCP 設定の変更が実行中に反映される |
 | **Claude Code** | Claude の agent adapter 経由で動き、Crew の MCP サーバをセッションごとに受け取る |
-| **KAS** | Kiro CLI の ACP relay を通じて Kiro agent harness を動かす |
+| **KAS** | Kiro CLI の ACP relay を通じて Kiro agent harness を動かす（公式ページの記述。v0.10.0 以降は、kiro-cli を使わず Crew 自身のエンジンで動かす bundle 経路もあります。[v0.11.1での変更](#v0111での変更)） |
 | **Codex** | Codex ACP adapter を使う。Crew のサンドボックスが必須。compaction に対応 |
 | **OpenCode** | `opencode` バイナリを使う。Crew の MCP サーバを受け取り、compaction に対応 |
-| **Pi** | `pi` と `pi-acp` の**両方**が必要。**Kiro Crew の MCP ツールを受け取らない** |
+| **Pi** | `pi` と `pi-acp` の**両方**が必要。**Kiro Crew の MCP ツールを受け取らない**（公式ページの記述。CHANGELOG v0.10.0 は Pi のセッションが Crew の MCP サーバを受け取ると記述しており、食い違っています。[v0.11.1での変更](#v0111での変更)） |
 | **goose** | `goose` バイナリを使う。権限モードの検証後に Crew の MCP サーバを受け取る |
 | **DeepSeek Harness** | `dsh --profile acp` を動かす。Gateway ホストに `dsh` をインストールし、プロバイダのキーを Settings → Secrets から `agent.deepseek_env` で対応づける |
 
@@ -112,7 +117,7 @@ CHANGELOG v0.6.0 節は「A tool pre-approved in Claude's own settings never rea
 
 公式ページ（Page updated 2026-10-12）は、Crew が最初のプロンプトの前にバックエンドが公開する権限パスを検査し、**Developer → Agent Backend の capability card** がモデル・推論・compaction・steering・MCP・セッション再開の対応状況の現行の情報源であると記述します。特に重要な制約として次の2点を挙げています。
 
-- **Pi には Crew の MCP サーフェスがありません。** Pi は自身のツールを動かせますが、`pi-acp` が MCP サーバの配列を転送しません。Crew のメモリ・スケジューリング・Subagent などの MCP ツールが必要なセッションでは別のバックエンドを選びます。この状態は `kirocrew doctor` が報告します
+- **Pi には Crew の MCP サーフェスがありません（公式ページの記述。v0.10.0 以降の CHANGELOG・仕様書とは食い違っています。[v0.11.1での変更](#v0111での変更)）。** Pi は自身のツールを動かせますが、`pi-acp` が MCP サーバの配列を転送しません。Crew のメモリ・スケジューリング・Subagent などの MCP ツールが必要なセッションでは別のバックエンドを選びます。この状態は `kirocrew doctor` が報告します
 - **OpenCode はサーバ単位でフィルタします。** ある Crew MCP サーバのツールを1つでも無効にすると、Crew はツールの一部だけを見せるのではなく、そのサーバ全体を OpenCode のセッションから外します
 
 compaction は Codex と OpenCode のセッションで対応しています。
@@ -134,8 +139,108 @@ CHANGELOG v0.6.0 節は、これらが**従来は Kiro CLI 以外では fail clo
 
 | キー | 用途 |
 |---|---|
-| `agent.acp_backend` | ハーネスの選択。**既定は `ACP_BACKEND_KIRO`（Kiro CLI）**で、何も設定していない場合も、設定値が使えない場合も Kiro ハーネスになります（`harness-parity.md` 89行「H1」、`99e6253`。v0.7.2 では 84行。公式ページも Kiro CLI を「Default backend」と記述）。`acp_backends.resolve_selected_backend()` が値を正規化する（`claude-code-provider.md` 26行）。ゲートは1箇所に集約されている（同589-590行） |
+| `agent.acp_backend` | ハーネスの選択。**v0.11.0 以降、未設定または `""` は「選択なし」として扱われ、既定は KAS（`ACP_BACKEND_KAS`）です**。Kiro CLI は保存値 `"kiro"` で明示的に選びます。**v0.9.0 以前の既定は `ACP_BACKEND_KIRO`（Kiro CLI）でした**（v0.9.0 の `harness-parity.md` 89行「H1」）。設定値が使えない場合は Kiro CLI の床に落ちます。公式ページは Kiro CLI を「Default backend」と記述しており、食い違っています（[v0.11.1での変更](#v0111での変更)）。`acp_backends.resolve_selected_backend()` が値を正規化する（`claude-code-provider.md` 26行、`99e6253`）。ゲートは1箇所に集約されている（同589-590行、`99e6253`）<br>**出典**（v0.11.1 の既定値）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/harness-parity.md> 89行・91行（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1） |
+| `agent.kas_bundle` | KAS を kiro-cli の relay ではなく Crew 自身のエンジンで動かす経路（v0.10.0）。CHANGELOG v0.10.0 節 299-301行は既定オフと記述。v0.11.0 以降のスイッチの場所は Settings → Developer → Feature Previews（CHANGELOG v0.11.0節 154-157行）。[v0.11.1での変更](#v0111での変更)を参照 |
+| `agent.kas_persist_mcp_sign_in` | KAS のリモート MCP のサインインをセッションをまたいで保持する（v0.11.0。既定オフ。CHANGELOG v0.11.0節 158-161行） |
 | `agent.deepseek_env` | DeepSeek Harness の環境変数名を `secret://` の vault 参照に対応づける（既定は空。公式 Configuration ページ Page updated 2026-10-20 の設定表）。[v0.8.0での変更](#v080での変更)を参照 |
+
+## v0.11.1での変更
+
+本節は v0.10.0・v0.11.0・v0.11.1 の変更をまとめています。内容ごとに由来の版を明記します。CHANGELOG の日付は v0.10.0=2026-10-15、v0.11.0=2026-10-24、v0.11.1=2026-10-31 です。v0.11.0 以降の UI と CHANGELOG は、v0.10.0 以前の「crewmate」を「Mate」と呼びます（CHANGELOG v0.11.0節 74-75行）。公式ページ（Page updated 2026-10-20）は「crewmate」のままで、コード識別子・設定キー・API パスも crewmate のままです。
+
+### 既定のハーネスが Kiro CLI から KAS に変わった（v0.11.0）
+
+**既定値が変わりました。** 保存した選択のない新規インストールは KAS で始まり、一覧では KAS が Kiro CLI より前に並び、「Kiro Agent」と表示されます。明示的に選んだ Kiro CLI は維持されます（CHANGELOG v0.11.0節 151-153行）。
+
+- 仕様書の記述: `agent.acp_backend` が未設定または `""` のときは選択なしで、既定は KAS です。Kiro CLI は無条件に選べる床（`GOVERNANCE_FLOOR_BACKEND`）として残り、保存値は `"kiro"` です（`harness-parity.md` 89行 H1、`config.md` 110行）。未知または選べない明示的な選択は、ログを残して Kiro CLI の床に落ちます。選択なしで KAS が使えないときも、静かに Kiro CLI の床を選びます（`harness-parity.md` 91行 H3）
+- v0.9.0 以前は、未設定のときの既定が Kiro CLI でした（`ACP_BACKEND_KIRO`。v0.9.0 の `harness-parity.md` 89行）
+
+> ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**
+>
+> | 出典 | 既定のバックエンド |
+> |---|---|
+> | 公式 Agent Backends ページ（Page updated 2026-10-12） | Kiro CLI を「Default backend」と記述 |
+> | CHANGELOG v0.11.0節 151-153行（2026-10-24）・`harness-parity.md` 89行（v0.11.1、`fe6f5be`） | 保存した選択のない新規インストールは KAS で始まる。未設定または `""` の既定は KAS |
+>
+> 公式ページの更新日（2026-10-12）は CHANGELOG v0.11.0（2026-10-24）より前で、v0.11.0 の変更を反映していません。
+
+既存インストールで `agent.acp_backend` が未保存のものが、更新後に KAS で起動するかどうかは**未確認**です。CHANGELOG は新規インストールだけを挙げ、仕様書 H1 は「未設定なら KAS」と記述します。移行処理の記述は読んだ範囲に見つかっていません。
+
+出典: CHANGELOG.md v0.11.0節 151-153行（`fe6f5be`）、`harness-parity.md` 89行・91行、`config.md` 110行。
+
+**出典**（既定ハーネス）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/harness-parity.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+
+### Pi が Crew の MCP サーバを受け取れるようになった（v0.10.0）
+
+CHANGELOG v0.10.0節 302行は「pi sessions get Crew's MCP servers」と記述します。これは **v0.7.0 から続いていた「Pi は Crew の MCP ツールを受け取らない」という制約の解消**です。
+
+- 仕組み（仕様書）: `pi-acp` は `session/new` の MCP 配列を受け取っても pi に渡しません。そこで Crew は、配列の構成を所有者限定の handoff ファイルに書き出します。ファイルはセッションの nonce に結び付き、AES-256-GCM で封印され、鍵はその spawn の環境だけが持ちます。Crew の封印されたゲート拡張がファイルを開き、pi の組み込み MCP（`pi.registerMcpServer`、`PI_MIN_VERSION` 以上）に各サーバを登録します（`harness-parity.md` 222-232行、`harness-onboarding.md` 784-806行）
+- pi 自身の `mcp.json`（ユーザー階層または信頼されたプロジェクト）に同名のサーバがあると、そちらが優先されます。拡張はその名前のツールを拒否します（同上）
+- `sse` 形式のサーバは、pi がその transport を拒否するため登録されません（`harness-onboarding.md` 784-806行）
+
+> ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**
+>
+> | 出典 | Pi と Crew の MCP |
+> |---|---|
+> | 公式 Agent Backends ページ（Page updated 2026-10-12） | 「does not receive Kiro Crew MCP tools」。`kirocrew doctor` がこの状態を報告する |
+> | CHANGELOG v0.10.0節 302行（2026-10-15）・`harness-parity.md` 222-232行（v0.11.1、`fe6f5be`） | Pi のセッションは Crew の MCP サーバを受け取る。handoff ファイルとゲート拡張を経由する |
+
+v0.11.1 で `kirocrew doctor` が Pi について何を報告するかは**未確認**です（doctor の仕様書に Pi の MCP の項目は見つかっていません）。
+
+出典: CHANGELOG.md v0.10.0節 302行（`fe6f5be`）。
+
+**出典**（Pi の MCP）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/harness-onboarding.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+
+### KAS を kiro-cli なしで動かす bundle 経路（v0.10.0、v0.11.0・v0.11.1 で拡張）
+
+KAS は、従来の「Kiro CLI の ACP relay を通す」経路に加えて、Crew 自身が持つエンジンを kiro-cli なしで起動する **bundle 経路**を持ちます。公式 Agent Backends ページの「KAS は Kiro CLI の ACP relay を通じて動く」という記述は、relay 経路のものです。
+
+- スイッチ: `agent.kas_bundle`。CHANGELOG v0.10.0節 299-301行は「off by default」と記述します。v0.11.0 以降のスイッチの場所は Settings → Developer → Feature Previews です（CHANGELOG v0.11.0節 154-157行）。`docs/guides/install.md` 594-596行は、このスイッチがすべてのプラットフォームで既定オフで、何も自動でオンにしないと記述します
+- エンジンの導入: CLI の `kas` サブコマンド（`install`・`status`・`remove`）。sha256 で固定した `@kiro/agent` のビルドと Node を `<データホーム>/engines/kas/<版>/` に置きます（`cli.md` 384行、`acp-client.md` 3621-3700行）。インストーラ（`cli.sh`・`install.sh`）は、Kiro Crew のインストール後に既定で `kas install` を実行します。`--no-kas` で省略でき、失敗は警告にとどまります。`agent.kas_bundle` は自動ではオンになりません（`cli.md` 384行。v0.11.1 の CHANGELOG 45-50行も「installers download Crew's built-in KAS engine by default (`--no-kas` skips it)」と記述）
+- 認証: bundle 経路では Crew が認証の所有者で、`--auth-method cli` へのフォールバックはありません（`kas-auth.md` 23-27行）
+- v0.11.0 は、デスクトップアプリが pin した KAS エンジンを同梱し、kiro-cli の同梱をやめ、利用者がインストールした kiro-cli を検出すると記述します（CHANGELOG v0.11.0節 154-157行）
+
+> ⚠️ **出典間で記述が食い違っています。本サイトは裁定しません。**
+>
+> | 出典 | 内容 |
+> |---|---|
+> | 公式 Installation ページ（Page updated 2026-10-20） | デスクトップパッケージは tested Kiro CLI copy を含む |
+> | CHANGELOG v0.11.0節 154-157行（2026-10-24） | アプリは kiro-cli の同梱をやめた |
+
+`docs/guides/install.md` 578-580行は、デスクトップを含むどのインストールの後でも、default agent のために Kiro CLI のインストールとサインインを案内しています。v0.11.0 で既定が KAS になったこととの関係は、読んだ範囲に記述が見つかっていません（**未確認**）。
+
+出典: CHANGELOG.md v0.10.0節 299-301行、v0.11.0節 154-157行、v0.11.1節 45-50行（`fe6f5be`）。
+
+**出典**（KAS の bundle 経路）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/acp-client.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+
+### KAS の追加の挙動（v0.11.0・v0.11.1）
+
+以下は CHANGELOG の記述です。対応する仕様書の記述は見つかっていません（`agent-host-contract.md` 627行に終了コード 2 の言及がありますが、hook の `executeHook` 出力が文脈ノートとしてだけ届くという別の話で、v0.11.1 の修正と同一かは判定できません）。
+
+- **MCP（v0.11.0）**: MCP サーバからの elicitation に応答します。MCP の変更は実行中のセッションにその場で適用されます。`agent.kas_persist_mcp_sign_in`（既定オフ）で、リモート MCP のサインインをセッションをまたいで保持します（CHANGELOG v0.11.0節 158-161行。キーの動作は `acp-client.md` 2205行）
+- **agent spec の尊重（v0.11.1）**: spec が許可した組み込みツールを、Crew 自身の検査を通過した後に自動承認します。spec が既定で拒否する場合、ゲートで許可されたシェルコマンドだけを通し、他を拒否します。spec が既定で拒否する場合、許可パス外へのファイル書き込みを拒否します。web 検索を、エンジンが期待する名前で登録します（CHANGELOG v0.11.1節 20-26行）
+- **hook と環境（v0.11.1）**: agent spec の hook は、終了コード 2 のときだけツールをブロックします（kiro-cli と同じ）。MCP サーバには真偽値の環境フラグだけを渡し、秘密は渡しません。相対 prompt ファイルの `..` を許可します。再開した KAS セッションは、ターンが返らないとき履歴を再生します（同 20-26行）
+
+出典: CHANGELOG.md v0.11.0節 158-161行、v0.11.1節 20-26行（`fe6f5be`）。
+
+### Side Chat とほかのバックエンドの変更
+
+- **Side Chat（v0.10.0）**: 読み取りツールを使える Side Chat が Claude Code・goose・KAS で動きます（CHANGELOG v0.10.0節 302-303行）。v0.11.0 は DeepSeek Harness でも動き、Kiro の side chat が認証情報のパスを拒否すると記述します（同 v0.11.0節 162-165行）
+- **Claude Code の Side Chat の閉じ込め（仕様書）**: 読み取り専用の Side Chat は、組み込みの読み取りツール 5 種（Read・Grep・Glob・WebFetch・WebSearch）だけで起動し、MCP サーバは空、各ツールに `ask` ルールを付け、機密パスの読み取りを deny し、`disableAllHooks` を設定します（`claude-code-provider.md` 608-624行）。「[セキュリティ上の重要な境界](#セキュリティ上の重要な境界)」の事前承認のギャップとは別の、Side Chat 専用の閉じ込めです。同ファイル 626-636行の、ユーザーのグローバル `~/.claude` を継承する既知のギャップの節も引き続きあります
+- **ステアリング・推論 effort・compaction（v0.10.0）**: 実行中の Claude Code・goose のターンにメッセージを送るとそのターンに差し込まれます。推論 effort の操作が goose と opencode に届きます。手動の `/compact` が KAS と pi で動きます（CHANGELOG v0.10.0節 296-298行）
+- **実行中のターン（v0.11.0）**: 実行中の pi のターンをステアリングできます。opencode は実行中のターンへのメッセージ追加を受け付けます（CHANGELOG v0.11.0節 162-165行）
+- **タスクごとのバックエンド指定（v0.10.0）**: `spawn_run` はタスクごとにバックエンドを取れます（CHANGELOG v0.10.0節 266-267行）。詳細は [06_autonomy.md](06_autonomy.md#v0111での変更subagent) を参照してください
+
+出典: CHANGELOG.md v0.10.0節・v0.11.0節（`fe6f5be`）、`claude-code-provider.md`（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）。
+
+### capability card の区分（仕様書）
+
+仕様書は、capability card の項目を user-facing（核となる7項目）・detail・security・operator・off-card の5つに分けます。全体の比較は `USER_FACING_LINES`・`DETAIL_LINES`・`SECURITY_LINES`・`OPERATOR_LINES`・`OFF_CARD_SETS` を読む、と記述します（`harness-onboarding.md` 186-203行）。ハーネスごとの値の一覧は、この仕様書には載っていません。
+
+出典: `harness-onboarding.md`（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）。
 
 ## v0.9.0での変更
 
@@ -165,7 +270,7 @@ CHANGELOG v0.6.0 節は、これらが**従来は Kiro CLI 以外では fail clo
 - **OpenCode が選択肢に加わった**: Gateway ホストに `opencode` バイナリをインストールし、Developer ページの Agent Backend タブで選びます（CHANGELOG 271-274行）
 - **Crew 自身のツールが OpenCode と Codex のセッションにも届く**: Claude と同じ方法で届きます。ただし OpenCode のセッションは、Crew のサーバのツールが1つでも無効化されていると、そのサーバ全体を外します（CHANGELOG 275-277行）
 - **Codex でポリシーにブロックされたツール呼び出しが、チャットを黙って終了させなくなった**。インストール済みの App が登録するエージェントは KAS で起動し、ファイル名ではなく宣言した名前で解決されます（CHANGELOG 278-280行）
-- **Pi が選択肢に加わった**: Gateway に `pi` と `pi-acp` の両方をインストールします。セレクタは不足しているコンポーネントを示し、ツール権限のゲートを検証できないセッションは拒否されます。**Pi のセッションは Kiro Crew の MCP ツールを持たない**ため（`kirocrew doctor` が報告）、Subagent・スケジューリング・メモリのツールが必要な場合は別のバックエンドを選びます（CHANGELOG 284-290行）
+- **Pi が選択肢に加わった**: Gateway に `pi` と `pi-acp` の両方をインストールします。セレクタは不足しているコンポーネントを示し、ツール権限のゲートを検証できないセッションは拒否されます。**Pi のセッションは Kiro Crew の MCP ツールを持たない**ため（`kirocrew doctor` が報告）、Subagent・スケジューリング・メモリのツールが必要な場合は別のバックエンドを選びます（CHANGELOG 284-290行）。**これは v0.7.0 時点の記述です。v0.10.0 以降の Pi は Crew の MCP サーバを受け取ります**（[v0.11.1での変更](#v0111での変更)）
 - **バックエンドの一覧化と goose の追加**: Developer → Agent Backend が、行ごとに capability card（できること・MCP 設定の扱い）を持つハーネスの一覧になりました。goose が選択可能なバックエンドに加わり、Codex と OpenCode のセッションが compaction に対応しました（CHANGELOG 415-418行）
 - **修正**: 管理された KAS バックエンドのセッションがタイムアウトせずに開始する、バックエンドのツール承認プロンプトがキャンセルとして読まれずに届く、codex・opencode・goose・pi のセッションが最初のプロンプトの前に拒否されなくなった（CHANGELOG 612-615行）
 
@@ -173,12 +278,16 @@ CHANGELOG v0.6.0 節は、これらが**従来は Kiro CLI 以外では fail clo
 
 ## 未確認事項
 
-- KAS の正式名称（公式ページは「Runs the Kiro agent harness through Kiro CLI's ACP relay」、`agent-host-contract.md` 85行は「Kiro's agent service, run through `kiro-cli acp --agent-engine v3 --auth-method cli`」と記述するが、略称の展開は確認できていない。`kas-auth.md` は本サイトでは未精読）
-- capability card に表示される項目の値（公式ページは card を現行の情報源とするが、ハーネスごとの値は一覧化していない。`harness-parity.md` の全体は本サイトでは未精読）
+- KAS の正式名称（公式ページは「Runs the Kiro agent harness through Kiro CLI's ACP relay」、`agent-host-contract.md` 85行は「Kiro's agent service, run through `kiro-cli acp --agent-engine v3 --auth-method cli`」と記述するが、略称の展開は確認できていない。v0.11.1 で `kas-auth.md` を精読したが、展開は記述されていない）
+- capability card に表示される項目の値（公式ページは card を現行の情報源とするが、ハーネスごとの値は一覧化していない。v0.11.1 の `harness-onboarding.md` は項目の区分を記述するが、値の一覧は載せていない。[v0.11.1での変更](#v0111での変更)参照）
+- 既存インストールで `agent.acp_backend` が未保存のものが、v0.11.0 以降に KAS で起動するか（CHANGELOG は新規インストールだけを挙げ、仕様書は「未設定は KAS」と記述する。移行処理の記述は見つかっていない）
+- `kirocrew doctor` が v0.11.1 で Pi について報告する内容（公式ページは Crew の MCP を受け取らない状態を報告すると記述するが、v0.10.0 以降は Pi が Crew の MCP サーバを受け取る）
+- v0.11.0 で既定が KAS になったことと、`docs/guides/install.md` 578-580行の「default agent のために Kiro CLI をインストールしてサインインする」案内との関係
+- v0.11.1 の KAS 関連の修正（agent spec の尊重・hook・環境フラグ）に対応する仕様書の記述（CHANGELOG のみで確認できる）
 
 > **解消済み**:
 >
-> - 「`agent.acp_backend` の既定値」: `harness-parity.md` 89行（`99e6253`。v0.7.2（`c67c506`）では84行、v0.6.0（`8575209`）では74行）で `ACP_BACKEND_KIRO` と確認できています（上記「設定キー」節参照）
+> - 「`agent.acp_backend` の既定値」: `harness-parity.md` 89行（`99e6253`。v0.7.2（`c67c506`）では84行、v0.6.0（`8575209`）では74行）で `ACP_BACKEND_KIRO` と確認できていました。**v0.11.0 で既定は KAS に変わっています**（上記「設定キー」節と[v0.11.1での変更](#v0111での変更)参照）
 > - 「Codex・OpenCode・Pi・goose が `BASELINE_SELECTABLE_BACKENDS` に含まれるか」と選択肢の数の食い違い: v0.9.0 では公式ページ・CHANGELOG・仕様書が8種で一致しました（上記「選択できるハーネス」節参照）
 
 ## 関連リンク

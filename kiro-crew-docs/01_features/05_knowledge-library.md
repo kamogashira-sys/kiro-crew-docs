@@ -5,6 +5,8 @@
 **出典**: <https://kiro.dev/docs/crew/features/knowledge/>（Page updated 2026-09-25）
 **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/knowledge.md>
 （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
+**出典**（v0.11.1での変更。v0.10.0・v0.11.0 由来の内容を含む）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/knowledge.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/memory-skills-hooks.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
 **出典**（v0.9.0・v0.8.0での変更）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/knowledge.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/config.md>
 （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
 **出典**（v0.7.0での変更・エージェントの書き込み経路・SELイベント・タイムアウトの扱い）: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/knowledge.md>
@@ -20,6 +22,7 @@
 - [ハイブリッド検索](#ハイブリッド検索)
 - [埋め込みは共有in-process機構](#埋め込みは共有in-process機構)
 - [重複排除](#重複排除)
+- [v0.11.1での変更](#v0111での変更)
 - [v0.9.0での変更](#v090での変更)
 - [v0.8.0での変更](#v080での変更)
 - [v0.7.0での変更](#v070での変更)
@@ -51,7 +54,7 @@ files / uploads / artifacts / URLs
 | コンポーネント | 役割 |
 |--------------|------|
 | `knowledge/chunker.py` | `HeadingAwareChunker` — テキスト/Markdown/コード/スライドのチャンク分割 |
-| `knowledge/embedder.py` | `InProcessEmbedder` — vendored された llama-cpp ランタイムによるin-process埋め込み。**サーバもHTTPホップも介しません**（`knowledge.md` 122行。v0.6.0 では106行） |
+| `knowledge/embedder.py` | `InProcessEmbedder` — vendored された llama-cpp ランタイムによるin-process埋め込み。**サーバもHTTPホップも介しません**（`knowledge.md` 124行。v0.9.0 では122行、v0.6.0 では106行） |
 | `knowledge/store.py` | `KnowledgeStore` — SQLiteスキーマ、items/entities/graph、FTS5同期 |
 | `knowledge/retrieval.py` | `HybridRetriever` — FTS5＋グラフ＋ベクトル検索をRRFで融合 |
 | `knowledge/ingestion.py` | `IngestionPipeline` — 読み込み→チャンク分割→抽出→保存のオーケストレーション |
@@ -82,6 +85,8 @@ FTS5（キーワード）＋グラフ探索＋任意のベクトル検索を **R
 >
 > **v0.9.0 での再確認**: v0.9.0 の `knowledge.md` でも `Ollama` の語は0件です。`InProcessEmbedder` は122行に記載されています。`config.md` の `KnowledgeConfig` は、埋め込みと検索の設定が `MemoryConfig` の下にあり、`create_embedder_from_config` で共有されると記載しています（2717-2719行）。
 >
+> **v0.11.1 での再確認**: v0.11.1 の `knowledge.md` でも `Ollama` の語は0件です。`InProcessEmbedder` は124行に、既定モデル `qwen3-embedding:0.6b` は216行に記載されています（再確認は 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）。
+>
 > **出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/knowledge.md>
 > （参照: 2026-09-13 / commit `8575209` / 版 v0.6.0。v0.9.0 の再確認は 2026-10-25 / commit `99e6253` / 版 v0.9.0）
 
@@ -89,7 +94,7 @@ FTS5（キーワード）＋グラフ探索＋任意のベクトル検索を **R
 
 | 項目 | 値 |
 |------|-----|
-| 埋め込みモデル（共有GGUF） | `qwen3-embedding-0.6b-q8_0.gguf`（Memoryと共有。`memory-skills-hooks.md`の`ModelDownloadManager`が管理） |
+| 埋め込みモデル（共有GGUF） | `qwen3-embedding-0.6b.gguf`（Q8_0 量子化、610MB。Memoryと共有。`memory-skills-hooks.md`の`ModelDownloadManager`が管理。保存先は `~/.kiro/crew/models/qwen3-embedding-0.6b.gguf`）。v0.9.0 以前の仕様書は、ダウンロードするファイル名を `qwen3-embedding-0.6b-q8_0.gguf` と記載しており、保存先のファイル名は当時から `qwen3-embedding-0.6b.gguf` でした。v0.11.1 の仕様書は `qwen3-embedding-0.6b.gguf`（Q8_0 quantized）と記載します（`memory-skills-hooks.md` 2981行・2983行） |
 | リクエストごとのタイムアウト | 10秒（`knowledge.embed_timeout_secs` で上書き可）。v0.9.0 の `knowledge.md` 150行は、この値を「Retained for config compatibility」（設定の互換性のために残す）とし、in-process ランタイムにはこの値が制限するリクエスト単位の呼び出しがないと記載しています（v0.7.2 では135行、v0.6.0 の同ファイル133行は「Per-request embed timeout (s)」と記載） |
 | チャンクオーバーラップ | 200 |
 | ベクトルRRFの重み | 2.0 |
@@ -99,6 +104,45 @@ Knowledge Library の初回検索時には、共有embedderのバックグラウ
 ## 重複排除
 
 「1つのドキュメント・複数の場所」の原則で管理されます。2つのソースが同じドキュメントを持つ場合、1つの保存済みコピーと `source_locations` 行で管理され、片方が消えても別のソースが保持していれば削除されません。完全一致（ハッシュ）の重複は取り込み時にゲートされ、あいまい一致（埋め込みベース）は事後の掃き掃除で処理されます。
+
+## v0.11.1での変更
+
+v0.10.0・v0.11.0・v0.11.1 の CHANGELOG と、v0.11.1 タグの仕様書で確認できる変更です。項目ごとに由来する版を示します。公式 Knowledge ページ（Page updated 2026-09-25）は v0.9.0 時点から変わっていません。3つの版の CHANGELOG に「Before you upgrade」節はありません。
+
+### すべての `/api/knowledge` ルートで owner を確認する（v0.11.0）
+
+v0.9.0 時点の本ページは、owner の確認を変更系ルート17本としていました（下記「[v0.9.0での変更](#v090での変更)」）。v0.11.1 の仕様書は、変更系17本に加えて**読み取り19本**も `_require_knowledge_owner` を通ると記載しています（`knowledge.md` 645-655行）。読み取りの内訳は、アイテム、アイテム本文とエクスポート、エンティティ、グラフ、ソース、ソースのファイル、件数、統計、設定、ジョブ、埋め込み状態、`search-for-context`、ライブラリ全体の `export` です。
+
+- ダッシュボードのユーザーからの呼び出しは、ダッシュボードの owner でなければなりません。Telegram・Teams・Webex の許可リスト経由のリンクなど、owner でないダッシュボードのセッションは 403 `owner_only` になります
+- アプリ token（マニフェストが宣言したパスに制限）と、`X-Internal-Secret` を持つ loopback の呼び出しは、この確認を通り、それぞれ既存の制御の下に置かれます。この点は v0.9.0 から変わっていません
+- v0.11.0 の CHANGELOG の「Security and access」は、owner の確認がセッション履歴・Knowledge の読み取り・タスク操作に広がったと記載しています（CHANGELOG v0.11.0節 222行）
+
+### 取り込み対象の拡張（仕様書だけで確認）
+
+次の項目は、v0.11.1 の仕様書にあり、CHANGELOG の v0.10.0・v0.11.0・v0.11.1 節に説明がありません（`docs/feature-map/`・`docs/decisions/` は根拠にしていません）。
+
+- **拡張子**: フォルダのスキャン対象に `.php` と `.phtml` が加わりました（`knowledge.md` 233行）
+- **AsciiDoc の include**: `.adoc`／`.asciidoc` の `include::target[attrs]` を展開し、含まれた内容を、含む側のドキュメントとして索引します。展開できるのは、同じソースのスキャンが選んだファイルだけで、`.kiroignore`・`ignore_patterns`・機微パスの除外などの規則が、含まれる側にも効きます（`knowledge.md` 258行）。「[v0.8.0での変更](#v080での変更)」の AsciiDoc の記述（`.adoc` と `.asciidoc` を読む）は、include の展開を述べていません
+- **変更検知**: 更新時刻が同じで、保存済みのバイトハッシュが空でないときだけ `last_seen` を更新します。include の対象が変わった includer も再取り込みします（`knowledge.md` 290-292行）
+
+### Auto-added ソースは Sync できない（仕様書だけで確認）
+
+「Auto-added」（`agent://`）ソースには、同期する対象がありません。`POST /api/knowledge/sources/{id}/sync` は 409 `source_not_syncable` を返し、行の状態は変わりません。`GET /api/knowledge/sources` の各行に `syncable` フラグ（この行だけ false）が付き、一覧の行は「manual」の代わりに「added by agent」と表示します（`knowledge.md` 336-346行）。CHANGELOG に説明はありません。
+
+### 壊れたライブラリファイルでも Gateway が起動する（仕様書だけで確認）
+
+Gateway は `KnowledgeStore.open_recovering` でストアを開きます。SQLite がファイル自体の破損を報告したとき（`file is not a database`、`database disk image is malformed`）は、ファイルと `-journal`／`-wal`／`-shm` を `knowledge.db.corrupt-<utc>...` に改名して保全し、空のライブラリで起動します。ダッシュボードの通知フィードに、Knowledge Library へのリンク付きで知らせます。ソースは再登録が必要です。エージェントが `knowledge_add_document` で追加した文書は、保全したコピーにだけ残ります。ロック中・busy・読み取り専用・容量不足は破損として扱いません（`knowledge.md` 607行）。CHANGELOG に説明はありません。
+
+### 検索の速度とバックグラウンド処理（v0.10.0・v0.11.0・v0.11.1）
+
+- **v0.10.0**: Knowledge 検索の応答が約5分の1の時間になりました（CHANGELOG v0.10.0節 374行）
+- **v0.11.0**: 初回（cold）の検索が1回のスコアリングを共有します（CHANGELOG v0.11.0節 190-193行）
+- **仕様書の記述**: ベクトルの脚は、float32 の行列とノルムのキャッシュ（`_cached_matrix`）でスコアします。キャッシュは、DB と `-wal` の更新時刻・サイズ・WAL ヘッダの salt が一致する間だけ有効で、最大2エントリ・合計 512 MiB です（`knowledge.md` 572行）。CHANGELOG はこのキャッシュを説明していません
+- **v0.11.1**: Knowledge の取り込み、live crew log、サブエージェントのイベントといったバックグラウンド処理が、黙って止まらず最後まで走るようになりました（CHANGELOG v0.11.1節 35-37行）
+
+**出典**: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/knowledge.md>、<https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/memory-skills-hooks.md>
+（参照: 2026-11-01 / commit `fe6f5be` / 版 v0.11.1）
+出典: CHANGELOG.md v0.10.0節 374行・v0.11.0節 190-193行・222行・v0.11.1節 35-37行（`fe6f5be`）。
 
 ## v0.9.0での変更
 
@@ -114,7 +158,7 @@ v0.9.0 の CHANGELOG（v0.9.0節）は Knowledge Library の変更を説明し�
 ### 検索の出力と権限
 
 - **ベクトル検索が使えないとき**: `local_knowledge_search` の出力は、結果なしのメッセージも含めて末尾に ` (vector path unavailable; keyword results only)` が付きます。埋め込み器が使えないという判定はキャッシュされ、`NEGATIVE_CACHE_TTL`（300秒）の後に再確認されます（`knowledge.md` 505行）
-- **変更系ルートの owner 確認**: `/api/knowledge` の変更系ルート17本は、呼び出しがダッシュボードのユーザーからのときに、ダッシュボードの owner であることを確認します。それ以外の呼び出し元（アプリ token、`X-Internal-Secret` を持つ loopback の呼び出し）はこの確認を通り、それぞれ既存の制御（アプリ token はマニフェストで宣言したパスへの制限）の下に置かれます（`knowledge.md` 519-524行）
+- **変更系ルートの owner 確認**（v0.11.0 以降は読み取りを含む全ルートに広がりました。「[v0.11.1での変更](#v0111での変更)」参照）: `/api/knowledge` の変更系ルート17本は、呼び出しがダッシュボードのユーザーからのときに、ダッシュボードの owner であることを確認します。それ以外の呼び出し元（アプリ token、`X-Internal-Secret` を持つ loopback の呼び出し）はこの確認を通り、それぞれ既存の制御（アプリ token はマニフェストで宣言したパスへの制限）の下に置かれます（`knowledge.md` 519-524行）
 
 出典: <https://github.com/kirodotdev/KiroCrew/blob/main/docs/system-specs/modules/knowledge.md>
 （参照: 2026-10-25 / commit `99e6253` / 版 v0.9.0）
@@ -172,8 +216,7 @@ Knowledge Libraryの支出（LLM抽出のコスト）が境界づけられまし
 
 ## 未確認事項
 
-- `knowledge.extraction_effort`・`knowledge.pool_idle_ttl_secs` は、公式 Knowledge ページと CHANGELOG（v0.8.0・v0.9.0）に記載がなく、v0.9.0 タグの仕様書だけが記載しています。`knowledge.extraction_pool_size` の既定値は仕様書で確認できません（「[v0.9.0での変更](#v090での変更)」参照）
-- Knowledge Library の埋め込み機構について、一次情報の食い違いはありません。Knowledgeの埋め込み機構は、公式ドキュメント `features/knowledge/`（「Knowledge items are embedded … using the same in-process embedding runtime as Memory」）および `memory-skills-hooks.md`／`install.md`／`overview.md`／`config.md`で「Memoryと共有するin-process機構」と確認済み。v0.4.1 までOllama依存の記述を残していたリポジトリの`docs/system-specs/modules/knowledge.md`（本ページの主要出典）も v0.6.0 で更新され、v0.9.0 の同ファイルでも `Ollama` の語は0件、`InProcessEmbedder` は「no server and no HTTP hop」と記載されている（122行。v0.7.2 では108行。上記「埋め込みは共有in-process機構」参照）
+- `knowledge.extraction_effort`・`knowledge.pool_idle_ttl_secs` は、公式 Knowledge ページと CHANGELOG（v0.8.0〜v0.11.1）に記載がなく、仕様書だけが記載しています（v0.11.1 の `knowledge.md` 17-49行・549行）。`knowledge.extraction_pool_size` の既定値は仕様書で確認できません。仕様書の定数表は、プールのワーカー数の既定値（`DEFAULT_POOL_SIZE`）を3としています（205行）。この状態は v0.9.0 から変わっていません（「[v0.9.0での変更](#v090での変更)」参照）
 
 ## 関連リンク
 

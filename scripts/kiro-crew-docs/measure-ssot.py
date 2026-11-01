@@ -104,7 +104,9 @@ def measure(snapshot):
     s1 = len(re.findall(r"<loc>(https://kiro\.dev/docs/crew/[^<]*)</loc>", sitemap))
     s2 = count_files(os.path.join(snapshot, "repo", "docs"))
     releases = json.load(open(os.path.join(snapshot, "releases", "releases.json"), encoding="utf-8"))
-    stable = [r for r in releases if not r.get("prerelease") and r["published_at"] <= cutoff]
+    # Kiro Crew の版は vX.Y.Z 形式のタグだけ（ffmpeg-decoder-* などの配布用リリースは含めない）
+    stable = [r for r in releases if not r.get("prerelease") and r["published_at"] <= cutoff
+              and re.fullmatch(r"v\d+\.\d+\.\d+", r["tag_name"])]
     stable.sort(key=lambda r: r["published_at"])
     s3 = stable[-1]["tag_name"].lstrip("v") if stable else None
     s4_set = {r["tag_name"].lstrip("v") for r in stable}

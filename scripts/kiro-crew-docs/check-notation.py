@@ -77,7 +77,8 @@ DATE_OK_RE = re.compile(r"Page updated|出典|公式|引用|略記|月名フル|
 # ------------------------------------------------------------
 VERSION_RE = re.compile(r"\bv(\d+)\.(\d+)\.(\d+)\b")
 VALID_STABLE_VERSIONS = {"0.1.0", "0.1.1", "0.1.2", "0.1.3", "0.2.0", "0.3.0", "0.4.0", "0.4.1",
-                         "0.5.0", "0.6.0", "0.7.0", "0.7.1", "0.7.2", "0.8.0", "0.9.0"}
+                         "0.5.0", "0.6.0", "0.7.0", "0.7.1", "0.7.2", "0.8.0", "0.9.0",
+                         "0.10.0", "0.11.0", "0.11.1"}
 VERSION_ALLOW = [
     (re.compile(r"-rc\.\d+"), "プレリリース版への言及（実装済みとして書かない文脈）"),
 ]
@@ -131,6 +132,9 @@ ALLOWED_CLI_COMMANDS = {
     "desktop",
     # ↑ v0.8.0〜。`kirocrew desktop metrics/tunnel`。modules/cli.md 435行の表で実在確認（commit 99e6253 / v0.9.0）。
     #   公式cli-reference・READMEには無い（台帳 ledgers/cli-commands.md に記録）
+    "kas",
+    # ↑ v0.11.1。`kirocrew kas install/status/remove`。modules/cli.md 384行の表で実在確認（commit fe6f5be / v0.11.1）。
+    #   公式cli-reference・READMEには無い。CHANGELOG v0.11.1節は `--no-kas` として言及（台帳 ledgers/cli-commands.md に記録）
 }
 # 明示的に「記載しない」と判定した語。現時点では該当なし（cloud/podはmodules/cli.mdで実在確認済み）
 DENIED_CLI_COMMANDS = set()

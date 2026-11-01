@@ -121,7 +121,9 @@ def check_releases(notes, errors, offline_dir):
             data = json.load(open(path, encoding="utf-8"))
         else:
             data = fetch_all_releases(notes)
-        stable = [r for r in data if not r.get("prerelease")]
+        # Kiro Crew の版は vX.Y.Z 形式のタグだけ（ffmpeg-decoder-* などの配布用リリースは含めない）
+        stable = [r for r in data if not r.get("prerelease")
+                  and re.fullmatch(r"v\d+\.\d+\.\d+", r["tag_name"])]
         stable.sort(key=lambda r: r["published_at"], reverse=True)
         latest = stable[0]["tag_name"] if stable else None
         notes.append(f"① Releases: 最新安定版 {latest} / 安定版数 {len(stable)}")
